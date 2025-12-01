@@ -487,13 +487,13 @@ function ChatbotViewContent() {
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button
+                    {/* <button
                         onClick={toggleVoiceMode}
                         className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                         title="Voice Assistant Mode"
                     >
                         <Headphones className="w-4 h-4" />
-                    </button>
+                    </button> */}
                     <button
                         onClick={handleToggleSize}
                         className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors hidden sm:block"
@@ -632,14 +632,14 @@ function ChatbotViewContent() {
                                 className="w-full text-sm bg-gray-50 border border-gray-200 rounded-full pl-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-transparent transition-all shadow-sm"
                                 style={{ '--tw-ring-color': settings.brandColor } as any}
                             />
-                            <button
+                            {/* <button
                                 type="button"
                                 onClick={handleVoiceInput}
                                 className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-all ${isListening ? 'text-red-500 bg-red-50 animate-pulse' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                                 title="Voice Input"
                             >
                                 <Mic className="w-4 h-4" />
-                            </button>
+                            </button> */}
                         </div>
                         <button
                             type="submit"

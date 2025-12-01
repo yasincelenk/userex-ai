@@ -28,16 +28,6 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
         welcomeMessage: "Hello! How can I help you today?",
         brandColor: "#000000",
         brandLogo: "",
-        position: "bottom-right",
-        viewMode: "classic", // 'classic' | 'wide'
-        modalSize: "half", // 'half' | 'full' (only for wide mode)
-        launcherStyle: "circle", // 'circle' | 'square' | 'text' | 'icon_text'
-        launcherText: "Chat",
-        launcherRadius: 50,
-        launcherHeight: 60,
-        launcherWidth: 60,
-        launcherIcon: "message", // 'message' | 'sparkles'
-        launcherIconUrl: "",
         suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"]
     })
     const [isLoading, setIsLoading] = useState(false)
@@ -67,16 +57,6 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         welcomeMessage: data.welcomeMessage || "Hello! How can I help you today?",
                         brandColor: data.brandColor || "#000000",
                         brandLogo: data.brandLogo || "",
-                        position: data.position || "bottom-right",
-                        viewMode: data.viewMode || "classic",
-                        modalSize: data.modalSize || "half",
-                        launcherStyle: data.launcherStyle || "circle",
-                        launcherText: data.launcherText || "Chat",
-                        launcherRadius: data.launcherRadius !== undefined ? data.launcherRadius : 50,
-                        launcherHeight: data.launcherHeight || 60,
-                        launcherWidth: data.launcherWidth || 60,
-                        launcherIcon: data.launcherIcon || "message",
-                        launcherIconUrl: data.launcherIconUrl || "",
                         suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"]
                     }
                     setSettings(loadedSettings)
@@ -87,16 +67,6 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         welcomeMessage: "Hello! How can I help you today?",
                         brandColor: "#000000",
                         brandLogo: "",
-                        position: "bottom-right",
-                        viewMode: "classic",
-                        modalSize: "half",
-                        launcherStyle: "circle",
-                        launcherText: "Chat",
-                        launcherRadius: 50,
-                        launcherHeight: 60,
-                        launcherWidth: 60,
-                        launcherIcon: "message",
-                        launcherIconUrl: "",
                         suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"]
                     }
                     setSettings(defaultSettings)
@@ -169,11 +139,11 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                 title: "Success",
                 description: "Logo uploaded successfully. Remember to save changes.",
             })
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error uploading logo:", error)
             toast({
                 title: "Error",
-                description: "Failed to upload logo. Please try again.",
+                description: `Failed to upload logo: ${error.message || "Unknown error"}`,
                 variant: "destructive",
             })
         } finally {
@@ -181,41 +151,7 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
         }
     }
 
-    const handleLauncherIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file || !user) return
 
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            toast({
-                title: "Error",
-                description: "File size exceeds 2MB limit.",
-                variant: "destructive",
-            })
-            return
-        }
-
-        setIsUploading(true)
-        try {
-            const storageRef = ref(storage, `launcher_icons/${userId}/${file.name}`)
-            await uploadBytes(storageRef, file)
-            const downloadURL = await getDownloadURL(storageRef)
-
-            setSettings(prev => ({ ...prev, launcherIconUrl: downloadURL }))
-            toast({
-                title: "Success",
-                description: "Launcher icon uploaded successfully.",
-            })
-        } catch (error) {
-            console.error("Error uploading launcher icon:", error)
-            toast({
-                title: "Error",
-                description: "Failed to upload launcher icon.",
-                variant: "destructive",
-            })
-        } finally {
-            setIsUploading(false)
-        }
-    }
 
     const addSuggestedQuestion = () => {
         if (settings.suggestedQuestions.length >= 4) {
@@ -259,25 +195,6 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                     <div>
                         <h3 className="text-lg font-semibold tracking-tight">{t('branding')}</h3>
                         <p className="text-sm text-muted-foreground">{t('customizeDescription')}</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => window.open(`/widget-test?id=${userId}`, '_blank')}>
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            {t('testLiveWidget')}
-                        </Button>
-                        <Button onClick={handleSave} disabled={isSaving || !isDirty}>
-                            {isSaving ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    <span className="ml-2">{t('saving')}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    {t('saveChanges')}
-                                </>
-                            )}
-                        </Button>
                     </div>
                 </div>
 
@@ -340,7 +257,16 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                                         {isUploading ? (
                                             <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
                                         ) : settings.brandLogo ? (
-                                            <img src={settings.brandLogo} alt="Logo" className="w-full h-full object-cover" />
+                                            <img
+                                                src={settings.brandLogo}
+                                                alt="Logo"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    console.error("Error loading logo image")
+                                                    e.currentTarget.style.display = 'none'
+                                                    // Optionally show an error icon or fallback
+                                                }}
+                                            />
                                         ) : (
                                             <ImageIcon className="w-6 h-6 text-muted-foreground" />
                                         )}
@@ -361,160 +287,15 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         </div>
                     </div>
 
-                    {/* Widget Behavior */}
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('widgetBehavior')}</h4>
-                        <div className="grid gap-4">
-                            <div className="grid gap-2">
-                                <Label>{t('viewMode')}</Label>
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={() => setSettings(prev => ({ ...prev, viewMode: 'classic' }))}
-                                        className={`flex-1 p-4 rounded-lg border-2 text-left transition-all ${settings.viewMode === 'classic' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                                    >
-                                        <div className="font-medium mb-1">{t('classic')}</div>
-                                        <div className="text-xs text-muted-foreground">{t('standardChatWindow')}</div>
-                                    </button>
-                                    <button
-                                        onClick={() => setSettings(prev => ({ ...prev, viewMode: 'wide' }))}
-                                        className={`flex-1 p-4 rounded-lg border-2 text-left transition-all ${settings.viewMode === 'wide' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
-                                    >
-                                        <div className="font-medium mb-1">{t('wide')}</div>
-                                        <div className="text-xs text-muted-foreground">{t('expandedView')}</div>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Launcher Design */}
-                    <div className="space-y-4">
-                        <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('launcherDesign')}</h4>
-                        <div className="grid gap-4">
-                            <div className="grid gap-2">
-                                <Label>{t('style')}</Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['circle', 'square', 'text', 'icon_text'].map((style) => (
-                                        <button
-                                            key={style}
-                                            onClick={() => setSettings(prev => ({ ...prev, launcherStyle: style }))}
-                                            className={`p-2 rounded-md border text-sm capitalize transition-all ${settings.launcherStyle === style ? 'border-primary bg-primary/5 font-medium' : 'border-muted hover:bg-muted'}`}
-                                        >
-                                            {style.replace('_', ' + ')}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>{t('size')} (px)</Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="range"
-                                            min="40"
-                                            max="100"
-                                            value={settings.launcherHeight}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value)
-                                                setSettings(prev => ({
-                                                    ...prev,
-                                                    launcherHeight: val,
-                                                    launcherWidth: (prev.launcherStyle === 'circle' || prev.launcherStyle === 'square') ? val : prev.launcherWidth
-                                                }))
-                                            }}
-                                            className="flex-1"
-                                        />
-                                        <span className="text-xs w-8">{settings.launcherHeight}</span>
-                                    </div>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>{t('radius')} (px)</Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="50"
-                                            value={settings.launcherRadius}
-                                            onChange={(e) => setSettings(prev => ({ ...prev, launcherRadius: parseInt(e.target.value) }))}
-                                            className="flex-1"
-                                        />
-                                        <span className="text-xs w-8">{settings.launcherRadius}</span>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
-                                <div className="grid gap-2">
-                                    <Label htmlFor="launcher-text">{t('launcherText')}</Label>
-                                    <Input
-                                        id="launcher-text"
-                                        value={settings.launcherText}
-                                        onChange={(e) => setSettings(prev => ({ ...prev, launcherText: e.target.value }))}
-                                        placeholder="e.g. Chat with us"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="grid gap-2">
-                                <Label>{t('icon')}</Label>
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={() => setSettings(prev => ({ ...prev, launcherIcon: 'message' }))}
-                                        className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${settings.launcherIcon === 'message' ? 'border-primary bg-primary/5' : 'border-muted'}`}
-                                    >
-                                        <MessageSquare className="w-4 h-4" />
-                                        <span className="text-sm">{t('message')}</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setSettings(prev => ({ ...prev, launcherIcon: 'sparkles' }))}
-                                        className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${settings.launcherIcon === 'sparkles' ? 'border-primary bg-primary/5' : 'border-muted'}`}
-                                    >
-                                        <Loader2 className="w-4 h-4" />
-                                        <span className="text-sm">{t('sparkles')}</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setSettings(prev => ({ ...prev, launcherIcon: 'custom' }))}
-                                        className={`flex-1 p-3 rounded-lg border flex items-center justify-center gap-2 ${settings.launcherIcon === 'custom' ? 'border-primary bg-primary/5' : 'border-muted'}`}
-                                    >
-                                        <ImageIcon className="w-4 h-4" />
-                                        <span className="text-sm">{t('custom')}</span>
-                                    </button>
-                                </div>
-
-                                {settings.launcherIcon === 'custom' && (
-                                    <div className="mt-2 flex items-center gap-4">
-                                        <div className="relative w-12 h-12 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden group hover:border-primary transition-colors">
-                                            {isUploading ? (
-                                                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-                                            ) : settings.launcherIconUrl ? (
-                                                <img src={settings.launcherIconUrl} alt="Icon" className="w-full h-full object-contain p-1" />
-                                            ) : (
-                                                <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                                            )}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleLauncherIconUpload}
-                                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                                disabled={isUploading}
-                                            />
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            <p>{t('uploadImage')}</p>
-                                            <p>{t('maxSize')}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Suggested Questions */}
                     <div className="space-y-4">
                         <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('suggestedQuestions')}</h4>
                         <div className="grid gap-3">
-                            {settings.suggestedQuestions.map((question, index) => (
+                            {settings.suggestedQuestions?.map((question, index) => (
                                 <div key={index} className="flex gap-2">
                                     <Input
                                         value={question}
@@ -543,6 +324,22 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                             )}
                         </div>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-4 border-t">
+                    <Button onClick={handleSave} disabled={isSaving || !isDirty}>
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span className="ml-2">{t('saving')}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Save className="mr-2 h-4 w-4" />
+                                {t('saveChanges')}
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
 
@@ -602,7 +399,7 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
 
                                         {/* Suggested Questions Preview */}
                                         <div className="grid grid-cols-1 gap-2 w-full max-w-xs ml-8">
-                                            {settings.suggestedQuestions.filter(q => q.trim() !== "").map((q, i) => (
+                                            {settings.suggestedQuestions?.filter(q => q && q.trim() !== "").map((q, i) => (
                                                 <button
                                                     key={i}
                                                     className="text-xs text-left px-4 py-3 bg-white hover:bg-gray-50 border border-gray-100 rounded-xl transition-all shadow-sm text-gray-600 truncate"
@@ -636,26 +433,14 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                                     <button
                                         onClick={() => setIsPreviewOpen(true)}
                                         style={{
-                                            width: (settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') ? 'auto' : `${settings.launcherHeight}px`,
-                                            height: `${settings.launcherHeight}px`,
-                                            borderRadius: `${settings.launcherRadius}px`,
+                                            width: '60px',
+                                            height: '60px',
+                                            borderRadius: '50px',
                                             backgroundColor: settings.brandColor,
-                                            minWidth: (settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') ? '100px' : 'auto'
                                         }}
                                         className="shadow-lg flex items-center justify-center text-white font-medium px-4 gap-2 hover:scale-105 transition-transform"
                                     >
-                                        {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
-                                            settings.launcherIcon === 'custom' && settings.launcherIconUrl ? (
-                                                <img src={settings.launcherIconUrl} alt="Icon" className="w-5 h-5 object-contain" />
-                                            ) : settings.launcherIcon === 'sparkles' ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                            ) : (
-                                                <MessageSquare className="w-5 h-5" />
-                                            )
-                                        )}
-                                        {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
-                                            <span>{settings.launcherText}</span>
-                                        )}
+                                        <MessageSquare className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}

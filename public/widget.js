@@ -7,6 +7,9 @@
   const attrColor = currentScript.getAttribute('data-color');
   const chatbotId = currentScript.getAttribute('data-chatbot-id') || 'default';
 
+  console.log('Userex Widget Initializing...');
+  console.log('Chatbot ID:', chatbotId);
+
   // Default Settings
   let settings = {
     primaryColor: attrColor || '#000000',
@@ -17,14 +20,96 @@
     launcherHeight: 60,
     launcherRadius: 50,
     launcherText: 'Chat',
-    launcherIcon: 'message'
+    launcherRadius: 50,
+    launcherText: 'Chat',
+    launcherIcon: 'message',
+    launcherIconColor: '#FFFFFF',
+    launcherBackgroundColor: ''
   };
 
   // Function to initialize widget
   function initWidget() {
+    // Check if widget already exists
+    if (document.getElementById('userex-chatbot-launcher')) {
+      return;
+    }
+
     // Determine position styles
-    const isLeft = settings.position === 'bottom-left';
-    const horizontalStyle = isLeft ? { left: '20px', right: 'auto' } : { right: '20px', left: 'auto' };
+    const position = settings.position || 'bottom-right';
+    const isLeft = position.includes('left');
+    const isRight = position.includes('right');
+    const isCenter = position.includes('center'); // Horizontal center
+    const isTop = position.includes('top');
+    const isBottom = position.includes('bottom');
+    const isMiddle = position.includes('middle'); // Vertical middle
+
+    const verticalSpacing = settings.bottomSpacing !== undefined ? settings.bottomSpacing : 20;
+    const sideSpacing = settings.sideSpacing !== undefined ? settings.sideSpacing : 20;
+
+    // Horizontal Style
+    let horizontalStyle = {};
+    if (isLeft) {
+      horizontalStyle = { left: `${sideSpacing}px`, right: 'auto' };
+    } else if (isRight) {
+      horizontalStyle = { right: `${sideSpacing}px`, left: 'auto' };
+    } else if (isCenter) {
+      horizontalStyle = { left: '50%', transform: 'translateX(-50%)', right: 'auto' };
+    }
+
+    // Vertical Style for Launcher
+    let verticalStyle = {};
+    if (isTop) {
+      verticalStyle = { top: `${verticalSpacing}px`, bottom: 'auto' };
+    } else if (isBottom) {
+      verticalStyle = { bottom: `${verticalSpacing}px`, top: 'auto' };
+    } else if (isMiddle) {
+      verticalStyle = { top: '50%', transform: 'translateY(-50%)', bottom: 'auto' };
+    }
+
+    // Combined Transform for Middle Center
+    if (isMiddle && isCenter) {
+      verticalStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bottom: 'auto', right: 'auto' };
+      horizontalStyle = {}; // Clear horizontal style as it's handled in verticalStyle
+    }
+
+    // Shadow Styles
+    const shadows = {
+      'none': 'none',
+      'light': '0 2px 8px rgba(0,0,0,0.1)',
+      'medium': '0 6px 16px rgba(0,0,0,0.2)',
+      'heavy': '0 10px 24px rgba(0,0,0,0.3)'
+    };
+    const shadowStyle = shadows[settings.launcherShadow] || shadows['medium'];
+
+    // Animation Styles
+    const addAnimationStyles = () => {
+      if (document.getElementById('userex-animation-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'userex-animation-styles';
+      style.innerHTML = `
+            @keyframes userex-pulse {
+                0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+                70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+            }
+            @keyframes userex-bounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                40% { transform: translateY(-10px); }
+                60% { transform: translateY(-5px); }
+            }
+            .userex-anim-pulse {
+                animation: userex-pulse 2s infinite;
+            }
+            .userex-anim-bounce {
+                animation: userex-bounce 2s infinite;
+            }
+        `;
+      document.head.appendChild(style);
+    };
+
+    if (settings.launcherAnimation !== 'none') {
+      addAnimationStyles();
+    }
 
     // Create Launcher Button
     const launcher = document.createElement('div');
@@ -32,15 +117,58 @@
 
     const isTextStyle = settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text';
 
+    // Icon rendering
+    let iconHtml = '';
+    if (settings.launcherIcon === 'custom' && settings.launcherIconUrl) {
+      // Custom uploaded icon
+      iconHtml = `<img src="${settings.launcherIconUrl}" style="width: 24px; height: 24px; object-fit: contain;" alt="Icon" />`;
+    } else if (settings.launcherIconUrl && settings.launcherIconUrl.trim() !== '') {
+      // Legacy: Custom icon URL (for backward compatibility)
+      iconHtml = `<img src="${settings.launcherIconUrl}" style="width: 24px; height: 24px; object-fit: contain;" alt="Icon" />`;
+    } else if (settings.launcherIcon === 'sparkles') {
+      iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
+    } else if (settings.launcherIcon === 'library' && settings.launcherLibraryIcon) {
+      // Fetch icon SVG from lucide (we'll use a simple mapping or fetch for now, or just embed a few common ones.
+      // For a full library in vanilla JS without a bundler, we might need a CDN or a large mapping.
+      // To keep it simple and robust, we will use a CDN for Lucide icons if 'library' is selected.
+      // We strip '-icon' suffix and 'Lucide' prefix to ensure correct icon name generation.
+      // e.g. 'LucideMessageCircle' -> 'MessageCircle' -> 'message-circle'
+      // e.g. 'ActivityIcon' -> 'Activity' -> 'activity'
+      const iconName = settings.launcherLibraryIcon
+        .replace(/^Lucide/, '')
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .toLowerCase()
+        .replace(/-icon$/, '');
+      iconHtml = `<i data-lucide="${iconName}" style="width: 24px; height: 24px; color: ${settings.launcherIconColor || '#FFFFFF'};"></i>`;
+
+      // Inject Lucide Script if not already present
+      if (!document.getElementById('userex-lucide-script')) {
+        const script = document.createElement('script');
+        script.id = 'userex-lucide-script';
+        script.src = 'https://unpkg.com/lucide@latest';
+        script.onload = () => {
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        };
+        document.head.appendChild(script);
+      } else if (window.lucide) {
+        // If script exists, try to render icons immediately (or after a short delay to ensure DOM is ready)
+        setTimeout(() => window.lucide.createIcons(), 100);
+      }
+    } else {
+      // Default Message Icon
+      iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 0 0 1-2 2H7l-4 4V5a2 0 0 1 2-2h14a2 0 0 1 2 2z"/></svg>`;
+    }
+
     Object.assign(launcher.style, {
       position: 'fixed',
-      bottom: '20px',
       width: isTextStyle ? 'auto' : `${settings.launcherWidth}px`,
       height: `${settings.launcherHeight}px`,
       minWidth: isTextStyle ? '100px' : 'auto',
       borderRadius: `${settings.launcherRadius}px`,
-      backgroundColor: settings.primaryColor,
-      boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+      backgroundColor: settings.launcherBackgroundColor || settings.primaryColor,
+      boxShadow: shadowStyle,
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -50,24 +178,16 @@
       color: 'white',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       fontWeight: '600',
-      fontSize: '14px',
-      gap: '8px',
       padding: isTextStyle ? '0 20px' : '0',
-      ...horizontalStyle
+      gap: '8px',
+      ...horizontalStyle,
+      ...verticalStyle
     });
 
-    // Render Content based on Style
-    let iconSvg;
-    if (settings.launcherIcon === 'custom' && settings.launcherIconUrl) {
-      iconSvg = `<img src="${settings.launcherIconUrl}" style="width: 24px; height: 24px; object-fit: contain;" />`;
-    } else if (settings.launcherIcon === 'sparkles') {
-      iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-         <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-       </svg>`;
-    } else {
-      iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>`;
+    if (settings.launcherAnimation === 'pulse') {
+      launcher.classList.add('userex-anim-pulse');
+    } else if (settings.launcherAnimation === 'bounce') {
+      launcher.classList.add('userex-anim-bounce');
     }
 
     const closeSvg = `
@@ -85,18 +205,34 @@
       if (settings.launcherStyle === 'text') {
         launcher.innerHTML = `<span>${settings.launcherText}</span>`;
       } else if (settings.launcherStyle === 'icon_text') {
-        launcher.innerHTML = `${iconSvg}<span>${settings.launcherText}</span>`;
+        launcher.innerHTML = `${iconHtml}<span>${settings.launcherText}</span>`;
       } else {
         // Circle or Square (Icon only)
-        launcher.innerHTML = iconSvg;
+        launcher.innerHTML = iconHtml;
+      }
+
+      if (window.lucide) {
+        window.lucide.createIcons();
       }
     };
 
     renderLauncherContent(false);
 
     // Hover effect
-    launcher.onmouseenter = () => launcher.style.transform = 'scale(1.05)';
-    launcher.onmouseleave = () => launcher.style.transform = 'scale(1)';
+    launcher.onmouseenter = () => {
+      let transform = 'scale(1.05)';
+      if (isMiddle && isCenter) transform = 'translate(-50%, -50%) scale(1.05)';
+      else if (isMiddle) transform = 'translateY(-50%) scale(1.05)';
+      else if (isCenter) transform = 'translateX(-50%) scale(1.05)';
+      launcher.style.transform = transform;
+    };
+    launcher.onmouseleave = () => {
+      let transform = 'scale(1)';
+      if (isMiddle && isCenter) transform = 'translate(-50%, -50%) scale(1)';
+      else if (isMiddle) transform = 'translateY(-50%) scale(1)';
+      else if (isCenter) transform = 'translateX(-50%) scale(1)';
+      launcher.style.transform = transform;
+    };
 
     // Create Iframe Container
     const iframeContainer = document.createElement('div');
@@ -145,11 +281,35 @@
       }
     } else {
       // Classic Styles
+      let classicVerticalStyle = {};
+      if (isTop) {
+        classicVerticalStyle = { top: `${verticalSpacing + settings.launcherHeight + 10}px`, bottom: 'auto' };
+      } else if (isBottom) {
+        classicVerticalStyle = { bottom: `${verticalSpacing + settings.launcherHeight + 10}px`, top: 'auto' };
+      } else if (isMiddle) {
+        // For middle, we place it next to the launcher
+        classicVerticalStyle = { top: '50%', transform: 'translateY(-50%)' };
+        // Adjust horizontal to be next to launcher
+        if (isLeft) {
+          Object.assign(horizontalStyle, { left: `${sideSpacing + settings.launcherWidth + 10}px`, right: 'auto' });
+        } else if (isRight) {
+          Object.assign(horizontalStyle, { right: `${sideSpacing + settings.launcherWidth + 10}px`, left: 'auto' });
+        } else if (isCenter) {
+          // Middle Center - place it below (or above if not enough space, but let's default to below for now)
+          classicVerticalStyle = { top: '50%', transform: 'translate(-50%, -50%)' }; // Centered on screen
+          // Actually for classic view in middle center, maybe just center it?
+          // Let's offset it slightly so it doesn't cover the launcher if possible, or just center it over.
+          // Let's center it completely.
+          horizontalStyle = { left: '50%', transform: 'translate(-50%, -50%)', right: 'auto' };
+          classicVerticalStyle = { top: '50%', bottom: 'auto' };
+        }
+      }
+
       Object.assign(iframeContainer.style, {
-        bottom: '90px',
         width: '350px',
         height: '500px',
-        ...horizontalStyle
+        ...horizontalStyle,
+        ...classicVerticalStyle
       });
     }
 
@@ -217,9 +377,10 @@
   }
 
   // Fetch settings from API
-  fetch(`${baseUrl}/api/widget-settings?chatbotId=${chatbotId}`)
+  fetch(`${baseUrl}/api/widget-settings?chatbotId=${chatbotId}&t=${Date.now()}`)
     .then(res => res.json())
     .then(data => {
+      console.log('Widget Settings API Response:', data);
       if (!data.error) {
         settings = {
           primaryColor: attrColor || data.brandColor || '#000000',
@@ -232,8 +393,18 @@
           launcherHeight: data.launcherHeight || 60,
           launcherWidth: data.launcherWidth || 60,
           launcherIcon: data.launcherIcon || 'message',
-          launcherIconUrl: data.launcherIconUrl || ''
+          launcherIconColor: data.launcherIconColor || '#FFFFFF',
+          // Only use launcherBackgroundColor if it's explicitly set (not empty string)
+          launcherBackgroundColor: (data.launcherBackgroundColor && data.launcherBackgroundColor.trim()) ? data.launcherBackgroundColor : '',
+          launcherIconUrl: data.launcherIconUrl || '',
+          launcherLibraryIcon: data.launcherLibraryIcon || 'MessageSquare',
+          bottomSpacing: data.bottomSpacing !== undefined ? data.bottomSpacing : 20,
+          sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
+          launcherShadow: data.launcherShadow || 'medium',
+          launcherAnimation: data.launcherAnimation || 'none'
         };
+        console.log('Final settings object:', settings);
+        console.log('Launcher will use color:', settings.launcherBackgroundColor || settings.primaryColor);
       }
       initWidget();
     })

@@ -3,6 +3,8 @@ import { db } from "@/lib/firebase"; // Ensure this path is correct for server-s
 // Note: Client SDK in route handlers works but isn't ideal for high scale. For this prototype it's fine.
 import { doc, getDoc } from "firebase/firestore";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get("chatbotId");
@@ -31,6 +33,19 @@ export async function GET(req: Request) {
                 launcherWidth: data.launcherWidth || 60,
                 launcherIcon: data.launcherIcon || "message",
                 launcherIconUrl: data.launcherIconUrl || "",
+                launcherLibraryIcon: data.launcherLibraryIcon || "MessageSquare",
+                launcherIconColor: data.launcherIconColor || "#FFFFFF",
+                launcherBackgroundColor: data.launcherBackgroundColor || "",
+                bottomSpacing: data.bottomSpacing !== undefined ? data.bottomSpacing : 20,
+                sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
+                launcherShadow: data.launcherShadow || "medium",
+                launcherAnimation: data.launcherAnimation || "none",
+            }, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                }
             });
         } else {
             return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });

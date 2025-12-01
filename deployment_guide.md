@@ -1,34 +1,34 @@
-# Deployment Guide for Userex AI Assistant
+# Userex AI Assistant Dağıtım (Deployment) Rehberi
 
-This guide will help you deploy your application to **Vercel**, which is the recommended platform for Next.js applications.
+Bu rehber, Next.js uygulamaları için önerilen platform olan **Vercel** üzerinde uygulamanızı nasıl yayına alacağınızı anlatır.
 
-## Prerequisites
+## Gereksinimler
 
-- A [Vercel Account](https://vercel.com/signup)
-- A [GitHub Account](https://github.com/join) (Recommended)
+- Bir [Vercel Hesabı](https://vercel.com/signup)
+- Bir [GitHub Hesabı](https://github.com/join) (Önerilen)
 
-## Option 1: Deploy via GitHub (Recommended)
+## Seçenek 1: GitHub ile Dağıtım (Önerilen)
 
-1.  **Create a GitHub Repository:**
-    - Go to [GitHub.com](https://github.com/new) and create a new repository (e.g., `userex-ai-assistant`).
-    - Do not initialize with README, .gitignore, or License (since you already have code).
+1.  **GitHub Deposu (Repository) Oluşturun:**
+    - [GitHub.com](https://github.com/new) adresine gidin ve yeni bir depo oluşturun (örneğin: `userex-ai-assistant`).
+    - README, .gitignore veya Lisans ile başlatmayın (çünkü zaten kodunuz var).
 
-2.  **Push your code:**
-    Open your terminal in the project folder and run:
+2.  **Kodunuzu Yükleyin:**
+    Proje klasörünüzde terminali açın ve aşağıdaki komutları çalıştırın:
     ```bash
-    git remote add origin https://github.com/YOUR_USERNAME/userex-ai-assistant.git
+    git remote add origin https://github.com/yasincelenk/userex-ai.git
     git branch -M main
     git push -u origin main
     ```
-    *(Replace `YOUR_USERNAME` with your actual GitHub username)*
+    *(KULLANICI_ADINIZ kısmını kendi GitHub kullanıcı adınızla değiştirin)*
 
-3.  **Deploy on Vercel:**
-    - Go to your [Vercel Dashboard](https://vercel.com/dashboard).
-    - Click **"Add New..."** -> **"Project"**.
-    - Import the `userex-ai-assistant` repository you just created.
+3.  **Vercel Üzerinde Dağıtın:**
+    - [Vercel Paneline](https://vercel.com/dashboard) gidin.
+    - **"Add New..."** -> **"Project"** seçeneğine tıklayın.
+    - Az önce oluşturduğunuz `userex-ai-assistant` deposunu içe aktarın (Import).
 
-4.  **Configure Environment Variables:**
-    In the deployment configuration screen, find the **"Environment Variables"** section and add the following keys (copy values from your `.env.local` file):
+4.  **Ortam Değişkenlerini (Environment Variables) Ayarlayın:**
+    Dağıtım yapılandırma ekranında, **"Environment Variables"** bölümünü bulun ve aşağıdaki anahtarları ekleyin (değerleri `.env.local` dosyanızdan kopyalayın):
 
     - `OPENAI_API_KEY`
     - `PINECONE_API_KEY`
@@ -40,30 +40,30 @@ This guide will help you deploy your application to **Vercel**, which is the rec
     - `NEXT_PUBLIC_FIREBASE_APP_ID`
     - `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
 
-5.  **Click "Deploy"**.
+5.  **"Deploy" butonuna tıklayın.**
 
-## Option 2: Deploy via CLI (Quickest)
+## Seçenek 2: CLI ile Dağıtım (En Hızlı)
 
-If you have the Vercel CLI installed, you can deploy directly from your terminal:
+Eğer Vercel CLI yüklü ise, doğrudan terminalden dağıtım yapabilirsiniz:
 
-1.  Run the following command:
+1.  Aşağıdaki komutu çalıştırın:
     ```bash
     npx vercel
     ```
-2.  Follow the prompts:
+2.  Soruları yanıtlayın:
     - Set up and deploy? **Yes**
-    - Which scope? **(Select your account)**
+    - Which scope? **(Hesabınızı seçin)**
     - Link to existing project? **No**
-    - Project name? **userex-ai-assistant** (or press Enter)
-    - In which directory? **./** (press Enter)
+    - Project name? **userex-ai-assistant** (veya Enter'a basın)
+    - In which directory? **./** (Enter'a basın)
     - Want to modify settings? **No**
 
-3.  **Add Environment Variables:**
-    After the first deployment (which might fail due to missing keys), go to the Vercel dashboard for your new project, add the Environment Variables listed in Option 1, and then redeploy using:
+3.  **Ortam Değişkenlerini Ekleyin:**
+    İlk dağıtım (anahtarlar eksik olduğu için) muhtemelen başarısız olacaktır. Yeni projeniz için Vercel paneline gidin, Seçenek 1'de listelenen Ortam Değişkenlerini ekleyin ve ardından şu komutla tekrar dağıtın:
     ```bash
     npx vercel --prod
     ```
 
-## Verification
+## Doğrulama
 
-Once deployed, Vercel will provide a URL (e.g., `https://userex-ai-assistant.vercel.app`). Share this URL with your testers.
+Dağıtım tamamlandığında, Vercel size bir URL verecektir (örneğin: `https://userex-ai-assistant.vercel.app`). Bu URL'i test edecek kişilerle paylaşabilirsiniz.

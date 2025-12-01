@@ -77,6 +77,12 @@ export default function IntegrationPage({ userId }: IntegrationPageProps) {
                         >
                             {t('directLink')}
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="wordpress"
+                            className="rounded-none border-b-2 border-transparent px-0 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                        >
+                            {t('wordpress')}
+                        </TabsTrigger>
                     </TabsList>
                 </div>
 
@@ -180,6 +186,40 @@ export default function IntegrationPage({ userId }: IntegrationPageProps) {
                             <p className="text-sm text-muted-foreground ml-2">
                                 {t('shareLink')}
                             </p>
+                        </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="wordpress" className="space-y-6 m-0">
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-lg font-medium">{t('wordpress')}</h3>
+                            <p className="text-sm text-muted-foreground">
+                                {t('wordpressDescription')}
+                            </p>
+                        </div>
+
+                        <div className="bg-muted p-4 rounded-md relative group border">
+                            <pre className="text-xs font-mono whitespace-pre-wrap break-all pr-10 text-foreground">
+                                {scriptCode}
+                            </pre>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="absolute top-2 right-2 h-8 w-8 hover:bg-background"
+                                onClick={() => copyToClipboard(scriptCode, "wordpress")}
+                            >
+                                {copied === "wordpress" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                            </Button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium">{t('instructions')}:</h4>
+                            <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-1 ml-2">
+                                {(t('wordpressInstructions') || '').split('\n').map((instruction, index) => (
+                                    <li key={index}>{instruction.replace(/^\d+\.\s*/, '')}</li>
+                                ))}
+                            </ol>
                         </div>
                     </div>
                 </TabsContent>

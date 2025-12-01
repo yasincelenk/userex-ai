@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore"
+import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
     Table,
@@ -49,28 +49,50 @@ export function TenantManagement() {
     const [isCreating, setIsCreating] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
 
-    const fetchUsers = async () => {
-        try {
-            const usersSnapshot = await getDocs(collection(db, "users"))
-            const usersData = usersSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as UserData[]
-            setUsers(usersData)
-        } catch (error) {
-            console.error("Error fetching users:", error)
-            toast({
-                title: t('error'),
-                description: t('failedToLoadUsers'),
-                variant: "destructive",
-            })
-        } finally {
-            setIsLoading(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const setupListener = () => {
+        console.log("TenantManagement: Setting up onSnapshot listener")
+        setIsLoading(true)
+        setError(null)
+
+        const unsubscribe = onSnapshot(collection(db, "users"),
+            (snapshot) => {
+                console.log(`TenantManagement: Snapshot received with ${snapshot.docs.length} users`)
+                const usersData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as UserData[]
+                setUsers(usersData)
+                setIsLoading(false)
+            },
+            (err) => {
+                console.error("Error in onSnapshot:", err)
+                setError(t('failedToLoadUsers'))
+                setIsLoading(false)
+            }
+        )
+
+        // Safety timeout
+        const timeoutId = setTimeout(() => {
+            if (isLoading) {
+                console.log("TenantManagement: Safety timeout triggered")
+                setIsLoading(false)
+                setError("Loading timed out. Please check your connection.")
+                unsubscribe() // Stop listening if timed out
+            }
+        }, 15000)
+
+        return () => {
+            console.log("TenantManagement: Unsubscribing listener")
+            unsubscribe()
+            clearTimeout(timeoutId)
         }
     }
 
     useEffect(() => {
-        fetchUsers()
+        const cleanup = setupListener()
+        return cleanup
     }, [])
 
     const toggleStatus = async (userId: string, currentStatus: boolean) => {
@@ -128,7 +150,7 @@ export function TenantManagement() {
             setIsAddTenantOpen(false)
             setNewTenantEmail("")
             setNewTenantPassword("")
-            fetchUsers()
+            // fetchUsers() - No need to call this manually as onSnapshot will pick up the change
         } catch (error: any) {
             console.error("Error creating tenant:", error)
             toast({
@@ -182,6 +204,17 @@ export function TenantManagement() {
         return (
             <div className="flex justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 gap-4">
+                <p className="text-red-500 font-medium">{error}</p>
+                <Button onClick={() => window.location.reload()}>
+                    {t('retry') || "Retry"}
+                </Button>
             </div>
         )
     }
