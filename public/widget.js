@@ -43,8 +43,43 @@
     const isBottom = position.includes('bottom');
     const isMiddle = position.includes('middle'); // Vertical middle
 
+    // Adjust spacing for mobile
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      settings.bottomSpacing = Math.max(settings.bottomSpacing, 20); // Ensure at least 20px
+      settings.sideSpacing = Math.max(settings.sideSpacing, 20); // Ensure at least 20px
+    }
+
     const verticalSpacing = settings.bottomSpacing !== undefined ? settings.bottomSpacing : 20;
     const sideSpacing = settings.sideSpacing !== undefined ? settings.sideSpacing : 20;
+
+    // Mobile Styles Injection
+    const addMobileStyles = () => {
+      if (document.getElementById('userex-mobile-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'userex-mobile-styles';
+      style.innerHTML = `
+        @media (max-width: 768px) {
+          #userex-chatbot-container {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            border-radius: 0 !important;
+            transform: none !important;
+          }
+          #userex-chatbot-launcher {
+             max-width: calc(100vw - 40px) !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    };
+    addMobileStyles();
 
     // Horizontal Style
     let horizontalStyle = {};

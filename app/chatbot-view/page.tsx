@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
+import { doc, getDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff } from "lucide-react"
 import { useChat } from "ai/react"
@@ -180,7 +180,7 @@ function ChatbotViewContent() {
         }
     }
 
-    // Generate Session ID on mount and load history
+    // Generate Session ID on mount and load history with real-time listener
     useEffect(() => {
         let sid = localStorage.getItem("chat_session_id")
         if (!sid) {
@@ -189,29 +189,26 @@ function ChatbotViewContent() {
         }
         setSessionId(sid)
 
-        // Load history
-        const loadHistory = async () => {
-            if (!sid) return
-            try {
-                const docRef = doc(db, "chat_sessions", sid)
-                const docSnap = await getDoc(docRef)
-                if (docSnap.exists()) {
-                    const data = docSnap.data()
-                    if (data.messages && Array.isArray(data.messages)) {
-                        const history = data.messages.map((m: any, idx: number) => ({
-                            id: m.id || `${sid}-${idx}`,
-                            role: m.role,
-                            content: m.content,
-                            createdAt: m.createdAt ? new Date(m.createdAt) : new Date()
-                        }))
-                        setInitialMessages(history)
-                    }
+        // Real-time listener
+        const docRef = doc(db, "chat_sessions", sid)
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data()
+                if (data.messages && Array.isArray(data.messages)) {
+                    const history = data.messages.map((m: any, idx: number) => ({
+                        id: m.id || `${sid}-${idx}`,
+                        role: m.role,
+                        content: m.content,
+                        createdAt: m.createdAt ? new Date(m.createdAt) : new Date()
+                    }))
+                    setInitialMessages(history)
                 }
-            } catch (e) {
-                console.error("Error loading history:", e)
             }
-        }
-        loadHistory()
+        }, (error) => {
+            console.error("Error listening to chat history:", error)
+        })
+
+        return () => unsubscribe()
     }, [])
 
     const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading: isChatLoading, append } = useChat({
@@ -278,7 +275,9 @@ function ChatbotViewContent() {
     }, [messages])
 
     const [hasRequestedContactInfo, setHasRequestedContactInfo] = useState(false)
+    const [hasCapturedInChatLead, setHasCapturedInChatLead] = useState(false)
     const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
+    const contactRequestMsg = "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?"
 
     useEffect(() => {
         if (inactivityTimerRef.current) {
@@ -286,11 +285,52 @@ function ChatbotViewContent() {
         }
 
         const userMessageCount = messages.filter(m => m.role === 'user').length
-        const contactRequestMsg = "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?"
         const alreadyRequested = messages.some(m => m.content === contactRequestMsg)
 
         if (alreadyRequested) {
             if (!hasRequestedContactInfo) setHasRequestedContactInfo(true)
+
+            // Check for response to contact request
+            const lastMsg = messages[messages.length - 1]
+            const secondLastMsg = messages[messages.length - 2]
+
+            if (
+                messages.length >= 2 &&
+                lastMsg.role === 'user' &&
+                secondLastMsg.role === 'assistant' &&
+                secondLastMsg.content === contactRequestMsg &&
+                !hasCapturedInChatLead
+            ) {
+                // Parse lead info
+                const text = lastMsg.content
+                const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
+                const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/)
+
+                const email = emailMatch ? emailMatch[0] : ""
+                const phone = phoneMatch ? phoneMatch[0] : ""
+                // Use the whole text as name if no specific format, or try to strip email/phone?
+                // For simplicity, let's use the whole text as name if it's short, otherwise "In-Chat User"
+                const name = text.length < 50 ? text : "In-Chat User"
+
+                // Send to API
+                fetch("/api/leads", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chatbotId,
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        source: "In-Chat Conversation"
+                    })
+                }).then(res => {
+                    if (res.ok) {
+                        console.log("In-chat lead captured")
+                        setHasCapturedInChatLead(true)
+                    }
+                }).catch(err => console.error("Error capturing in-chat lead:", err))
+            }
+
             return
         }
 
@@ -324,7 +364,7 @@ function ChatbotViewContent() {
                 clearTimeout(inactivityTimerRef.current)
             }
         }
-    }, [messages, input, hasRequestedContactInfo, setMessages, isChatLoading, sessionId])
+    }, [messages, input, hasRequestedContactInfo, setMessages, isChatLoading, sessionId, hasCapturedInChatLead, chatbotId])
 
     const [isConfirmingClear, setIsConfirmingClear] = useState(false)
 
@@ -361,7 +401,8 @@ function ChatbotViewContent() {
         welcomeMessage: "Hello! How can I help you today?",
         brandColor: "#000000",
         brandLogo: "",
-        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"]
+        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
+        enableLeadCollection: false
     })
     const [isLoading, setIsLoading] = useState(true)
 
@@ -377,7 +418,8 @@ function ChatbotViewContent() {
                         welcomeMessage: data.welcomeMessage || "Hello! How can I help you today?",
                         brandColor: data.brandColor || "#000000",
                         brandLogo: data.brandLogo || "",
-                        suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"]
+                        suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"],
+                        enableLeadCollection: data.enableLeadCollection || false
                     })
                 }
             } catch (error) {
@@ -389,12 +431,125 @@ function ChatbotViewContent() {
         loadSettings()
     }, [chatbotId])
 
+    const [showLeadForm, setShowLeadForm] = useState(false)
+    const [leadName, setLeadName] = useState("")
+    const [leadEmail, setLeadEmail] = useState("")
+    const [leadPhone, setLeadPhone] = useState("")
+    const [isSubmittingLead, setIsSubmittingLead] = useState(false)
+
+    useEffect(() => {
+        if (!isLoading && settings.enableLeadCollection) {
+            const storedLead = localStorage.getItem(`lead_${chatbotId}`)
+            if (!storedLead) {
+                setShowLeadForm(true)
+            }
+        }
+    }, [isLoading, settings.enableLeadCollection, chatbotId])
+
+    const handleLeadSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsSubmittingLead(true)
+
+        try {
+            const res = await fetch("/api/leads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chatbotId,
+                    name: leadName,
+                    email: leadEmail,
+                    phone: leadPhone
+                })
+            })
+
+            if (res.ok) {
+                localStorage.setItem(`lead_${chatbotId}`, JSON.stringify({ name: leadName, email: leadEmail, phone: leadPhone }))
+                setShowLeadForm(false)
+            }
+        } catch (error) {
+            console.error("Error submitting lead:", error)
+        } finally {
+            setIsSubmittingLead(false)
+        }
+    }
+
     if (isLoading) {
         return <div className="flex items-center justify-center h-screen bg-gray-50">Loading...</div>
     }
 
     return (
         <div className="flex flex-col h-screen bg-white font-sans text-gray-900 relative overflow-hidden">
+            {/* Lead Collection Overlay */}
+            {showLeadForm && (
+                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="w-full max-w-sm space-y-6">
+                        <div className="text-center space-y-2">
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto overflow-hidden"
+                                style={{ backgroundColor: settings.brandColor }}
+                            >
+                                {settings.brandLogo ? (
+                                    <img src={settings.brandLogo} alt="Logo" className="w-full h-full object-cover" />
+                                ) : (
+                                    <MessageSquare className="w-8 h-8 text-white" />
+                                )}
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800">Welcome</h2>
+                            <p className="text-sm text-gray-500">Please provide your details to start chatting.</p>
+                        </div>
+
+                        <form onSubmit={handleLeadSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <label htmlFor="name" className="text-sm font-medium text-gray-700">Name</label>
+                                <input
+                                    id="name"
+                                    required
+                                    type="text"
+                                    value={leadName}
+                                    onChange={(e) => setLeadName(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+                                    style={{ '--tw-ring-color': settings.brandColor } as any}
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                                <input
+                                    id="email"
+                                    required
+                                    type="email"
+                                    value={leadEmail}
+                                    onChange={(e) => setLeadEmail(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+                                    style={{ '--tw-ring-color': settings.brandColor } as any}
+                                    placeholder="john@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone (Optional)</label>
+                                <input
+                                    id="phone"
+                                    type="tel"
+                                    value={leadPhone}
+                                    onChange={(e) => setLeadPhone(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+                                    style={{ '--tw-ring-color': settings.brandColor } as any}
+                                    placeholder="+1 234 567 890"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={isSubmittingLead}
+                                className="w-full py-3 rounded-lg text-white font-medium shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                                style={{ backgroundColor: settings.brandColor }}
+                            >
+                                {isSubmittingLead ? "Starting..." : "Start Chatting"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Voice Mode Overlay */}
             {isVoiceMode && (
                 <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -524,7 +679,7 @@ function ChatbotViewContent() {
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-6 p-8 animate-in fade-in duration-700 slide-in-from-bottom-4 fill-mode-forwards">
                         <div
                             className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg mb-2 overflow-hidden"
-                            style={{ backgroundColor: settings.brandLogo ? 'transparent' : settings.brandColor }}
+                            style={{ backgroundColor: settings.brandColor }}
                         >
                             {settings.brandLogo ? (
                                 <img src={settings.brandLogo} alt="Logo" className="w-full h-full object-cover" />

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AdminActivityFeed } from "@/components/admin-activity-feed"
 import { AdminAnnouncementSettings } from "@/components/admin-announcement-settings"
 import { useLanguage } from "@/context/LanguageContext"
+import { useAuth } from "@/context/AuthContext"
 
 interface UserData {
     id: string
@@ -83,6 +84,10 @@ export function SuperAdminDashboard() {
         )
     }
 
+    const { user } = useAuth()
+
+    // ...
+
     return (
         <div className="space-y-8">
             {/* Header & Stats */}
@@ -92,7 +97,7 @@ export function SuperAdminDashboard() {
                         <h2 className="text-3xl font-bold tracking-tight">{t('superAdminDashboard')}</h2>
                         <p className="text-muted-foreground">{t('systemPerformanceOverview')}</p>
                     </div>
-                    <Button variant="outline" onClick={() => window.open('/widget-test?id=test-bot', '_blank')}>
+                    <Button variant="outline" onClick={() => window.open(`/widget-test?id=${user?.uid}`, '_blank')}>
                         <MessageSquare className="mr-2 h-4 w-4" />
                         {t('testWidget')}
                     </Button>

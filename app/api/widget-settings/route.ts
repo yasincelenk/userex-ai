@@ -48,7 +48,34 @@ export async function GET(req: Request) {
                 }
             });
         } else {
-            return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+            // Return default settings if not found
+            return NextResponse.json({
+                companyName: "Acme Corp",
+                brandColor: "#000000",
+                position: "bottom-right",
+                viewMode: "classic",
+                modalSize: "half",
+                launcherStyle: "circle",
+                launcherText: "Chat",
+                launcherRadius: 50,
+                launcherHeight: 60,
+                launcherWidth: 60,
+                launcherIcon: "message",
+                launcherIconUrl: "",
+                launcherLibraryIcon: "MessageSquare",
+                launcherIconColor: "#FFFFFF",
+                launcherBackgroundColor: "",
+                bottomSpacing: 20,
+                sideSpacing: 20,
+                launcherShadow: "medium",
+                launcherAnimation: "none",
+            }, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                }
+            });
         }
     } catch (error) {
         console.error("Error fetching settings:", error);

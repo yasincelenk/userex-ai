@@ -12,6 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
+import { Switch } from "@/components/ui/switch"
 
 interface BrandingSettingsProps {
     targetUserId?: string
@@ -28,7 +29,8 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
         welcomeMessage: "Hello! How can I help you today?",
         brandColor: "#000000",
         brandLogo: "",
-        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"]
+        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
+        enableLeadCollection: false
     })
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
@@ -57,7 +59,8 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         welcomeMessage: data.welcomeMessage || "Hello! How can I help you today?",
                         brandColor: data.brandColor || "#000000",
                         brandLogo: data.brandLogo || "",
-                        suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"]
+                        suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"],
+                        enableLeadCollection: data.enableLeadCollection || false
                     }
                     setSettings(loadedSettings)
                     setInitialSettings(loadedSettings)
@@ -67,7 +70,8 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         welcomeMessage: "Hello! How can I help you today?",
                         brandColor: "#000000",
                         brandLogo: "",
-                        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"]
+                        suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
+                        enableLeadCollection: false
                     }
                     setSettings(defaultSettings)
                     setInitialSettings(defaultSettings)
@@ -221,6 +225,19 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                                     value={settings.welcomeMessage}
                                     onChange={(e) => setSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
                                     className="resize-none min-h-[100px]"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between border p-4 rounded-lg bg-muted/50">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Lead Collection Form</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Collect visitor details (Name, Email, Phone) before starting a chat.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.enableLeadCollection}
+                                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableLeadCollection: checked }))}
                                 />
                             </div>
                         </div>

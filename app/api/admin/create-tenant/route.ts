@@ -18,7 +18,7 @@ const firebaseConfig = {
 export async function POST(req: Request) {
     let secondaryApp;
     try {
-        const { email, password } = await req.json();
+        const { email, password, firstName, lastName, companyName, companyWebsite } = await req.json();
 
         if (!email || !password) {
             console.log("Create Tenant API: Missing email or password");
@@ -46,6 +46,10 @@ export async function POST(req: Request) {
         // Create user document in Firestore
         await setDoc(doc(secondaryDb, "users", user.uid), {
             email: user.email,
+            firstName: firstName || "",
+            lastName: lastName || "",
+            companyName: companyName || "",
+            companyWebsite: companyWebsite || "",
             role: "TENANT_ADMIN",
             createdAt: new Date().toISOString(),
             isActive: true
@@ -60,6 +64,13 @@ export async function POST(req: Request) {
         console.error("Error creating tenant:", error);
         console.error("Error code:", error.code);
         console.error("Error message:", error.message);
+
+        if (error.code === 'auth/email-already-in-use') {
+            return NextResponse.json({
+                error: "Bu e-posta adresi zaten kullanımda. (Not: Daha önce silinen kullanıcıların kayıtları Auth sisteminde kalmış olabilir. Lütfen farklı bir e-posta adresi kullanın.)"
+            }, { status: 409 });
+        }
+
         return NextResponse.json({ error: error.message || "Failed to create tenant" }, { status: 500 });
     } finally {
         // Cleanup secondary app

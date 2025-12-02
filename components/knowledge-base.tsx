@@ -111,16 +111,25 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                 docId = docRef.id
                 payload = { chatbotId: userId, docId, type: "text", text: content }
             } else if (activeTab === "url") {
-                // For URL, we first call the API to scrape, THEN save to Firestore if successful
-                // Or we can save a placeholder first. Let's call API first to get the title/content.
-                // Actually, let's create a doc first to get an ID, then update it? 
-                // Better: Send to API, API scrapes, returns title/content, THEN we save to Firestore?
-                // No, the previous pattern was Firestore -> API.
-                // Let's stick to that but for URL we might not have title/content yet.
-                // Let's send URL to API, API scrapes and saves to Pinecone, and returns the scraped title/content.
-                // Then we save to Firestore.
-
-                payload = { chatbotId: userId, type: "url", url }
+                // If we have content (fetched via preview), treat it as text but with URL source
+                if (content) {
+                    // 1. Save to Firestore (Metadata)
+                    const docRef = await addDoc(collection(db, "knowledge_docs"), {
+                        chatbotId: userId,
+                        title: title || url,
+                        type: "url",
+                        source: url,
+                        content: content.substring(0, 200) + "...",
+                        fullContent: content,
+                        createdAt: serverTimestamp()
+                    })
+                    docId = docRef.id
+                    // Send as text to API to avoid re-scraping
+                    payload = { chatbotId: userId, docId, type: "text", text: content, url, fileName: url }
+                } else {
+                    // Fallback to old behavior (API scrapes)
+                    payload = { chatbotId: userId, type: "url", url }
+                }
             } else if (activeTab === "file" && file) {
                 // Validation: Check file size (10MB limit)
                 if (file.size > 10 * 1024 * 1024) {
@@ -181,13 +190,13 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
 
             const result = await response.json()
 
-            // Save Metadata to Firestore for URL and File
-            if (activeTab === "url" || activeTab === "file") {
+            // Save Metadata to Firestore for File (URL handled above)
+            if (activeTab === "file") {
                 await addDoc(collection(db, "knowledge_docs"), {
                     chatbotId: userId,
-                    title: result.title || (activeTab === "url" ? url : file?.name),
-                    type: activeTab,
-                    source: activeTab === "url" ? url : file?.name,
+                    title: result.title || file?.name,
+                    type: "file",
+                    source: file?.name,
                     content: result.preview || "Parsed Content",
                     createdAt: serverTimestamp()
                 })
@@ -419,16 +428,63 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                                 <TabsContent value="url" className="space-y-4 mt-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="url">{t('websiteUrl')}</Label>
-                                        <Input
-                                            id="url"
-                                            placeholder="https://example.com/about"
-                                            value={url}
-                                            onChange={(e) => setUrl(e.target.value)}
-                                        />
+                                        <div className="flex gap-2">
+                                            <Input
+                                                id="url"
+                                                placeholder="https://example.com/about"
+                                                value={url}
+                                                onChange={(e) => setUrl(e.target.value)}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                onClick={async () => {
+                                                    if (!url) return;
+                                                    setIsAdding(true);
+                                                    try {
+                                                        const res = await fetch('/api/crawl', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ url })
+                                                        });
+                                                        if (!res.ok) throw new Error('Failed to crawl');
+                                                        const data = await res.json();
+                                                        setTitle(data.title);
+                                                        setContent(data.content);
+                                                        toast({ title: "Success", description: "Content fetched successfully. Review and add." });
+                                                    } catch (e) {
+                                                        toast({ title: "Error", description: "Failed to fetch URL", variant: "destructive" });
+                                                    } finally {
+                                                        setIsAdding(false);
+                                                    }
+                                                }}
+                                                disabled={isAdding || !url}
+                                            >
+                                                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fetch"}
+                                            </Button>
+                                        </div>
                                         <p className="text-xs text-muted-foreground">
                                             {t('scrapeDescription')}
                                         </p>
                                     </div>
+                                    {content && activeTab === 'url' && (
+                                        <div className="space-y-2 border p-4 rounded-md bg-muted/50">
+                                            <div className="space-y-1">
+                                                <Label>Preview Title</Label>
+                                                <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label>Preview Content</Label>
+                                                <Textarea
+                                                    value={content}
+                                                    onChange={(e) => setContent(e.target.value)}
+                                                    className="h-40"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Review the content above. Click "Add to Knowledge Base" to save.
+                                            </p>
+                                        </div>
+                                    )}
                                 </TabsContent>
 
                                 {/* FILE INPUT */}

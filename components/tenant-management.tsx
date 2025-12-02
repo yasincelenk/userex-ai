@@ -46,15 +46,22 @@ export function TenantManagement() {
     const [isAddTenantOpen, setIsAddTenantOpen] = useState(false)
     const [newTenantEmail, setNewTenantEmail] = useState("")
     const [newTenantPassword, setNewTenantPassword] = useState("")
+    const [newTenantFirstName, setNewTenantFirstName] = useState("")
+    const [newTenantLastName, setNewTenantLastName] = useState("")
+    const [newTenantCompanyName, setNewTenantCompanyName] = useState("")
+    const [newTenantWebsite, setNewTenantWebsite] = useState("")
     const [isCreating, setIsCreating] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
 
     const [error, setError] = useState<string | null>(null)
+    const [createError, setCreateError] = useState<string | null>(null)
 
     const setupListener = () => {
         console.log("TenantManagement: Setting up onSnapshot listener")
         setIsLoading(true)
         setError(null)
+
+        let timeoutId: NodeJS.Timeout
 
         const unsubscribe = onSnapshot(collection(db, "users"),
             (snapshot) => {
@@ -65,28 +72,28 @@ export function TenantManagement() {
                 })) as UserData[]
                 setUsers(usersData)
                 setIsLoading(false)
+                if (timeoutId) clearTimeout(timeoutId)
             },
             (err) => {
                 console.error("Error in onSnapshot:", err)
                 setError(t('failedToLoadUsers'))
                 setIsLoading(false)
+                if (timeoutId) clearTimeout(timeoutId)
             }
         )
 
         // Safety timeout
-        const timeoutId = setTimeout(() => {
-            if (isLoading) {
-                console.log("TenantManagement: Safety timeout triggered")
-                setIsLoading(false)
-                setError("Loading timed out. Please check your connection.")
-                unsubscribe() // Stop listening if timed out
-            }
+        timeoutId = setTimeout(() => {
+            console.log("TenantManagement: Safety timeout triggered")
+            setIsLoading(false)
+            setError("Loading timed out. Please check your connection.")
+            unsubscribe() // Stop listening if timed out
         }, 15000)
 
         return () => {
             console.log("TenantManagement: Unsubscribing listener")
             unsubscribe()
-            clearTimeout(timeoutId)
+            if (timeoutId) clearTimeout(timeoutId)
         }
     }
 
@@ -121,10 +128,13 @@ export function TenantManagement() {
     }
 
     const handleCreateTenant = async () => {
-        if (!newTenantEmail || !newTenantPassword) {
+        setCreateError(null)
+        if (!newTenantEmail || !newTenantPassword || !newTenantFirstName || !newTenantLastName || !newTenantCompanyName) {
+            const msg = "Please fill in all required fields"
+            setCreateError(msg)
             toast({
                 title: t('error'),
-                description: t('enterEmailPassword'),
+                description: msg,
                 variant: "destructive",
             })
             return
@@ -135,7 +145,14 @@ export function TenantManagement() {
             const response = await fetch("/api/admin/create-tenant", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: newTenantEmail, password: newTenantPassword })
+                body: JSON.stringify({
+                    email: newTenantEmail,
+                    password: newTenantPassword,
+                    firstName: newTenantFirstName,
+                    lastName: newTenantLastName,
+                    companyName: newTenantCompanyName,
+                    companyWebsite: newTenantWebsite
+                })
             })
 
             if (!response.ok) {
@@ -150,9 +167,15 @@ export function TenantManagement() {
             setIsAddTenantOpen(false)
             setNewTenantEmail("")
             setNewTenantPassword("")
+            setNewTenantFirstName("")
+            setNewTenantLastName("")
+            setNewTenantCompanyName("")
+            setNewTenantWebsite("")
+            setCreateError(null)
             // fetchUsers() - No need to call this manually as onSnapshot will pick up the change
         } catch (error: any) {
             console.error("Error creating tenant:", error)
+            setCreateError(error.message)
             toast({
                 title: t('error'),
                 description: error.message,
@@ -333,18 +356,77 @@ export function TenantManagement() {
                             {t('addNewTenantDescription')}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">{t('email')}</Label>
-                            <Input id="email" type="email" value={newTenantEmail} onChange={(e) => setNewTenantEmail(e.target.value)} placeholder="tenant@example.com" />
+
+                    {createError && (
+                        <div className="bg-red-500/15 border border-red-500/50 rounded-md p-3 text-sm text-red-600 dark:text-red-400 flex items-center gap-2 mt-4">
+                            <div className="w-1 h-1 rounded-full bg-red-500" />
+                            {createError}
                         </div>
-                        <div className="space-y-2">
+                    )}
+
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="firstName">First Name</Label>
+                                <Input
+                                    id="firstName"
+                                    value={newTenantFirstName}
+                                    onChange={(e) => setNewTenantFirstName(e.target.value)}
+                                    placeholder="John"
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="lastName">Last Name</Label>
+                                <Input
+                                    id="lastName"
+                                    value={newTenantLastName}
+                                    onChange={(e) => setNewTenantLastName(e.target.value)}
+                                    placeholder="Doe"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="companyName">Company Name</Label>
+                            <Input
+                                id="companyName"
+                                value={newTenantCompanyName}
+                                onChange={(e) => setNewTenantCompanyName(e.target.value)}
+                                placeholder="Acme Inc."
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="website">Website</Label>
+                            <Input
+                                id="website"
+                                value={newTenantWebsite}
+                                onChange={(e) => setNewTenantWebsite(e.target.value)}
+                                placeholder="https://example.com"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">{t('email')}</Label>
+                            <Input
+                                id="email"
+                                value={newTenantEmail}
+                                onChange={(e) => setNewTenantEmail(e.target.value)}
+                                placeholder="tenant@example.com"
+                            />
+                        </div>
+                        <div className="grid gap-2">
                             <Label htmlFor="password">{t('password')}</Label>
-                            <Input id="password" type="password" value={newTenantPassword} onChange={(e) => setNewTenantPassword(e.target.value)} placeholder="******" />
+                            <Input
+                                id="password"
+                                type="password"
+                                value={newTenantPassword}
+                                onChange={(e) => setNewTenantPassword(e.target.value)}
+                                placeholder="******"
+                            />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAddTenantOpen(false)}>{t('cancel')}</Button>
+                        <Button variant="outline" onClick={() => setIsAddTenantOpen(false)}>
+                            {t('cancel')}
+                        </Button>
                         <Button onClick={handleCreateTenant} disabled={isCreating}>
                             {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {t('createTenant')}
