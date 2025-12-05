@@ -24,6 +24,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useLanguage } from "@/context/LanguageContext"
 import { ProductLauncher } from "@/components/product-launcher"
+import Image from "next/image"
 
 export function SiteHeader() {
     const { user } = useAuth()
@@ -59,10 +60,13 @@ export function SiteHeader() {
                 <ProductLauncher />
                 <SidebarTrigger />
                 <div className="flex items-center gap-2 ml-2">
-                    <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
-                        <span className="text-primary-foreground font-bold text-xs">UA</span>
-                    </div>
-                    <span className="font-semibold text-lg">Userex Ai</span>
+                    <Image
+                        src="/logo-dark.png"
+                        alt="Userex AI"
+                        width={120}
+                        height={32}
+                        className="h-8 w-auto object-contain"
+                    />
                 </div>
                 <div className="ml-4 h-6 w-px bg-border" />
                 <Breadcrumbs />
