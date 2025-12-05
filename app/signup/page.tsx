@@ -10,7 +10,8 @@ import { auth, db } from "@/lib/firebase"
 import { doc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, CheckCircle2 } from "lucide-react"
+import { Loader2, Command, CheckCircle2, Bot, ShoppingBag, PenTool, Search } from "lucide-react"
+import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
 
@@ -110,15 +111,60 @@ export default function SignUpForm() {
                     <div className="absolute inset-0 bg-black" />
                     <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                         <div className="flex items-center text-lg font-medium">
-                            <Command className="mr-2 h-6 w-6" />
-                            Userex AI Assistant
+                            <Image
+                                src="/logo.png"
+                                alt="Userex AI"
+                                width={150}
+                                height={40}
+                                className="h-10 w-auto object-contain"
+                            />
                         </div>
-                        <div className="space-y-2">
-                            <blockquote className="space-y-2">
-                                <p className="text-lg">
-                                    &ldquo;Join thousands of businesses using Userex AI to improve their customer support.&rdquo;
-                                </p>
-                            </blockquote>
+                        <div className="space-y-8 max-w-md">
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-bold tracking-tight">Transform Your Business with AI</h2>
+                                <p className="text-gray-400">One platform, four powerful agents working together.</p>
+                            </div>
+                            <div className="grid gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500/10 border border-lime-500/20">
+                                        <Bot className="h-6 w-6 text-lime-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">AI Customer Support</h3>
+                                        <p className="text-sm text-gray-400">24/7 intelligent support that resolves 80% of queries instantly.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                        <ShoppingBag className="h-6 w-6 text-purple-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">Personal Shopper</h3>
+                                        <p className="text-sm text-gray-400">Smart product recommendations that boost conversion.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20">
+                                        <PenTool className="h-6 w-6 text-pink-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">AI Copywriter</h3>
+                                        <p className="text-sm text-gray-400">Generate high-converting content in seconds.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 border border-green-500/20">
+                                        <Search className="h-6 w-6 text-green-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">Lead Finder</h3>
+                                        <p className="text-sm text-gray-400">Automated prospecting to find your perfect customers.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            © 2024 Userex AI. All rights reserved.
                         </div>
                     </div>
                 </div>
@@ -153,16 +199,60 @@ export default function SignUpForm() {
                 <div className="absolute inset-0 bg-black" />
                 <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                     <div className="flex items-center text-lg font-medium">
-                        <Command className="mr-2 h-6 w-6" />
-                        Userex AI Assistant
+                        <Image
+                            src="/logo.png"
+                            alt="Userex AI"
+                            width={150}
+                            height={40}
+                            className="h-10 w-auto object-contain"
+                        />
                     </div>
-                    <div className="space-y-2">
-                        <blockquote className="space-y-2">
-                            <p className="text-lg">
-                                &ldquo;The best way to predict the future is to create it.&rdquo;
-                            </p>
-                            <footer className="text-sm">Peter Drucker</footer>
-                        </blockquote>
+                    <div className="space-y-8 max-w-md">
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-bold tracking-tight">Transform Your Business with AI</h2>
+                            <p className="text-gray-400">One platform, four powerful agents working together.</p>
+                        </div>
+                        <div className="grid gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500/10 border border-lime-500/20">
+                                    <Bot className="h-6 w-6 text-lime-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">AI Customer Support</h3>
+                                    <p className="text-sm text-gray-400">24/7 intelligent support that resolves 80% of queries instantly.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                    <ShoppingBag className="h-6 w-6 text-purple-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">Personal Shopper</h3>
+                                    <p className="text-sm text-gray-400">Smart product recommendations that boost conversion.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20">
+                                    <PenTool className="h-6 w-6 text-pink-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">AI Copywriter</h3>
+                                    <p className="text-sm text-gray-400">Generate high-converting content in seconds.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 border border-green-500/20">
+                                    <Search className="h-6 w-6 text-green-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">Lead Finder</h3>
+                                    <p className="text-sm text-gray-400">Automated prospecting to find your perfect customers.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-sm text-gray-400">
+                        © 2024 Userex AI. All rights reserved.
                     </div>
                 </div>
             </div>
