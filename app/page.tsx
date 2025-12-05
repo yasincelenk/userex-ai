@@ -22,7 +22,7 @@ import Script from "next/script"
 
 export default function LandingPage() {
     return (
-        <div className="dark min-h-screen bg-black text-white selection:bg-blue-500/20 font-sans">
+        <div className="dark min-h-screen bg-black text-white selection:bg-lime-500/20 font-sans">
             {/* Navbar */}
             <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl supports-[backdrop-filter]:bg-black/20">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -58,15 +58,15 @@ export default function LandingPage() {
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
                 {/* Background Effects */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black pointer-events-none" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-lime-900/20 via-black to-black pointer-events-none" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-lime-500/10 blur-[100px] rounded-full pointer-events-none" />
 
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto text-center space-y-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-blue-400 animate-fade-in backdrop-blur-sm">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-lime-400 animate-fade-in backdrop-blur-sm">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
                             </span>
                             The All-in-One AI Platform
                         </div>
@@ -79,7 +79,7 @@ export default function LandingPage() {
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                             <Link href="/signup">
-                                <Button className="h-12 px-8 text-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 w-full sm:w-auto transition-all hover:scale-105">
+                                <Button className="h-12 px-8 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 w-full sm:w-auto transition-all hover:scale-105">
                                     Start for free
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
@@ -108,17 +108,17 @@ export default function LandingPage() {
                                 <MessageSquare className="w-32 h-32" />
                             </div>
                             <div className="relative z-10 space-y-4">
-                                <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                                    <Bot className="w-6 h-6 text-blue-400" />
+                                <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
+                                    <Bot className="w-6 h-6 text-lime-400" />
                                 </div>
                                 <h3 className="text-2xl font-bold">AI Customer Support</h3>
                                 <p className="text-muted-foreground">
                                     24/7 intelligent support that resolves 80% of queries instantly. Learns from your documents and website to provide accurate answers.
                                 </p>
                                 <ul className="space-y-2 text-sm text-gray-400">
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-blue-500" /> Multilingual Support</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-blue-500" /> Lead Collection</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-blue-500" /> Seamless Handoff</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Multilingual Support</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Lead Collection</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Seamless Handoff</li>
                                 </ul>
                             </div>
                         </div>
@@ -243,7 +243,7 @@ export default function LandingPage() {
 
             {/* CTA Section */}
             <section className="py-24 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-black pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-lime-900/20 to-black pointer-events-none" />
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto text-center bg-white/5 border border-white/10 rounded-3xl p-12 backdrop-blur-sm shadow-2xl">
                         <h2 className="text-3xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
