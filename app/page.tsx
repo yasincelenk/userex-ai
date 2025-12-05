@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
     ArrowRight,
@@ -26,10 +27,13 @@ export default function LandingPage() {
             <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl supports-[backdrop-filter]:bg-black/20">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <Bot className="w-5 h-5 text-white" />
-                        </div>
-                        <span>Userex AI</span>
+                        <Image
+                            src="/logo.png"
+                            alt="Userex AI"
+                            width={150}
+                            height={40}
+                            className="h-10 w-auto object-contain"
+                        />
                     </div>
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
                         <Link href="#products" className="hover:text-white transition-colors">Products</Link>
@@ -262,10 +266,13 @@ export default function LandingPage() {
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2 font-bold text-xl">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                                <Bot className="w-5 h-5 text-white" />
-                            </div>
-                            <span>Userex AI</span>
+                            <Image
+                                src="/logo.png"
+                                alt="Userex AI"
+                                width={150}
+                                height={40}
+                                className="h-8 w-auto object-contain"
+                            />
                         </div>
                         <div className="text-sm text-muted-foreground">
                             © 2024 Userex AI. All rights reserved.
