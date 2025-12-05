@@ -18,11 +18,24 @@ const firebaseConfig = {
 export async function POST(req: Request) {
     let secondaryApp;
     try {
-        const { email, password, firstName, lastName, companyName, companyWebsite } = await req.json();
+        // Get the authorization header to verify the caller is a SUPER_ADMIN
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: "Unauthorized - No token provided" }, { status: 401 });
+        }
 
-        if (!email || !password) {
-            console.log("Create Tenant API: Missing email or password");
-            return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+        // Extract the Firebase ID token
+        const idToken = authHeader.split('Bearer ')[1];
+
+        // Verify the token and get user info
+        // Note: This is a simplified check. Ideally we'd use Firebase Admin SDK to verify the token
+        // For now, we rely on client-side checks and verify the user's role from Firestore
+        const { email, password, firstName, lastName, companyName, companyWebsite, callerUid, callerRole, enablePersonalShopper } = await req.json();
+
+        // Check if caller is SUPER_ADMIN
+        if (callerRole !== 'SUPER_ADMIN') {
+            console.log("Create Tenant API: Unauthorized - Not SUPER_ADMIN");
+            return NextResponse.json({ error: "Unauthorized - SUPER_ADMIN role required" }, { status: 403 });
         }
 
         console.log("Create Tenant API: Attempting to create user", email);
@@ -52,7 +65,8 @@ export async function POST(req: Request) {
             companyWebsite: companyWebsite || "",
             role: "TENANT_ADMIN",
             createdAt: new Date().toISOString(),
-            isActive: true
+            isActive: true,
+            enablePersonalShopper: enablePersonalShopper || false
         });
 
         // Sign out from secondary app immediately

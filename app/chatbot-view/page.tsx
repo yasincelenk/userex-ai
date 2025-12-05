@@ -19,7 +19,7 @@ declare global {
 
 function ChatbotViewContent() {
     const searchParams = useSearchParams()
-    const chatbotId = searchParams.get("id") || "default"
+    const chatbotId = searchParams?.get("id") || "default"
     const [sessionId, setSessionId] = useState("")
 
     const [initialMessages, setInitialMessages] = useState<any[]>([])
@@ -277,94 +277,7 @@ function ChatbotViewContent() {
     const [hasRequestedContactInfo, setHasRequestedContactInfo] = useState(false)
     const [hasCapturedInChatLead, setHasCapturedInChatLead] = useState(false)
     const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
-    const contactRequestMsg = "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?"
 
-    useEffect(() => {
-        if (inactivityTimerRef.current) {
-            clearTimeout(inactivityTimerRef.current)
-        }
-
-        const userMessageCount = messages.filter(m => m.role === 'user').length
-        const alreadyRequested = messages.some(m => m.content === contactRequestMsg)
-
-        if (alreadyRequested) {
-            if (!hasRequestedContactInfo) setHasRequestedContactInfo(true)
-
-            // Check for response to contact request
-            const lastMsg = messages[messages.length - 1]
-            const secondLastMsg = messages[messages.length - 2]
-
-            if (
-                messages.length >= 2 &&
-                lastMsg.role === 'user' &&
-                secondLastMsg.role === 'assistant' &&
-                secondLastMsg.content === contactRequestMsg &&
-                !hasCapturedInChatLead
-            ) {
-                // Parse lead info
-                const text = lastMsg.content
-                const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
-                const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/)
-
-                const email = emailMatch ? emailMatch[0] : ""
-                const phone = phoneMatch ? phoneMatch[0] : ""
-                // Use the whole text as name if no specific format, or try to strip email/phone?
-                // For simplicity, let's use the whole text as name if it's short, otherwise "In-Chat User"
-                const name = text.length < 50 ? text : "In-Chat User"
-
-                // Send to API
-                fetch("/api/leads", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        chatbotId,
-                        name: name,
-                        email: email,
-                        phone: phone,
-                        source: "In-Chat Conversation"
-                    })
-                }).then(res => {
-                    if (res.ok) {
-                        console.log("In-chat lead captured")
-                        setHasCapturedInChatLead(true)
-                    }
-                }).catch(err => console.error("Error capturing in-chat lead:", err))
-            }
-
-            return
-        }
-
-        if (userMessageCount >= 2 && !hasRequestedContactInfo && !isChatLoading) {
-            inactivityTimerRef.current = setTimeout(() => {
-                const contactMsg = {
-                    id: 'contact-request-' + Date.now(),
-                    role: 'assistant',
-                    content: contactRequestMsg,
-                    createdAt: new Date()
-                }
-                setMessages([...messages, contactMsg as any])
-                setHasRequestedContactInfo(true)
-
-                if (sessionId) {
-                    const sessionRef = doc(db, "chat_sessions", sessionId)
-                    updateDoc(sessionRef, {
-                        messages: arrayUnion({
-                            id: contactMsg.id,
-                            role: contactMsg.role,
-                            content: contactMsg.content,
-                            createdAt: contactMsg.createdAt.toISOString()
-                        })
-                    }).catch(e => console.error("Error saving contact request:", e))
-                }
-            }, 30000)
-        }
-
-        return () => {
-            if (inactivityTimerRef.current) {
-                clearTimeout(inactivityTimerRef.current)
-            }
-        }
-    }, [messages, input, hasRequestedContactInfo, setMessages, isChatLoading, sessionId, hasCapturedInChatLead, chatbotId])
 
     const [isConfirmingClear, setIsConfirmingClear] = useState(false)
 
@@ -430,6 +343,121 @@ function ChatbotViewContent() {
         }
         loadSettings()
     }, [chatbotId])
+
+    const contactMessages = {
+        tr: "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?",
+        en: "Could you please share your Name, Surname, Company, and Contact Information so our customer representatives can contact you?",
+        de: "Könnten Sie bitte Ihren Namen, Nachnamen, Ihre Firma und Ihre Kontaktinformationen mitteilen, damit unsere Kundenbetreuer Sie kontaktieren können?",
+        es: "¿Podría compartir su Nombre, Apellido, Empresa e Información de contacto para que nuestros representantes de atención al cliente puedan contactarlo?",
+        fr: "Pourriez-vous partager votre Nom, Prénom, Entreprise et Coordonnées afin que nos représentants du service client puissent vous contacter ?"
+    }
+
+    const detectLanguage = (text: string): keyof typeof contactMessages => {
+        const trChars = /[çğıöşüÇĞİÖŞÜ]/
+        if (trChars.test(text)) return 'tr'
+
+        // Simple fallback to browser language if available, otherwise 'en'
+        if (typeof window !== 'undefined' && window.navigator.language) {
+            const lang = window.navigator.language.split('-')[0]
+            if (lang in contactMessages) return lang as keyof typeof contactMessages
+        }
+
+        return 'en'
+    }
+
+    useEffect(() => {
+        if (inactivityTimerRef.current) {
+            clearTimeout(inactivityTimerRef.current)
+        }
+
+        // If lead collection is disabled, do nothing
+        if (!isLoading && !settings.enableLeadCollection) return
+
+        const userMessageCount = messages.filter(m => m.role === 'user').length
+        // Check if ANY of the contact messages have been sent
+        const alreadyRequested = messages.some(m => Object.values(contactMessages).includes(m.content))
+
+        if (alreadyRequested) {
+            if (!hasRequestedContactInfo) setHasRequestedContactInfo(true)
+
+            // Check for response to contact request
+            const lastMsg = messages[messages.length - 1]
+            const secondLastMsg = messages[messages.length - 2]
+
+            if (
+                messages.length >= 2 &&
+                lastMsg.role === 'user' &&
+                secondLastMsg.role === 'assistant' &&
+                Object.values(contactMessages).includes(secondLastMsg.content) &&
+                !hasCapturedInChatLead
+            ) {
+                // Parse lead info
+                const text = lastMsg.content
+                const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
+                const phoneMatch = text.match(/[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}/)
+
+                const email = emailMatch ? emailMatch[0] : ""
+                const phone = phoneMatch ? phoneMatch[0] : ""
+                const name = text.length < 50 ? text : "In-Chat User"
+
+                // Send to API
+                fetch("/api/leads", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chatbotId,
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        source: "In-Chat Conversation"
+                    })
+                }).then(res => {
+                    if (res.ok) {
+                        console.log("In-chat lead captured")
+                        setHasCapturedInChatLead(true)
+                    }
+                }).catch(err => console.error("Error capturing in-chat lead:", err))
+            }
+
+            return
+        }
+
+        if (userMessageCount >= 2 && !hasRequestedContactInfo && !isChatLoading) {
+            inactivityTimerRef.current = setTimeout(() => {
+                // Detect language from the last user message
+                const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+                const lang = lastUserMsg ? detectLanguage(lastUserMsg.content) : 'en'
+                const messageContent = contactMessages[lang] || contactMessages['en']
+
+                const contactMsg = {
+                    id: 'contact-request-' + Date.now(),
+                    role: 'assistant',
+                    content: messageContent,
+                    createdAt: new Date()
+                }
+                setMessages([...messages, contactMsg as any])
+                setHasRequestedContactInfo(true)
+
+                if (sessionId) {
+                    const sessionRef = doc(db, "chat_sessions", sessionId)
+                    updateDoc(sessionRef, {
+                        messages: arrayUnion({
+                            id: contactMsg.id,
+                            role: contactMsg.role,
+                            content: contactMsg.content,
+                            createdAt: contactMsg.createdAt.toISOString()
+                        })
+                    }).catch(e => console.error("Error saving contact request:", e))
+                }
+            }, 30000)
+        }
+
+        return () => {
+            if (inactivityTimerRef.current) {
+                clearTimeout(inactivityTimerRef.current)
+            }
+        }
+    }, [messages, input, hasRequestedContactInfo, setMessages, isChatLoading, sessionId, hasCapturedInChatLead, chatbotId, settings.enableLeadCollection, isLoading])
 
     const [showLeadForm, setShowLeadForm] = useState(false)
     const [leadName, setLeadName] = useState("")

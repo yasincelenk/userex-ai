@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, LogOut, Settings, LayoutDashboard } from "lucide-react"
+import { User, LogOut, Settings, LayoutDashboard, Globe, Check } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
@@ -23,10 +23,11 @@ import { Breadcrumbs } from "@/components/breadcrumbs"
 
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useLanguage } from "@/context/LanguageContext"
+import { ProductLauncher } from "@/components/product-launcher"
 
 export function SiteHeader() {
     const { user } = useAuth()
-    const { t } = useLanguage()
+    const { t, language, setLanguage } = useLanguage()
     const router = useRouter()
     const { toast } = useToast()
 
@@ -55,6 +56,7 @@ export function SiteHeader() {
     return (
         <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 shadow-sm w-full">
             <div className="flex items-center gap-2">
+                <ProductLauncher />
                 <SidebarTrigger />
                 <div className="flex items-center gap-2 ml-2">
                     <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center">
@@ -66,7 +68,6 @@ export function SiteHeader() {
                 <Breadcrumbs />
             </div>
             <div className="ml-auto flex items-center gap-2">
-                <LanguageSwitcher />
                 <DropdownMenu>
                     <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 h-auto p-2 hover:bg-accent hover:text-accent-foreground outline-none")}>
                         <div className="hidden md:flex flex-col items-end">
@@ -99,6 +100,30 @@ export function SiteHeader() {
                         <DropdownMenuItem onClick={() => router.push("/dashboard/branding")}>
                             <Settings className="mr-2 h-4 w-4" />
                             <span>{t('settings')}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
+                            {t('language')}
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setLanguage('en')}>
+                            <Globe className="mr-2 h-4 w-4" />
+                            <span>English</span>
+                            {language === 'en' && <Check className="ml-auto h-4 w-4" />}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLanguage('tr')}>
+                            <Globe className="mr-2 h-4 w-4" />
+                            <span>Türkçe</span>
+                            {language === 'tr' && <Check className="ml-auto h-4 w-4" />}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLanguage('de')}>
+                            <Globe className="mr-2 h-4 w-4" />
+                            <span>Deutsch</span>
+                            {language === 'de' && <Check className="ml-auto h-4 w-4" />}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLanguage('es')}>
+                            <Globe className="mr-2 h-4 w-4" />
+                            <span>Español</span>
+                            {language === 'es' && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>

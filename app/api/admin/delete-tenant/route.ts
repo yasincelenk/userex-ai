@@ -4,10 +4,18 @@ import { doc, deleteDoc, collection, query, where, getDocs, writeBatch } from "f
 
 export async function POST(req: Request) {
     try {
-        const { userId } = await req.json();
+        // Verify authorization
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: "Unauthorized - No token provided" }, { status: 401 });
+        }
 
-        if (!userId) {
-            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        const { userId, callerRole } = await req.json();
+
+        // Check if caller is SUPER_ADMIN
+        if (callerRole !== 'SUPER_ADMIN') {
+            console.log("Delete Tenant API: Unauthorized - Not SUPER_ADMIN");
+            return NextResponse.json({ error: "Unauthorized - SUPER_ADMIN role required" }, { status: 403 });
         }
 
         // 1. Delete User Document

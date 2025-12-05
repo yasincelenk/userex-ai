@@ -39,10 +39,10 @@ export default function LoginForm() {
         const userData = userDoc.data()
         if (userData.isActive === false) {
           await auth.signOut()
-          const msg = "Your account is currently pending approval. Please wait for an administrator to activate your account."
+          const msg = t('accountPendingApproval')
           setError(msg)
           toast({
-            title: "Account Pending Approval",
+            title: t('accountPendingTitle'),
             description: msg,
             variant: "destructive",
           })
@@ -50,7 +50,7 @@ export default function LoginForm() {
         }
       }
 
-      router.push("/dashboard")
+      router.push("/platform")
     } catch (error: any) {
       console.error("Login error:", error)
       const msg = t('invalidEmailPassword')

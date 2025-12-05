@@ -132,11 +132,33 @@
                 40% { transform: translateY(-10px); }
                 60% { transform: translateY(-5px); }
             }
+            @keyframes userex-wiggle {
+                0%, 100% { transform: rotate(-3deg); }
+                50% { transform: rotate(3deg); }
+            }
+            @keyframes userex-float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+            @keyframes userex-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
             .userex-anim-pulse {
                 animation: userex-pulse 2s infinite;
             }
             .userex-anim-bounce {
                 animation: userex-bounce 2s infinite;
+            }
+            .userex-anim-wiggle {
+                animation: userex-wiggle 1s ease-in-out infinite;
+            }
+            .userex-anim-float {
+                animation: userex-float 3s ease-in-out infinite;
+            }
+            .userex-anim-spin {
+                animation: userex-spin 4s linear infinite;
             }
         `;
       document.head.appendChild(style);
@@ -202,7 +224,7 @@
       height: `${settings.launcherHeight}px`,
       minWidth: isTextStyle ? '100px' : 'auto',
       borderRadius: `${settings.launcherRadius}px`,
-      backgroundColor: settings.launcherBackgroundColor || settings.primaryColor,
+      backgroundColor: settings.launcherBackgroundColor || settings.brandColor || settings.primaryColor,
       boxShadow: shadowStyle,
       cursor: 'pointer',
       display: 'flex',
@@ -223,6 +245,12 @@
       launcher.classList.add('userex-anim-pulse');
     } else if (settings.launcherAnimation === 'bounce') {
       launcher.classList.add('userex-anim-bounce');
+    } else if (settings.launcherAnimation === 'wiggle') {
+      launcher.classList.add('userex-anim-wiggle');
+    } else if (settings.launcherAnimation === 'float') {
+      launcher.classList.add('userex-anim-float');
+    } else if (settings.launcherAnimation === 'spin') {
+      launcher.classList.add('userex-anim-spin');
     }
 
     const closeSvg = `
@@ -418,6 +446,7 @@
       console.log('Widget Settings API Response:', data);
       if (!data.error) {
         settings = {
+          brandColor: data.brandColor,
           primaryColor: attrColor || data.brandColor || '#000000',
           position: data.position || 'bottom-right',
           viewMode: data.viewMode || 'classic',

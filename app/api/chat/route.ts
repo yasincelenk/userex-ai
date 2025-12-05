@@ -1,5 +1,5 @@
 import { OpenAIStream, StreamingTextResponse } from "ai";
-import { generateAIResponse, saveMessageToSession } from "@/lib/ai-service";
+import { generateAIResponse, saveMessageToSession, analyzeSentiment } from "@/lib/ai-service";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
@@ -34,10 +34,16 @@ export async function POST(req: Request) {
                 onStart: async () => {
                     // Save user message
                     const lastMessage = messages[messages.length - 1];
+                    let sentiment = "Neutral";
+                    if (lastMessage.role === "user") {
+                        sentiment = await analyzeSentiment(lastMessage.content);
+                    }
+
                     if (sessionId) {
                         await saveMessageToSession(sessionId, chatbotId, {
                             ...lastMessage,
-                            role: "user"
+                            role: "user",
+                            sentiment
                         });
                     }
                 },

@@ -76,6 +76,9 @@ export default function SignUpForm() {
 
             // No email verification needed for application flow
 
+            // Sign out immediately so the user is not logged in while pending approval
+            await auth.signOut()
+
             setIsSuccess(true)
             toast({
                 title: t('success'),

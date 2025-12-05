@@ -19,10 +19,15 @@ export async function POST(req: Request) {
         console.log("API: Received knowledge request");
         const body = await req.json();
         const { text, chatbotId, docId, type, url, fileBase64, fileName } = body;
-        console.log("API: Parsed body", { chatbotId, type, fileName, hasFile: !!fileBase64 });
+        console.log("API: Parsed body", { chatbotId, docId, type, fileName, hasFile: !!fileBase64 });
 
         if (!chatbotId) {
             return NextResponse.json({ error: "Missing chatbotId" }, { status: 400 });
+        }
+
+        // Enforce docId for consistency
+        if (!docId) {
+            return NextResponse.json({ error: "Missing docId" }, { status: 400 });
         }
 
         let contentToEmbed = text;
@@ -34,20 +39,24 @@ export async function POST(req: Request) {
             if (!url) return NextResponse.json({ error: "Missing URL" }, { status: 400 });
 
             try {
-                const response = await fetch(url);
-                const html = await response.text();
-                const $ = cheerio.load(html);
+                // If text is already provided (from preview), use it. Otherwise scrape.
+                if (!text) {
+                    const response = await fetch(url);
+                    const html = await response.text();
+                    const $ = cheerio.load(html);
 
-                // Remove scripts, styles, etc.
-                $('script').remove();
-                $('style').remove();
-                $('nav').remove();
-                $('footer').remove();
-                $('header').remove();
+                    // Remove scripts, styles, etc.
+                    $('script').remove();
+                    $('style').remove();
+                    $('nav').remove();
+                    $('footer').remove();
+                    $('header').remove();
 
-                title = $('title').text() || url;
-                // Get text content
-                contentToEmbed = $('body').text().replace(/\s+/g, ' ').trim();
+                    title = $('title').text() || url;
+                    // Get text content
+                    contentToEmbed = $('body').text().replace(/\s+/g, ' ').trim();
+                }
+
                 preview = contentToEmbed.substring(0, 200) + "...";
 
                 if (!contentToEmbed || contentToEmbed.length < 50) {
@@ -116,8 +125,8 @@ export async function POST(req: Request) {
             }
         } else {
             // Text Type
-            if (!text || !docId) {
-                return NextResponse.json({ error: "Missing text or docId" }, { status: 400 });
+            if (!text) {
+                return NextResponse.json({ error: "Missing text" }, { status: 400 });
             }
         }
 
@@ -147,13 +156,15 @@ export async function POST(req: Request) {
             });
 
             const embedding = embeddingResponse.data[0].embedding;
-            const chunkId = `${docId || Math.random().toString(36).substring(7)}-${i}`;
+            // Use docId in the vector ID for easier debugging, but rely on metadata for deletion
+            const chunkId = `${docId}-${i}`;
 
             vectors.push({
                 id: chunkId,
                 values: embedding,
                 metadata: {
                     chatbotId,
+                    docId, // CRITICAL: Store docId in metadata for deletion
                     text: chunk,
                     type: type || 'text',
                     source: url || fileName || 'manual',
@@ -196,31 +207,15 @@ export async function DELETE(req: Request) {
 
         console.log(`API: Deleting doc ${docId} for chatbot ${chatbotId}`);
 
-        // 1. Delete from Pinecone (Best effort)
-        // Since we didn't store vector IDs perfectly, we'll try to delete by filter if possible, 
-        // or just accept that some vectors might remain orphaned for now.
-        // Ideally, we should have stored vector IDs in Firestore.
-        // For now, we will skip Pinecone deletion to avoid deleting wrong data, 
-        // or we could try to delete by metadata if we had indexed it.
+        const index = pinecone.index("chatbot-knowledge");
 
-        // FUTURE IMPROVEMENT: Store vector IDs in Firestore doc and delete them here.
+        // Delete by metadata filter
+        await index.deleteMany({
+            chatbotId: chatbotId,
+            docId: docId
+        });
 
-        // 2. Delete from Firestore
-        // We can't use firebase-admin here easily without setup, so we rely on client-side deletion?
-        // No, we should do it here if we want to be secure, but we are using client SDK in route.ts?
-        // Wait, route.ts is server-side. We need firebase-admin or use the client SDK with admin privileges?
-        // The current project uses client SDK 'firebase/firestore' in 'lib/firebase'. 
-        // This works on server but acts as a client. It requires auth rules to allow it.
-        // Since we are in a server environment, we might not be authenticated as the user.
-        // However, for this prototype, we are calling this API from the client which IS authenticated.
-        // Actually, it's better to handle Firestore deletion on the Client Side (page.tsx) 
-        // and only use this API for Pinecone deletion.
-
-        // Let's change strategy: 
-        // Client deletes from Firestore.
-        // Client calls API to delete from Pinecone.
-
-        // For now, let's just return success to allow the client to proceed with UI update.
+        console.log("API: Deleted vectors from Pinecone");
 
         return NextResponse.json({ success: true });
 

@@ -5,7 +5,7 @@ import { collection, query, where, orderBy, onSnapshot, limit } from "firebase/f
 import { db } from "@/lib/firebase"
 import { useLanguage } from "@/context/LanguageContext"
 import { format } from "date-fns"
-import { Loader2, Send, MessageSquare, Monitor, Search, User } from "lucide-react"
+import { Loader2, Send, MessageSquare, Monitor, Search, User, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -158,12 +158,22 @@ export function UnifiedInbox({ userId }: UnifiedInboxProps) {
         if (sessionId.startsWith("telegram-")) {
             return <Send className="h-4 w-4 text-sky-500" />
         }
+        if (sessionId.startsWith("whatsapp-")) {
+            return <MessageCircle className="h-4 w-4 text-green-500" />
+        }
         return <Monitor className="h-4 w-4 text-gray-500" />
     }
 
     const getChannelName = (sessionId: string) => {
         if (sessionId.startsWith("telegram-")) return "Telegram"
+        if (sessionId.startsWith("whatsapp-")) return "WhatsApp"
         return "Web Widget"
+    }
+
+    const getSessionDisplayName = (session: ChatSession) => {
+        if (session.id.startsWith("telegram-")) return "Telegram User"
+        if (session.id.startsWith("whatsapp-")) return `+${session.id.split('-')[2]}`
+        return "Web Visitor"
     }
 
     if (isLoading) {
@@ -211,7 +221,7 @@ export function UnifiedInbox({ userId }: UnifiedInboxProps) {
                                     <div className="flex-1 overflow-hidden">
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="font-medium text-sm truncate">
-                                                {session.id.startsWith("telegram-") ? "Telegram User" : "Web Visitor"}
+                                                {getSessionDisplayName(session)}
                                             </span>
                                             <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
                                                 {session.lastMessageTime ? format(new Date(session.lastMessageTime), "HH:mm") : ""}

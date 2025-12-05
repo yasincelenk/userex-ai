@@ -26,12 +26,17 @@ import { useToast } from "@/hooks/use-toast"
 import { updateDoc } from "firebase/firestore"
 import IntegrationPage from "@/components/integration-page"
 import WidgetSettings from "@/components/widget-settings"
+import { TenantPermissions } from "@/components/tenant-permissions"
 
 interface TenantData {
     email: string
     role: string
     createdAt: any
     isActive: boolean
+    enablePersonalShopper?: boolean
+    enableChatbot?: boolean
+    enableCopywriter?: boolean
+    enableLeadFinder?: boolean
 }
 
 function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantData, userId: string, onUpdate: (data: Partial<TenantData>) => void }) {
@@ -176,7 +181,7 @@ export default function TenantDetailClient({ userId }: { userId: string }) {
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                                <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => router.push("/admin")}>
+                                <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => router.push("/platform/tenants")}>
                                     Tenants
                                 </Button>
                                 <span>/</span>
@@ -209,8 +214,8 @@ export default function TenantDetailClient({ userId }: { userId: string }) {
             <div className="container mx-auto py-8 px-4 md:px-8">
                 <Tabs defaultValue="profile" className="w-full space-y-6">
                     <div className="flex items-center justify-between">
-                        <TabsList className="h-auto bg-transparent p-0 gap-2">
-                            {["profile", "branding", "widget", "chats", "knowledge", "integration"].map((tab) => (
+                        <TabsList className="h-auto bg-transparent p-0 gap-2 flex-wrap">
+                            {["profile", "permissions", "branding", "widget", "chats", "knowledge", "integration"].map((tab) => (
                                 <TabsTrigger
                                     key={tab}
                                     value={tab}
@@ -225,6 +230,10 @@ export default function TenantDetailClient({ userId }: { userId: string }) {
                     <div className="bg-white rounded-xl shadow-sm border border-border/50 min-h-[500px]">
                         <TabsContent value="profile" className="m-0 p-6">
                             <TenantProfileSettings tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
+                        </TabsContent>
+
+                        <TabsContent value="permissions" className="m-0 p-6">
+                            <TenantPermissions tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
                         </TabsContent>
 
                         <TabsContent value="branding" className="m-0 p-6">

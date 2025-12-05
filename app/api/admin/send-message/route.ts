@@ -43,10 +43,10 @@ export async function POST(req: Request) {
 
                 if (chatbotSnap.exists()) {
                     const data = chatbotSnap.data();
-                    const botToken = data.integrations?.telegram?.botToken;
+                    const telegramConfig = data.integrations?.telegram;
 
-                    if (botToken) {
-                        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    if (telegramConfig?.connected && telegramConfig?.botToken) {
+                        await fetch(`https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -56,7 +56,40 @@ export async function POST(req: Request) {
                         });
                         console.log("Admin Message: Sent to Telegram");
                     } else {
-                        console.warn("Admin Message: No Telegram token found");
+                        console.warn("Admin Message: No Telegram token found or not connected");
+                    }
+                }
+            }
+        } else if (sessionId.startsWith("whatsapp-")) {
+            // WhatsApp Logic
+            const parts = sessionId.split("-");
+            // parts[0] = "whatsapp"
+            // parts[1] = chatbotId
+            // parts[2] = phoneNumber
+            const phoneNumber = parts[2];
+
+            if (phoneNumber) {
+                const chatbotRef = doc(db, "chatbots", chatbotId);
+                const chatbotSnap = await getDoc(chatbotRef);
+
+                if (chatbotSnap.exists()) {
+                    const waConfig = chatbotSnap.data().integrations?.whatsapp;
+                    if (waConfig?.connected && waConfig?.phoneNumberId && waConfig?.accessToken) {
+                        await fetch(`https://graph.facebook.com/v17.0/${waConfig.phoneNumberId}/messages`, {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${waConfig.accessToken}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                messaging_product: "whatsapp",
+                                to: phoneNumber,
+                                text: { body: content }
+                            })
+                        });
+                        console.log("Admin Message: Sent to WhatsApp");
+                    } else {
+                        console.warn("Admin Message: WhatsApp not configured or connected for this chatbot");
                     }
                 }
             }

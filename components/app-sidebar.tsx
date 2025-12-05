@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Home, Inbox, Search, Settings, User, LogOut, MessageSquare, Database, Shield, Users, Share2 } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, User, LogOut, MessageSquare, Database, Shield, Users, Share2, BarChart3 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
@@ -37,6 +37,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ]
 
     const testItems = [
+        {
+            title: "Analytics",
+            url: "/dashboard/analytics",
+            icon: BarChart3,
+        },
         {
             title: t('chats'),
             url: "/dashboard/chats",

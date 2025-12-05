@@ -24,6 +24,7 @@ export function SuperAdminDashboard() {
     const [isLoading, setIsLoading] = useState(true)
     const { toast } = useToast()
     const { t } = useLanguage()
+    const { user } = useAuth()
 
     // Dashboard Stats
     const [stats, setStats] = useState({
@@ -83,8 +84,6 @@ export function SuperAdminDashboard() {
             </div>
         )
     }
-
-    const { user } = useAuth()
 
     // ...
 

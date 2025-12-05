@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { db } from "@/lib/firebase"
-import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, deleteDoc, doc } from "firebase/firestore"
+import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, deleteDoc, doc, setDoc } from "firebase/firestore"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -95,12 +95,15 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
 
         setIsAdding(true)
         try {
-            let docId = ""
+            // 1. Generate Firestore ID first to ensure consistency
+            const docRef = doc(collection(db, "knowledge_docs"));
+            const docId = docRef.id;
+
             let payload = {}
 
             if (activeTab === "text") {
-                // 1. Save to Firestore (Metadata)
-                const docRef = await addDoc(collection(db, "knowledge_docs"), {
+                // Save to Firestore
+                await setDoc(docRef, {
                     chatbotId: userId,
                     title,
                     type: "text",
@@ -108,13 +111,11 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                     fullContent: content,
                     createdAt: serverTimestamp()
                 })
-                docId = docRef.id
                 payload = { chatbotId: userId, docId, type: "text", text: content }
             } else if (activeTab === "url") {
                 // If we have content (fetched via preview), treat it as text but with URL source
                 if (content) {
-                    // 1. Save to Firestore (Metadata)
-                    const docRef = await addDoc(collection(db, "knowledge_docs"), {
+                    await setDoc(docRef, {
                         chatbotId: userId,
                         title: title || url,
                         type: "url",
@@ -123,12 +124,18 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                         fullContent: content,
                         createdAt: serverTimestamp()
                     })
-                    docId = docRef.id
                     // Send as text to API to avoid re-scraping
                     payload = { chatbotId: userId, docId, type: "text", text: content, url, fileName: url }
                 } else {
-                    // Fallback to old behavior (API scrapes)
-                    payload = { chatbotId: userId, type: "url", url }
+                    // Fallback to old behavior (API scrapes) - BUT we still need to save metadata after
+                    // For now, let's just send to API and save metadata after success if we don't have content yet
+                    // Actually, better to scrape first in UI always? 
+                    // The current UI allows "Fetch" button. If user didn't click fetch, we rely on API.
+                    // But we need docId.
+
+                    // We will save a placeholder to Firestore to reserve the ID? 
+                    // Or just pass the ID and save later.
+                    payload = { chatbotId: userId, docId, type: "url", url }
                 }
             } else if (activeTab === "file" && file) {
                 // Validation: Check file size (10MB limit)
@@ -157,14 +164,14 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
 
                 payload = {
                     chatbotId: userId,
+                    docId, // Pass the generated ID
                     type: "file",
                     fileBase64,
                     fileName: file.name
                 }
             } else if (activeTab === "qa") {
                 const qaContent = `Q: ${question}\nA: ${answer}`;
-                // 1. Save to Firestore
-                const docRef = await addDoc(collection(db, "knowledge_docs"), {
+                await setDoc(docRef, {
                     chatbotId: userId,
                     title: question,
                     type: "qa",
@@ -172,7 +179,6 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                     fullContent: qaContent,
                     createdAt: serverTimestamp()
                 })
-                docId = docRef.id
                 payload = { chatbotId: userId, docId, type: "qa", text: qaContent, title: question }
             }
 
@@ -190,14 +196,24 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
 
             const result = await response.json()
 
-            // Save Metadata to Firestore for File (URL handled above)
+            // 3. Save Metadata to Firestore for File/URL (if not saved yet)
             if (activeTab === "file") {
-                await addDoc(collection(db, "knowledge_docs"), {
+                await setDoc(docRef, {
                     chatbotId: userId,
                     title: result.title || file?.name,
                     type: "file",
                     source: file?.name,
                     content: result.preview || "Parsed Content",
+                    createdAt: serverTimestamp()
+                })
+            } else if (activeTab === "url" && !content) {
+                await setDoc(docRef, {
+                    chatbotId: userId,
+                    title: result.title || url,
+                    type: "url",
+                    source: url,
+                    content: result.preview || "Scraped Content",
+                    fullContent: result.fullContent || result.preview, // API doesn't return full content yet, but preview is something
                     createdAt: serverTimestamp()
                 })
             }

@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Loader2, MessageSquare, Save } from "lucide-react"
 import { Image as ImageIcon } from "lucide-react"
+import { icons } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
@@ -42,6 +44,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         sideSpacing: 20,
         launcherShadow: "medium", // 'none' | 'light' | 'medium' | 'heavy'
         launcherAnimation: "none", // 'none' | 'pulse' | 'bounce'
+        enableLeadCollection: false,
     })
 
     const [isLoading, setIsLoading] = useState(false)
@@ -78,6 +81,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
                         launcherShadow: data.launcherShadow || "medium",
                         launcherAnimation: data.launcherAnimation || "none",
+                        enableLeadCollection: data.enableLeadCollection || false,
                     }))
                 }
             } catch (error) {
@@ -156,7 +160,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
 
     // Helper to render dynamic icon
     const renderIcon = (iconName: string, className?: string) => {
-        const IconComponent = (LucideIcons as any)[iconName]
+        const IconComponent = (icons as any)[iconName] || (LucideIcons as any)[iconName]
         return IconComponent ? <IconComponent className={className} /> : <MessageSquare className={className} />
     }
 
@@ -295,6 +299,24 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                             )}
                         </div>
                     </div>
+
+                    <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Behavior Settings</h4>
+                        <div className="grid gap-4">
+                            <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Lead Collection</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Ask users for their contact information during the chat.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.enableLeadCollection}
+                                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableLeadCollection: checked }))}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Positioning & Design */}
@@ -351,7 +373,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                             <div className="grid gap-2">
                                 <Label>Animation</Label>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {['none', 'pulse', 'bounce'].map((anim) => (
+                                    {['none', 'pulse', 'bounce', 'wiggle', 'float', 'spin'].map((anim) => (
                                         <button
                                             key={anim}
                                             onClick={() => setSettings(prev => ({ ...prev, launcherAnimation: anim }))}
@@ -472,23 +494,14 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                             />
                                             <div className="border rounded-md p-2 h-48 overflow-y-auto grid grid-cols-6 gap-2">
-                                                {Object.keys(LucideIcons)
+                                                {Object.keys(icons)
                                                     .filter(key => {
-                                                        // Filter out non-component exports and internal utilities
-                                                        if (key === "createLucideIcon" || key === "icons" || key === "default") return false;
-                                                        // Ensure it starts with uppercase (Component convention)
-                                                        if (!/^[A-Z]/.test(key)) return false;
-                                                        // Filter out keys ending with 'Icon' (aliases)
-                                                        if (key.endsWith('Icon') && key !== 'Icon') return false;
-                                                        // Filter out keys starting with 'Lucide' (aliases)
-                                                        if (key.startsWith('Lucide') && key !== 'Lucide') return false;
-                                                        // Filter by search term
                                                         if (searchTerm && !key.toLowerCase().includes(searchTerm.toLowerCase())) return false;
                                                         return true;
                                                     })
                                                     .slice(0, 100) // Limit to 100 icons for performance
                                                     .map((iconName) => {
-                                                        const Icon = (LucideIcons as any)[iconName]
+                                                        const Icon = (icons as any)[iconName]
                                                         // Double check it's a valid component
                                                         if (typeof Icon !== 'function' && typeof Icon !== 'object') return null
 

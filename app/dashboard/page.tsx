@@ -1,26 +1,14 @@
 "use client"
 
-import { DashboardStats } from "@/components/dashboard-stats";
-import { useAuth } from "@/context/AuthContext";
-import { SuperAdminDashboard } from "@/components/super-admin-dashboard";
-import { useLanguage } from "@/context/LanguageContext";
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
-export default function DashboardPage() {
-    const { role } = useAuth()
-    const { t } = useLanguage()
+export default function DashboardRedirectPage() {
+    const router = useRouter()
 
-    if (role === 'SUPER_ADMIN') {
-        return (
-            <div className="p-8">
-                <SuperAdminDashboard />
-            </div>
-        )
-    }
+    useEffect(() => {
+        router.replace("/platform")
+    }, [router])
 
-    return (
-        <div className="p-8">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">{t('dashboardOverview')}</h2>
-            <DashboardStats />
-        </div>
-    );
+    return null
 }

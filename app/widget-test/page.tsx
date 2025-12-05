@@ -8,7 +8,7 @@ import { Suspense } from "react"
 
 function WidgetTestPageContent() {
     const searchParams = useSearchParams()
-    const id = searchParams.get("id")
+    const id = searchParams?.get("id")
     const [scriptLoaded, setScriptLoaded] = useState(false)
 
     useEffect(() => {
@@ -35,7 +35,7 @@ function WidgetTestPageContent() {
         // We can optionally fetch the brand color here if we want to be precise, 
         // but the widget.js fetches settings from API anyway. 
         // We'll just set a default or let the widget handle it.
-        script.setAttribute("data-color", "#000000")
+        // script.setAttribute("data-color", "#000000")
 
         script.onload = () => setScriptLoaded(true)
         document.body.appendChild(script)

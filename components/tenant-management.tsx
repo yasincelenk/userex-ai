@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/context/LanguageContext"
+import { useAuth } from "@/context/AuthContext"
 
 interface UserData {
     id: string
@@ -34,6 +35,7 @@ interface UserData {
     role: string
     isActive: boolean
     createdAt: string
+    enablePersonalShopper?: boolean
 }
 
 export function TenantManagement() {
@@ -41,6 +43,7 @@ export function TenantManagement() {
     const [isLoading, setIsLoading] = useState(true)
     const { toast } = useToast()
     const { t } = useLanguage()
+    const { user, role } = useAuth()
 
     // Add Tenant State
     const [isAddTenantOpen, setIsAddTenantOpen] = useState(false)
@@ -50,6 +53,7 @@ export function TenantManagement() {
     const [newTenantLastName, setNewTenantLastName] = useState("")
     const [newTenantCompanyName, setNewTenantCompanyName] = useState("")
     const [newTenantWebsite, setNewTenantWebsite] = useState("")
+    const [newTenantEnablePersonalShopper, setNewTenantEnablePersonalShopper] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
 
@@ -127,6 +131,31 @@ export function TenantManagement() {
         }
     }
 
+    const togglePersonalShopper = async (userId: string, currentStatus: boolean) => {
+        try {
+            await updateDoc(doc(db, "users", userId), {
+                enablePersonalShopper: !currentStatus
+            })
+
+            const updatedUsers = users.map(u =>
+                u.id === userId ? { ...u, enablePersonalShopper: !currentStatus } : u
+            )
+            setUsers(updatedUsers)
+
+            toast({
+                title: t('success'),
+                description: "Personal Shopper status updated",
+            })
+        } catch (error) {
+            console.error("Error updating user:", error)
+            toast({
+                title: t('error'),
+                description: "Failed to update status",
+                variant: "destructive",
+            })
+        }
+    }
+
     const handleCreateTenant = async () => {
         setCreateError(null)
         if (!newTenantEmail || !newTenantPassword || !newTenantFirstName || !newTenantLastName || !newTenantCompanyName) {
@@ -142,16 +171,25 @@ export function TenantManagement() {
 
         setIsCreating(true)
         try {
+            // Get auth token from Firebase
+            const token = await user?.getIdToken()
+
             const response = await fetch("/api/admin/create-tenant", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     email: newTenantEmail,
                     password: newTenantPassword,
                     firstName: newTenantFirstName,
                     lastName: newTenantLastName,
                     companyName: newTenantCompanyName,
-                    companyWebsite: newTenantWebsite
+                    companyWebsite: newTenantWebsite,
+                    callerUid: user?.uid,
+                    callerRole: role,
+                    enablePersonalShopper: newTenantEnablePersonalShopper
                 })
             })
 
@@ -171,6 +209,7 @@ export function TenantManagement() {
             setNewTenantLastName("")
             setNewTenantCompanyName("")
             setNewTenantWebsite("")
+            setNewTenantEnablePersonalShopper(false)
             setCreateError(null)
             // fetchUsers() - No need to call this manually as onSnapshot will pick up the change
         } catch (error: any) {
@@ -190,10 +229,18 @@ export function TenantManagement() {
         if (!confirm(t('deleteTenantConfirm'))) return
 
         try {
+            const token = await user?.getIdToken()
+
             const response = await fetch("/api/admin/delete-tenant", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId })
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    userId,
+                    callerRole: role
+                })
             })
 
             if (!response.ok) {
@@ -277,6 +324,7 @@ export function TenantManagement() {
                                     <TableHead>{t('role')}</TableHead>
                                     <TableHead>{t('status')}</TableHead>
                                     <TableHead>{t('createdAt')}</TableHead>
+                                    <TableHead>Personal Shopper</TableHead>
                                     <TableHead className="text-right">{t('actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -304,6 +352,15 @@ export function TenantManagement() {
                                         </TableCell>
                                         <TableCell>
                                             {new Date(user.createdAt).toLocaleDateString()}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={user.enablePersonalShopper ? 'default' : 'outline'}
+                                                className="cursor-pointer"
+                                                onClick={() => user.role !== 'SUPER_ADMIN' && togglePersonalShopper(user.id, user.enablePersonalShopper || false)}
+                                            >
+                                                {user.enablePersonalShopper ? "Enabled" : "Disabled"}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {user.role !== 'SUPER_ADMIN' && (
