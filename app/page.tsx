@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -16,11 +17,47 @@ import {
     PenTool,
     Search,
     BarChart3,
-    Users
+    Users,
+    ChevronDown
 } from "lucide-react"
 import Script from "next/script"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { translations, Language } from "@/lib/translations"
 
 export default function LandingPage() {
+    const [language, setLanguage] = useState<Language>('en')
+
+    useEffect(() => {
+        const storedLang = localStorage.getItem('language') as Language
+        if (storedLang && ['en', 'tr'].includes(storedLang)) {
+            setLanguage(storedLang)
+        } else {
+            const browserLang = navigator.language.split('-')[0] as Language
+            if (['en', 'tr'].includes(browserLang)) {
+                setLanguage(browserLang)
+            }
+        }
+    }, [])
+
+    const handleLanguageChange = (lang: Language) => {
+        setLanguage(lang)
+        localStorage.setItem('language', lang)
+    }
+
+    const t = (key: keyof typeof translations['en']) => {
+        return translations[language][key] || translations['en'][key] || key
+    }
+
+    const languageLabels: Record<string, string> = {
+        en: "English",
+        tr: "Türkçe"
+    }
+
     return (
         <div className="dark min-h-screen bg-black text-white selection:bg-lime-500/20 font-sans">
             {/* Navbar */}
@@ -28,27 +65,45 @@ export default function LandingPage() {
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
                         <Image
-                            src="/logo.png"
-                            alt="Userex AI"
-                            width={150}
-                            height={40}
-                            className="h-10 w-auto object-contain"
+                            src="/exai-logo.png"
+                            alt="ex ai"
+                            width={100}
+                            height={24}
+                            className="h-6 w-auto object-contain"
                         />
                     </div>
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-                        <Link href="#products" className="hover:text-white transition-colors">Products</Link>
-                        <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-                        <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+                        <Link href="#products" className="hover:text-white transition-colors">{t('landingProducts')}</Link>
+                        <Link href="#features" className="hover:text-white transition-colors">{t('landingFeatures')}</Link>
+                        <Link href="#pricing" className="hover:text-white transition-colors">{t('landingPricing')}</Link>
                     </div>
                     <div className="flex items-center gap-4">
+                        {/* Language Selector */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 gap-1">
+                                    <Globe className="w-4 h-4" />
+                                    {languageLabels[language]}
+                                    <ChevronDown className="w-3 h-3" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-black border-white/10">
+                                <DropdownMenuItem onClick={() => handleLanguageChange('en')} className="text-white hover:bg-white/10 cursor-pointer">
+                                    English
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleLanguageChange('tr')} className="text-white hover:bg-white/10 cursor-pointer">
+                                    Türkçe
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <Link href="/login">
                             <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5">
-                                Login
+                                {t('login')}
                             </Button>
                         </Link>
                         <Link href="/signup">
                             <Button className="bg-white text-black hover:bg-white/90 font-medium shadow-lg shadow-white/10">
-                                Get Started
+                                {t('landingGetStarted')}
                             </Button>
                         </Link>
                     </div>
@@ -68,19 +123,18 @@ export default function LandingPage() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
                             </span>
-                            The All-in-One AI Platform
+                            {t('landingTagline')}
                         </div>
                         <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/50 pb-2">
-                            Supercharge Your Business with AI Agents
+                            {t('landingHeroTitle')}
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                            Deploy intelligent agents for support, sales, content, and lead generation.
-                            One platform to automate your growth.
+                            {t('landingHeroSubtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                             <Link href="/signup">
                                 <Button className="h-12 px-8 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 w-full sm:w-auto transition-all hover:scale-105">
-                                    Start for free
+                                    {t('landingStartFree')}
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </Link>
@@ -94,32 +148,41 @@ export default function LandingPage() {
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16 space-y-4">
                         <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
-                            Meet Your New AI Team
+                            {t('landingMeetAiTeam')}
                         </h2>
                         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                            Powerful AI agents designed to handle specific aspects of your business, working together seamlessly.
+                            {t('landingMeetAiTeamDesc')}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
-                        {/* AI Chatbot */}
-                        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/10 transition-all duration-300">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <MessageSquare className="w-32 h-32" />
+                        {/* AI Chatbot - Featured */}
+                        <div className="group relative overflow-hidden rounded-3xl border-2 border-lime-500/50 bg-lime-500/5 p-8 hover:bg-lime-500/10 transition-all duration-300 md:col-span-2">
+                            <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity">
+                                <Bot className="w-48 h-48" />
                             </div>
-                            <div className="relative z-10 space-y-4">
-                                <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
-                                    <Bot className="w-6 h-6 text-lime-400" />
+                            <div className="absolute top-4 right-4">
+                                <span className="px-3 py-1 bg-lime-500 text-black text-xs font-bold rounded-full">⭐ {language === 'tr' ? 'ÖNE ÇIKAN' : 'FEATURED'}</span>
+                            </div>
+                            <div className="relative z-10 space-y-4 max-w-2xl">
+                                <div className="w-16 h-16 rounded-2xl bg-lime-500/20 flex items-center justify-center">
+                                    <Bot className="w-8 h-8 text-lime-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold">AI Customer Support</h3>
-                                <p className="text-muted-foreground">
-                                    24/7 intelligent support that resolves 80% of queries instantly. Learns from your documents and website to provide accurate answers.
+                                <h3 className="text-3xl font-bold">{t('landingAiSupport')}</h3>
+                                <p className="text-muted-foreground text-lg">
+                                    {t('landingAiSupportDesc')}
                                 </p>
-                                <ul className="space-y-2 text-sm text-gray-400">
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Multilingual Support</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Lead Collection</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> Seamless Handoff</li>
+                                <ul className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-lime-500" /> {t('landingMultilingual')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-lime-500" /> {t('landingLeadCollection')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-lime-500" /> {t('landingSeamlessHandoff')}</li>
                                 </ul>
+                                <Link href="/products/ai-support">
+                                    <Button variant="outline" className="mt-4 border-lime-500/50 text-lime-400 hover:bg-lime-500/10 hover:text-lime-300">
+                                        {language === 'tr' ? 'Daha Fazla Bilgi' : 'Learn More'}
+                                        <ArrowRight className="ml-2 w-4 h-4" />
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
 
@@ -132,14 +195,14 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
                                     <ShoppingBag className="w-6 h-6 text-purple-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold">Personal Shopper</h3>
+                                <h3 className="text-2xl font-bold">{t('landingPersonalShopper')}</h3>
                                 <p className="text-muted-foreground">
-                                    Turn visitors into buyers with personalized product recommendations. An AI that understands style, preferences, and intent.
+                                    {t('landingPersonalShopperDesc')}
                                 </p>
                                 <ul className="space-y-2 text-sm text-gray-400">
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> Smart Recommendations</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> Visual Search</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> Upselling & Cross-selling</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {t('landingSmartRecommendations')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {t('landingVisualSearch')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {t('landingUpselling')}</li>
                                 </ul>
                             </div>
                         </div>
@@ -153,20 +216,20 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center">
                                     <PenTool className="w-6 h-6 text-pink-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold">AI Copywriter</h3>
+                                <h3 className="text-2xl font-bold">{t('landingAiCopywriter')}</h3>
                                 <p className="text-muted-foreground">
-                                    Generate high-converting marketing copy, blog posts, and social media content in seconds. Your brand voice, perfected.
+                                    {t('landingAiCopywriterDesc')}
                                 </p>
                                 <ul className="space-y-2 text-sm text-gray-400">
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> SEO Optimized</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> Multi-format Content</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> Brand Voice Adaptation</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {t('landingSeoOptimized')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {t('landingMultiFormat')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {t('landingBrandVoice')}</li>
                                 </ul>
                             </div>
                         </div>
 
                         {/* Lead Finder */}
-                        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/10 transition-all duration-300">
+                        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/10 transition-all duration-300 md:col-span-2">
                             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <Search className="w-32 h-32" />
                             </div>
@@ -174,14 +237,14 @@ export default function LandingPage() {
                                 <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
                                     <Search className="w-6 h-6 text-green-400" />
                                 </div>
-                                <h3 className="text-2xl font-bold">Lead Finder</h3>
+                                <h3 className="text-2xl font-bold">{t('landingLeadFinder')}</h3>
                                 <p className="text-muted-foreground">
-                                    Discover and qualify potential clients automatically. Scrape the web for leads that match your ideal customer profile.
+                                    {t('landingLeadFinderDesc')}
                                 </p>
-                                <ul className="space-y-2 text-sm text-gray-400">
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Automated Prospecting</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Email Enrichment</li>
-                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> CRM Integration</li>
+                                <ul className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {t('landingAutomatedProspecting')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {t('landingEmailEnrichment')}</li>
+                                    <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> {t('landingCrmIntegration')}</li>
                                 </ul>
                             </div>
                         </div>
@@ -193,48 +256,48 @@ export default function LandingPage() {
             <section id="features" className="py-24 bg-white/5">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need to scale</h2>
-                        <p className="text-muted-foreground">Built for modern businesses that demand performance and reliability.</p>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('landingEverythingYouNeed')}</h2>
+                        <p className="text-muted-foreground">{t('landingEverythingYouNeedDesc')}</p>
                     </div>
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
                             {
                                 icon: Globe,
-                                title: "Global Reach",
-                                description: "Speak your customers' language with support for over 50 languages."
+                                titleKey: 'landingGlobalReach' as const,
+                                descKey: 'landingGlobalReachDesc' as const
                             },
                             {
                                 icon: BarChart3,
-                                title: "Deep Analytics",
-                                description: "Gain actionable insights into customer behavior and agent performance."
+                                titleKey: 'landingDeepAnalytics' as const,
+                                descKey: 'landingDeepAnalyticsDesc' as const
                             },
                             {
                                 icon: Zap,
-                                title: "Instant Setup",
-                                description: "Get up and running in minutes with our easy-to-use widget."
+                                titleKey: 'landingInstantSetup' as const,
+                                descKey: 'landingInstantSetupDesc' as const
                             },
                             {
                                 icon: Shield,
-                                title: "Enterprise Security",
-                                description: "Your data is protected with bank-grade encryption and privacy controls."
+                                titleKey: 'landingEnterpriseSecurity' as const,
+                                descKey: 'landingEnterpriseSecurityDesc' as const
                             },
                             {
                                 icon: Layout,
-                                title: "Custom Branding",
-                                description: "Fully customizable widgets to match your brand identity."
+                                titleKey: 'landingCustomBranding' as const,
+                                descKey: 'landingCustomBrandingDesc' as const
                             },
                             {
                                 icon: Users,
-                                title: "Team Collaboration",
-                                description: "Seamlessly hand off conversations to human agents when needed."
+                                titleKey: 'landingTeamCollab' as const,
+                                descKey: 'landingTeamCollabDesc' as const
                             }
                         ].map((feature, i) => (
                             <div key={i} className="p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-colors">
                                 <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center mb-4">
                                     <feature.icon className="w-6 h-6 text-white/80" />
                                 </div>
-                                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                                <p className="text-muted-foreground">{feature.description}</p>
+                                <h3 className="text-xl font-semibold mb-2">{t(feature.titleKey)}</h3>
+                                <p className="text-muted-foreground">{t(feature.descKey)}</p>
                             </div>
                         ))}
                     </div>
@@ -247,14 +310,14 @@ export default function LandingPage() {
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto text-center bg-white/5 border border-white/10 rounded-3xl p-12 backdrop-blur-sm shadow-2xl">
                         <h2 className="text-3xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
-                            Ready to transform your business?
+                            {t('landingReadyToTransform')}
                         </h2>
                         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                            Join the AI revolution today. Start your free trial and see the difference Userex AI can make.
+                            {t('landingReadyToTransformDesc')}
                         </p>
                         <Link href="/signup">
                             <Button className="h-14 px-10 text-lg bg-white text-black hover:bg-white/90 shadow-xl shadow-white/5 transition-all hover:scale-105">
-                                Create your account
+                                {t('landingCreateAccount')}
                             </Button>
                         </Link>
                     </div>
@@ -267,20 +330,20 @@ export default function LandingPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2 font-bold text-xl">
                             <Image
-                                src="/logo.png"
-                                alt="Userex AI"
-                                width={150}
-                                height={40}
-                                className="h-8 w-auto object-contain"
+                                src="/exai-logo.png"
+                                alt="ex ai"
+                                width={100}
+                                height={28}
+                                className="h-6 w-auto object-contain"
                             />
                         </div>
                         <div className="text-sm text-muted-foreground">
-                            © 2024 Userex AI. All rights reserved.
+                            © 2024 ex ai by Userex. {t('landingAllRights')}
                         </div>
                         <div className="flex gap-6 text-sm text-muted-foreground">
-                            <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                            <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-                            <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+                            <Link href="#" className="hover:text-white transition-colors">{t('landingPrivacy')}</Link>
+                            <Link href="#" className="hover:text-white transition-colors">{t('landingTerms')}</Link>
+                            <Link href="#" className="hover:text-white transition-colors">{t('landingContact')}</Link>
                         </div>
                     </div>
                 </div>

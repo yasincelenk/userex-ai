@@ -81,7 +81,7 @@ export function AdminActivityFeed() {
             <CardContent>
                 <div className="space-y-8">
                     {activities.map((item) => (
-                        <div key={item.id} className="flex items-center">
+                        <div key={`${item.type}-${item.id}`} className="flex items-center">
                             <Avatar className="h-9 w-9">
                                 <AvatarFallback className={item.type === 'user' ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"}>
                                     {item.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}

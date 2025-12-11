@@ -17,7 +17,14 @@ import {
     BarChart3,
     LogOut,
     ChevronLeft,
-    ShoppingBag
+    ShoppingBag,
+    Eye,
+    ScanLine,
+    CheckSquare,
+    FileText,
+    GitMerge,
+    TrendingUp,
+    Bot
 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -80,6 +87,85 @@ export function ConsoleSidebar() {
                                         >
                                             <LayoutDashboard className="h-4 w-4" />
                                             Lead Search
+                                        </Link>
+                                    </div>
+                                </>
+                            ) : pathname.startsWith("/console/ui-ux-auditor") ? (
+                                <>
+                                    {/* UI/UX Auditor Menu */}
+                                    <div>
+                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                                            {t('analysisTools')}
+                                        </div>
+                                        <Link
+                                            href="/console/ui-ux-auditor/autopilot"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/autopilot" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <Bot className="h-4 w-4" />
+                                            Autopilot (Beta)
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/visual"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/visual" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                            {t('visualAnalysis')}
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/accessibility"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/accessibility" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <ScanLine className="h-4 w-4" />
+                                            {t('accessibility')}
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/heuristic"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/heuristic" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CheckSquare className="h-4 w-4" />
+                                            {t('heuristicEval')}
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/copy"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/copy" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            {t('copyTone')}
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/user-flow"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/user-flow" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <GitMerge className="h-4 w-4" />
+                                            {t('userFlow')}
+                                        </Link>
+                                        <Link
+                                            href="/console/ui-ux-auditor/cro"
+                                            className={cn(
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                                pathname === "/console/ui-ux-auditor/cro" ? "bg-muted text-primary" : "text-muted-foreground"
+                                            )}
+                                        >
+                                            <TrendingUp className="h-4 w-4" />
+                                            {t('optimization')}
                                         </Link>
                                     </div>
                                 </>
@@ -192,16 +278,6 @@ export function ConsoleSidebar() {
                                         >
                                             <Database className="h-4 w-4" />
                                             {t('knowledgeBase')}
-                                        </Link>
-                                        <Link
-                                            href="/console/chatbot/branding"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/branding" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Palette className="h-4 w-4" />
-                                            {t('branding')}
                                         </Link>
                                         <Link
                                             href="/console/chatbot/widget"

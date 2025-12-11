@@ -40,6 +40,7 @@ export async function GET(req: Request) {
                 sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
                 launcherShadow: data.launcherShadow || "medium",
                 launcherAnimation: data.launcherAnimation || "none",
+                initialLanguage: data.initialLanguage || "auto",
             }, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
@@ -69,6 +70,7 @@ export async function GET(req: Request) {
                 sideSpacing: 20,
                 launcherShadow: "medium",
                 launcherAnimation: "none",
+                initialLanguage: "auto",
             }, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',

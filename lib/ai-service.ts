@@ -79,10 +79,27 @@ export async function generateAIResponse(
     
     Context from knowledge base and product catalog:
     ${context}
-    
+    `;
+
+        const strictMode = shopperConfig?.strictMode || false;
+
+        if (strictMode) {
+            systemPrompt += `
+    STRICTLY FOLLOW THESE RULES:
+    1. You are a specialized assistant for this specific company.
+    2. Answer ONLY questions related to the company, its products, services, or the provided context.
+    3. If a user asks about general topics (e.g., "Who won the World Cup?", "Write a poem", "What is 2+2?"), politely REFUSE to answer. Say something like: "I am restricted to answering questions only about our products and services."
+    4. Do not use your general knowledge to answer questions unrelated to the business context.
+            `;
+        } else {
+            systemPrompt += `
     If the answer is not in the context, use your general knowledge but mention that you are not 100% sure if it applies to this specific company.
     Always be polite and professional.
+    You are allowed to be creative (e.g., writing poems or stories) if the user asks, but try to keep it related to the company's products if possible.
+            `;
+        }
 
+        systemPrompt += `
     IMPORTANT: If the user provides their contact information (Name, Surname, Company, Phone, Email) in response to your request, politely thank them and confirm that a customer representative will reach out to them soon.
     `;
 

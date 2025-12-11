@@ -1,6 +1,13 @@
 (function () {
   // Find the current script tag to extract configuration
-  const currentScript = document.currentScript;
+  // Fallback for async scripts where document.currentScript might be null
+  const currentScript = document.currentScript || document.querySelector('script[src*="/widget.js"]');
+
+  if (!currentScript) {
+    console.error('Userex Widget: Could not find script tag to initialize.');
+    return;
+  }
+
   const scriptSrc = currentScript.src;
   const baseUrl = new URL(scriptSrc).origin; // Dynamically get base URL
 

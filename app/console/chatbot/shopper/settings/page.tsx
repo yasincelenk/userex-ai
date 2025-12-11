@@ -2,34 +2,45 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from "@/context/LanguageContext"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Save } from "lucide-react"
+import { Loader2, Save, Info } from "lucide-react"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { Switch } from "@/components/ui/switch"
 
-export default function ShopperSettingsPage() {
-    const { user } = useAuth()
+interface ShopperSettingsPageProps {
+    userId?: string
+}
+
+export default function ShopperSettingsPage({ userId }: ShopperSettingsPageProps) {
+    const { user, role } = useAuth()
+    const { t } = useLanguage()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
 
+    const targetUserId = userId || user?.uid
+
     const [salesTone, setSalesTone] = useState("friendly")
     const [recommendationStrategy, setRecommendationStrategy] = useState("best_match")
+    const [strictMode, setStrictMode] = useState(false)
 
     useEffect(() => {
-        if (user) {
+        if (targetUserId) {
             fetchSettings()
         }
-    }, [user])
+    }, [targetUserId])
 
     const fetchSettings = async () => {
+        if (!targetUserId) return
         setIsLoading(true)
         try {
-            const docRef = doc(db, "chatbots", user!.uid)
+            const docRef = doc(db, "chatbots", targetUserId)
             const docSnap = await getDoc(docRef)
 
             if (docSnap.exists()) {
@@ -37,13 +48,14 @@ export default function ShopperSettingsPage() {
                 if (data.shopperConfig) {
                     setSalesTone(data.shopperConfig.salesTone || "friendly")
                     setRecommendationStrategy(data.shopperConfig.recommendationStrategy || "best_match")
+                    setStrictMode(data.shopperConfig.strictMode || false)
                 }
             }
         } catch (error) {
             console.error("Error fetching settings:", error)
             toast({
-                title: "Error",
-                description: "Failed to load settings.",
+                title: t('error'),
+                description: t('failedToLoadProfile'), // Using closest generic error
                 variant: "destructive"
             })
         } finally {
@@ -52,25 +64,27 @@ export default function ShopperSettingsPage() {
     }
 
     const handleSave = async () => {
+        if (!targetUserId) return
         setIsSaving(true)
         try {
-            const docRef = doc(db, "chatbots", user!.uid)
+            const docRef = doc(db, "chatbots", targetUserId)
             await updateDoc(docRef, {
                 shopperConfig: {
                     salesTone,
-                    recommendationStrategy
+                    recommendationStrategy,
+                    strictMode
                 }
             })
 
             toast({
-                title: "Success",
-                description: "Settings saved successfully."
+                title: t('success'),
+                description: t('saveChanges') + " " + t('success'), // Generic "Save Changes Success"
             })
         } catch (error) {
             console.error("Error saving settings:", error)
             toast({
-                title: "Error",
-                description: "Failed to save settings.",
+                title: t('error'),
+                description: t('error'),
                 variant: "destructive"
             })
         } finally {
@@ -83,57 +97,72 @@ export default function ShopperSettingsPage() {
     }
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Assistant Settings</h1>
-                <p className="text-muted-foreground">Configure how your AI Personal Shopper interacts with customers.</p>
+                <h1 className="text-3xl font-bold tracking-tight">{t('assistantSettings')}</h1>
+                <p className="text-muted-foreground">{t('assistantSettingsDescription')}</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Behavior Configuration</CardTitle>
-                    <CardDescription>Customize the personality and logic of your AI assistant.</CardDescription>
+                    <CardTitle>{t('behaviorConfiguration')}</CardTitle>
+                    <CardDescription>{t('behaviorConfigurationDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
-                        <Label>Sales Tone</Label>
+                        <Label>{t('salesTone')}</Label>
                         <Select value={salesTone} onValueChange={setSalesTone}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="friendly">Friendly & Helpful (Recommended)</SelectItem>
-                                <SelectItem value="professional">Professional & Formal</SelectItem>
-                                <SelectItem value="enthusiastic">Enthusiastic & Energetic</SelectItem>
-                                <SelectItem value="direct">Direct & Concise</SelectItem>
+                                <SelectItem value="friendly">{t('friendlyHelpful')}</SelectItem>
+                                <SelectItem value="professional">{t('professionalFormal')}</SelectItem>
+                                <SelectItem value="enthusiastic">{t('enthusiasticEnergetic')}</SelectItem>
+                                <SelectItem value="direct">{t('directConcise')}</SelectItem>
                             </SelectContent>
                         </Select>
                         <p className="text-sm text-muted-foreground">
-                            Determines the style of language the AI uses when talking to customers.
+                            {t('salesToneDescription')}
                         </p>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Recommendation Strategy</Label>
+                        <Label>{t('recommendationStrategy')}</Label>
                         <Select value={recommendationStrategy} onValueChange={setRecommendationStrategy}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="best_match">Best Match (Relevance)</SelectItem>
-                                <SelectItem value="lowest_price">Price: Low to High</SelectItem>
-                                <SelectItem value="highest_rated">Highest Rated</SelectItem>
+                                <SelectItem value="best_match">{t('bestMatch')}</SelectItem>
+                                <SelectItem value="lowest_price">{t('lowestPrice')}</SelectItem>
+                                <SelectItem value="highest_rated">{t('highestRated')}</SelectItem>
                             </SelectContent>
                         </Select>
                         <p className="text-sm text-muted-foreground">
-                            How the AI prioritizes which products to suggest first.
+                            {t('recommendationStrategyDescription')}
                         </p>
                     </div>
+
+                    {role === 'SUPER_ADMIN' && (
+                        <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label className="text-base">{t('strictMode')}</Label>
+                                <CardDescription>
+                                    {t('strictModeDescription')}
+                                </CardDescription>
+                            </div>
+                            <Switch
+                                checked={strictMode}
+                                onCheckedChange={setStrictMode}
+                            />
+                        </div>
+                    )}
 
                     <Button onClick={handleSave} disabled={isSaving}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        {t('saveChanges')}
                     </Button>
                 </CardContent>
             </Card>

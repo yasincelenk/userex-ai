@@ -1,9 +1,9 @@
 "use client"
 
-import { Users, LogOut, Shield, Home } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { Users, LogOut, Shield, Home, Settings } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
-import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/AuthContext"
 
@@ -30,8 +30,12 @@ const items = [
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const router = useRouter()
+    const params = useParams()
     const { toast } = useToast()
     const { user } = useAuth()
+
+    // Check if we are in tenant detail view
+    const userId = params?.userId as string
 
     const handleLogout = async () => {
         try {
@@ -71,6 +75,24 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+
+                {userId && (
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Tenant Management</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <a href={`/admin/tenant/${userId}?tab=settings`}>
+                                            <Settings />
+                                            <span>Assistant Settings</span>
+                                        </a>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                )}
             </SidebarContent>
         </Sidebar>
     )

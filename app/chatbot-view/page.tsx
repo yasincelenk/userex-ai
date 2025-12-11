@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation"
 import { doc, getDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff } from "lucide-react"
-import { useChat } from "ai/react"
+import { useChat } from "@ai-sdk/react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { ProductCard } from "@/components/chatbot/product-card"
 
 // Extend Window interface for Web Speech API
 declare global {
@@ -86,9 +87,9 @@ function ChatbotViewContent() {
             console.log("Recognition result:", transcript)
             if (continuous) {
                 setVoiceStatus('processing')
-                append({ role: 'user', content: transcript })
+                sendMessage(transcript)
             } else {
-                handleInputChange({ target: { value: transcript } } as any)
+                setLocalInput(transcript)
             }
         }
 
@@ -180,6 +181,13 @@ function ChatbotViewContent() {
         }
     }
 
+    // Typing Indicator State
+    const [isTyping, setIsTyping] = useState(false)
+
+    // Proactive Engagement State
+    const [hasProactiveTriggered, setHasProactiveTriggered] = useState(false)
+    const proactiveTimerRef = useRef<NodeJS.Timeout | null>(null)
+
     // Generate Session ID on mount and load history with real-time listener
     useEffect(() => {
         let sid = localStorage.getItem("chat_session_id")
@@ -211,7 +219,10 @@ function ChatbotViewContent() {
         return () => unsubscribe()
     }, [])
 
-    const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading: isChatLoading, append } = useChat({
+    // Local Input State to avoid useChat issues
+    const [localInput, setLocalInput] = useState('')
+
+    const chatHelpers = useChat({
         body: {
             chatbotId,
             sessionId
@@ -241,6 +252,90 @@ function ChatbotViewContent() {
             }
         }
     })
+
+    const { messages, setMessages, status } = chatHelpers as any
+    const isChatLoading = status === 'streaming' || status === 'submitted'
+    console.log("DEBUG: useChat returns:", Object.keys(chatHelpers as any))
+
+    // Custom sendMessage function using fetch API
+    const sendMessage = async (content: string) => {
+        if (!content.trim()) return
+
+        const userMessage = {
+            id: 'user-' + Date.now(),
+            role: 'user',
+            content: content,
+            createdAt: new Date()
+        }
+        setMessages((prev: any) => [...prev, userMessage])
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [...messages, userMessage],
+                    chatbotId,
+                    sessionId
+                })
+            })
+
+            if (!response.ok) throw new Error('Chat API error')
+
+            const reader = response.body?.getReader()
+            const decoder = new TextDecoder()
+            let assistantContent = ''
+            const assistantMsgId = 'assistant-' + Date.now()
+
+            // Add placeholder assistant message
+            setMessages((prev: any) => [...prev, { id: assistantMsgId, role: 'assistant', content: '', createdAt: new Date() }])
+
+            while (reader) {
+                const { done, value } = await reader.read()
+                if (done) break
+                assistantContent += decoder.decode(value, { stream: true })
+                setMessages((prev: any) => prev.map((m: any) => m.id === assistantMsgId ? { ...m, content: assistantContent } : m))
+            }
+
+            if (isVoiceMode && assistantContent) {
+                setVoiceStatus('speaking')
+                handleSpeak(assistantContent, assistantMsgId, () => {
+                    if (isVoiceMode) startRecognition(true)
+                })
+            }
+        } catch (error) {
+            console.error('Chat error:', error)
+            if (isVoiceMode) {
+                setVoiceStatus('idle')
+                handleSpeak("Üzgünüm, bir hata oluştu.", "error-" + Date.now())
+            }
+        }
+    }
+
+    // Proactive Engagement Logic (Time-on-Page)
+    useEffect(() => {
+        if (hasProactiveTriggered || messages.length > 0) return
+
+        proactiveTimerRef.current = setTimeout(() => {
+            const proactiveMsg = {
+                id: 'proactive-' + Date.now(),
+                role: 'assistant',
+                content: "👋 Hi! I noticed you've been looking around. deeper? I can help you find specific products or answer questions.",
+                createdAt: new Date()
+            }
+            setMessages(prev => [...prev, proactiveMsg as any])
+            setHasProactiveTriggered(true)
+        }, 30000) // 30 seconds
+
+        return () => {
+            if (proactiveTimerRef.current) clearTimeout(proactiveTimerRef.current)
+        }
+    }, [hasProactiveTriggered, messages.length, setMessages])
+
+    // Update isTyping based on isLoading from useChat
+    useEffect(() => {
+        setIsTyping(isChatLoading)
+    }, [isChatLoading])
 
     // Safety Timeout for Voice Mode
     useEffect(() => {
@@ -457,7 +552,7 @@ function ChatbotViewContent() {
                 clearTimeout(inactivityTimerRef.current)
             }
         }
-    }, [messages, input, hasRequestedContactInfo, setMessages, isChatLoading, sessionId, hasCapturedInChatLead, chatbotId, settings.enableLeadCollection, isLoading])
+    }, [messages, localInput, hasRequestedContactInfo, setMessages, isChatLoading, sessionId, hasCapturedInChatLead, chatbotId, settings.enableLeadCollection, isLoading])
 
     const [showLeadForm, setShowLeadForm] = useState(false)
     const [leadName, setLeadName] = useState("")
@@ -726,7 +821,7 @@ function ChatbotViewContent() {
                                 <button
                                     key={i}
                                     onClick={() => {
-                                        append({ role: 'user', content: q })
+                                        sendMessage(q)
                                     }}
                                     className="text-xs text-left px-4 py-3 bg-white hover:bg-gray-50 border border-gray-100 rounded-xl transition-all hover:shadow-sm text-gray-600 shadow-sm"
                                 >
@@ -754,20 +849,20 @@ function ChatbotViewContent() {
                         </div>
 
                         {messages.map((m: any) => (
-                            <div key={m.id} className={`flex gap-4 max-w-3xl mx-auto ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                            <div key={m.id} className={`flex gap-4 max-w-3xl mx-auto ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                                 <div
-                                    className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs mt-1 ${m.role === 'user' ? 'bg-gray-200 text-gray-600' : 'text-white'}`}
+                                    className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs mt-1 shadow-sm ${m.role === 'user' ? 'bg-gray-100 text-gray-600' : 'text-white'}`}
                                     style={m.role === 'assistant' ? { backgroundColor: settings.brandColor } : {}}
                                 >
                                     {m.role === 'user' ? 'You' : 'AI'}
                                 </div>
-                                <div className={`space-y-1 max-w-[80%] ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-                                    <div className="flex items-center gap-2 justify-between">
-                                        <p className="text-xs font-semibold text-gray-500">{m.role === 'user' ? 'You' : settings.companyName}</p>
+                                <div className={`space-y-1 max-w-[85%] ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+                                    <div className="flex items-center gap-2 justify-between px-1">
+                                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{m.role === 'user' ? 'You' : settings.companyName}</p>
                                         {m.role === 'assistant' && (
                                             <button
                                                 onClick={() => handleSpeak(m.content, m.id)}
-                                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                                className="text-gray-300 hover:text-gray-500 transition-colors opacity-0 group-hover:opacity-100"
                                                 title={isSpeaking === m.id ? "Stop Speaking" : "Read Aloud"}
                                             >
                                                 {isSpeaking === m.id ? <Square className="w-3 h-3 fill-current" /> : <Volume2 className="w-3 h-3" />}
@@ -775,14 +870,43 @@ function ChatbotViewContent() {
                                         )}
                                     </div>
                                     <div
-                                        className={`text-sm leading-relaxed p-3 rounded-2xl shadow-sm inline-block text-left ${m.role === 'user'
-                                            ? 'bg-gray-100 text-gray-800 rounded-tr-none'
+                                        className={`text-sm leading-relaxed p-3.5 rounded-2xl shadow-sm inline-block text-left relative group ${m.role === 'user'
+                                            ? 'bg-blue-50 text-gray-800 rounded-tr-none border border-blue-100'
                                             : 'bg-white border border-gray-100 rounded-tl-none'
                                             }`}
                                     >
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
                                             components={{
+                                                // Function to detect and render Product Card JSON/Format
+                                                code: ({ node, inline, className, children, ...props }: any) => {
+                                                    const match = /language-(\w+)/.exec(className || '')
+                                                    const content = String(children).replace(/\n$/, '')
+
+                                                    // Detect Product JSON (Simple heuristic)
+                                                    if (content.trim().startsWith('{') && content.includes('"price"')) {
+                                                        try {
+                                                            const product = JSON.parse(content)
+                                                            if (product.name && product.price) {
+                                                                return <ProductCard product={product} brandColor={settings.brandColor} />
+                                                            }
+                                                        } catch (e) {
+                                                            // Not valid JSON, ignore
+                                                        }
+                                                    }
+
+                                                    return !inline && match ? (
+                                                        <div className="bg-gray-800 text-white p-2 rounded-md text-xs overflow-x-auto my-2">
+                                                            <code className={className} {...props}>
+                                                                {children}
+                                                            </code>
+                                                        </div>
+                                                    ) : (
+                                                        <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-red-500" {...props}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                },
                                                 table: ({ node, ...props }) => <table className="border-collapse table-auto w-full text-xs my-2" {...props} />,
                                                 th: ({ node, ...props }) => <th className="border border-gray-300 px-2 py-1 bg-gray-100 font-semibold" {...props} />,
                                                 td: ({ node, ...props }) => <td className="border border-gray-300 px-2 py-1" {...props} />,
@@ -797,6 +921,24 @@ function ChatbotViewContent() {
                                 </div>
                             </div>
                         ))}
+
+                        {/* Typing Indicator */}
+                        {isTyping && (
+                            <div className="flex gap-4 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div
+                                    className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs text-white mt-1 shadow-sm"
+                                    style={{ backgroundColor: settings.brandColor }}
+                                >
+                                    AI
+                                </div>
+                                <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                </div>
+                            </div>
+                        )}
+
                         <div ref={messagesEndRef} />
                     </>
                 )}
@@ -805,11 +947,19 @@ function ChatbotViewContent() {
             {/* Input Area */}
             <div className="p-4 bg-white border-t">
                 <div className="max-w-3xl mx-auto relative">
-                    <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                            if (!localInput.trim()) return
+                            sendMessage(localInput)
+                            setLocalInput('')
+                        }}
+                        className="relative flex items-center gap-2"
+                    >
                         <div className="relative flex-1">
                             <input
-                                value={input}
-                                onChange={handleInputChange}
+                                value={localInput}
+                                onChange={(e) => setLocalInput(e.target.value)}
                                 type="text"
                                 placeholder="Message..."
                                 className="w-full text-sm bg-gray-50 border border-gray-200 rounded-full pl-4 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-transparent transition-all shadow-sm"
@@ -826,7 +976,7 @@ function ChatbotViewContent() {
                         </div>
                         <button
                             type="submit"
-                            disabled={!input.trim()}
+                            disabled={!localInput.trim()}
                             className="p-3 rounded-full text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-sm"
                             style={{ backgroundColor: settings.brandColor }}
                         >

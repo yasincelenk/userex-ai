@@ -112,11 +112,11 @@ export default function SignUpForm() {
                     <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                         <div className="flex items-center text-lg font-medium">
                             <Image
-                                src="/logo.png"
-                                alt="Userex AI"
-                                width={150}
-                                height={40}
-                                className="h-10 w-auto object-contain"
+                                src="/exai-logo.png"
+                                alt="ex ai"
+                                width={100}
+                                height={24}
+                                className="h-6 w-auto object-contain"
                             />
                         </div>
                         <div className="space-y-8 max-w-md">
@@ -164,7 +164,7 @@ export default function SignUpForm() {
                             </div>
                         </div>
                         <div className="text-sm text-gray-400">
-                            © 2024 Userex AI. All rights reserved.
+                            © 2024 ex ai by Userex. All rights reserved.
                         </div>
                     </div>
                 </div>
@@ -200,11 +200,11 @@ export default function SignUpForm() {
                 <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                     <div className="flex items-center text-lg font-medium">
                         <Image
-                            src="/logo.png"
-                            alt="Userex AI"
-                            width={150}
-                            height={40}
-                            className="h-10 w-auto object-contain"
+                            src="/exai-logo.png"
+                            alt="ex ai"
+                            width={100}
+                            height={24}
+                            className="h-6 w-auto object-contain"
                         />
                     </div>
                     <div className="space-y-8 max-w-md">
@@ -252,7 +252,7 @@ export default function SignUpForm() {
                         </div>
                     </div>
                     <div className="text-sm text-gray-400">
-                        © 2024 Userex AI. All rights reserved.
+                        © 2024 ex ai by Userex. All rights reserved.
                     </div>
                 </div>
             </div>

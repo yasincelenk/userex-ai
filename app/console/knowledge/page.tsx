@@ -1,7 +1,6 @@
 "use client"
 
 import { KnowledgeBase } from "@/components/knowledge-base"
-
 import { useAuth } from "@/context/AuthContext"
 
 export default function KnowledgePage() {
@@ -9,9 +8,5 @@ export default function KnowledgePage() {
 
     if (!user) return null
 
-    return (
-        <div className="p-8">
-            <KnowledgeBase targetUserId={user.uid} />
-        </div>
-    )
+    return <KnowledgeBase targetUserId={user.uid} />
 }

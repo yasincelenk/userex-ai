@@ -1,4 +1,5 @@
-import { OpenAIStream, StreamingTextResponse } from "ai";
+import { streamText } from "ai";
+import { openai } from "@ai-sdk/openai";
 import { generateAIResponse, saveMessageToSession, analyzeSentiment } from "@/lib/ai-service";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
@@ -27,37 +28,61 @@ export async function POST(req: Request) {
             }
         }
 
+        // Save user message before generating response
+        const lastMessage = messages[messages.length - 1];
+        if (sessionId && lastMessage.role === "user") {
+            const sentiment = await analyzeSentiment(lastMessage.content);
+            await saveMessageToSession(sessionId, chatbotId, {
+                ...lastMessage,
+                role: "user",
+                sentiment
+            });
+        }
+
+        // Generate AI response using streamText
         const result = await generateAIResponse(chatbotId, messages, sessionId, true);
 
         if (result.isStream) {
-            const stream = OpenAIStream(result.response as any, {
-                onStart: async () => {
-                    // Save user message
-                    const lastMessage = messages[messages.length - 1];
-                    let sentiment = "Neutral";
-                    if (lastMessage.role === "user") {
-                        sentiment = await analyzeSentiment(lastMessage.content);
-                    }
+            // For streaming responses, we need to use the new ai SDK approach
+            // The generateAIResponse returns an OpenAI stream, we need to convert it
+            const stream = result.response;
 
-                    if (sessionId) {
-                        await saveMessageToSession(sessionId, chatbotId, {
-                            ...lastMessage,
-                            role: "user",
-                            sentiment
-                        });
+            // Create a readable stream from the OpenAI response
+            const encoder = new TextEncoder();
+            let fullContent = '';
+
+            const readableStream = new ReadableStream({
+                async start(controller) {
+                    try {
+                        for await (const chunk of stream as any) {
+                            const content = chunk.choices?.[0]?.delta?.content || '';
+                            if (content) {
+                                fullContent += content;
+                                controller.enqueue(encoder.encode(content));
+                            }
+                        }
+
+                        // Save assistant response after stream completes
+                        if (sessionId && fullContent) {
+                            await saveMessageToSession(sessionId, chatbotId, {
+                                role: "assistant",
+                                content: fullContent
+                            });
+                        }
+
+                        controller.close();
+                    } catch (error) {
+                        controller.error(error);
                     }
-                },
-                onCompletion: async (completion) => {
-                    // Save AI response
-                    if (sessionId) {
-                        await saveMessageToSession(sessionId, chatbotId, {
-                            role: "assistant",
-                            content: completion
-                        });
-                    }
+                }
+            });
+
+            return new Response(readableStream, {
+                headers: {
+                    'Content-Type': 'text/plain; charset=utf-8',
+                    'Transfer-Encoding': 'chunked',
                 },
             });
-            return new StreamingTextResponse(stream);
         } else {
             return new Response(JSON.stringify({ content: result.content }), { status: 200 });
         }

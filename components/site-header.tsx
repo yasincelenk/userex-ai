@@ -61,11 +61,11 @@ export function SiteHeader() {
                 <SidebarTrigger />
                 <div className="flex items-center gap-2 ml-2">
                     <Image
-                        src="/logo-dark.png"
-                        alt="Userex AI"
-                        width={120}
-                        height={32}
-                        className="h-8 w-auto object-contain"
+                        src="/exai-logo-dark.png"
+                        alt="ex ai"
+                        width={100}
+                        height={24}
+                        className="h-6 w-auto object-contain"
                     />
                 </div>
                 <div className="ml-4 h-6 w-px bg-border" />
