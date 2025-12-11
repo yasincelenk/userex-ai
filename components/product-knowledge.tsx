@@ -99,7 +99,7 @@ export function ProductKnowledge() {
                 title: "Success",
                 description: "Product added to catalog."
             })
-            setIsOpen(false)
+            setIsAddDialogOpen(false)
             setNewProduct({ name: "", price: "", currency: "USD", description: "", imageUrl: "" })
             fetchProducts()
         } catch (error) {

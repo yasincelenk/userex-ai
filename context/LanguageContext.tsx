@@ -6,7 +6,7 @@ import { translations, Language } from '@/lib/translations';
 type LanguageContextType = {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: keyof typeof translations['en']) => string;
+    t: (key: string) => string;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -32,8 +32,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('language', lang);
     };
 
-    const t = (key: keyof typeof translations['en']) => {
-        return translations[language][key] || translations['en'][key] || key;
+    const t = (key: string): string => {
+        const trans = translations[language] as Record<string, string>;
+        const enTrans = translations['en'] as Record<string, string>;
+        return trans[key] || enTrans[key] || key;
     };
 
     return (

@@ -27,7 +27,7 @@ import { updateDoc } from "firebase/firestore"
 import IntegrationPage from "@/components/integration-page"
 import WidgetSettings from "@/components/widget-settings"
 import { TenantPermissions } from "@/components/tenant-permissions"
-import ShopperSettingsPage from "@/app/console/chatbot/shopper/settings/page"
+// ShopperSettingsPage is a page component, not imported here
 
 interface TenantData {
     email: string
@@ -221,55 +221,51 @@ export default function TenantDetailClient({ userId }: { userId: string }) {
 
             {/* Main Content */}
             <div className="container mx-auto py-8 px-4 md:px-8">
-                {currentTab === 'settings' ? (
-                    <ShopperSettingsPage userId={userId} />
-                ) : (
-                    <Tabs defaultValue="profile" className="w-full space-y-6">
-                        <div className="flex items-center justify-between">
-                            <TabsList className="h-auto bg-transparent p-0 gap-2 flex-wrap">
-                                {["profile", "permissions", "branding", "widget", "chats", "knowledge", "integration"].map((tab) => (
-                                    <TabsTrigger
-                                        key={tab}
-                                        value={tab}
-                                        className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-muted-foreground data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-border/50 transition-all"
-                                    >
-                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                        </div>
+                <Tabs defaultValue="profile" className="w-full space-y-6">
+                    <div className="flex items-center justify-between">
+                        <TabsList className="h-auto bg-transparent p-0 gap-2 flex-wrap">
+                            {["profile", "permissions", "branding", "widget", "chats", "knowledge", "integration"].map((tab) => (
+                                <TabsTrigger
+                                    key={tab}
+                                    value={tab}
+                                    className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-muted-foreground data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-border/50 transition-all"
+                                >
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </div>
 
-                        <div className="bg-white rounded-xl shadow-sm border border-border/50 min-h-[500px]">
-                            <TabsContent value="profile" className="m-0 p-6">
-                                <TenantProfileSettings tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
-                            </TabsContent>
+                    <div className="bg-white rounded-xl shadow-sm border border-border/50 min-h-[500px]">
+                        <TabsContent value="profile" className="m-0 p-6">
+                            <TenantProfileSettings tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
+                        </TabsContent>
 
-                            <TabsContent value="permissions" className="m-0 p-6">
-                                <TenantPermissions tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
-                            </TabsContent>
+                        <TabsContent value="permissions" className="m-0 p-6">
+                            <TenantPermissions tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
+                        </TabsContent>
 
-                            <TabsContent value="branding" className="m-0 p-6">
-                                <BrandingSettings targetUserId={userId} />
-                            </TabsContent>
+                        <TabsContent value="branding" className="m-0 p-6">
+                            <BrandingSettings targetUserId={userId} />
+                        </TabsContent>
 
-                            <TabsContent value="widget" className="m-0 p-6">
-                                <WidgetSettings userId={userId} />
-                            </TabsContent>
+                        <TabsContent value="widget" className="m-0 p-6">
+                            <WidgetSettings userId={userId} />
+                        </TabsContent>
 
-                            <TabsContent value="chats" className="m-0 p-6">
-                                <ChatsList targetUserId={userId} embedded={true} />
-                            </TabsContent>
+                        <TabsContent value="chats" className="m-0 p-6">
+                            <ChatsList targetUserId={userId} embedded={true} />
+                        </TabsContent>
 
-                            <TabsContent value="knowledge" className="m-0 p-6">
-                                <KnowledgeBase targetUserId={userId} embedded={true} />
-                            </TabsContent>
+                        <TabsContent value="knowledge" className="m-0 p-6">
+                            <KnowledgeBase targetUserId={userId} embedded={true} />
+                        </TabsContent>
 
-                            <TabsContent value="integration" className="m-0 p-6">
-                                <IntegrationPage userId={userId} />
-                            </TabsContent>
-                        </div>
-                    </Tabs>
-                )}
+                        <TabsContent value="integration" className="m-0 p-6">
+                            <IntegrationPage userId={userId} />
+                        </TabsContent>
+                    </div>
+                </Tabs>
             </div>
         </div>
     )

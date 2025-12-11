@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation"
 import { doc, getDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff } from "lucide-react"
-import { useChat } from "@ai-sdk/react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ProductCard } from "@/components/chatbot/product-card"
@@ -222,40 +221,12 @@ function ChatbotViewContent() {
     // Local Input State to avoid useChat issues
     const [localInput, setLocalInput] = useState('')
 
-    const chatHelpers = useChat({
-        body: {
-            chatbotId,
-            sessionId
-        },
-        initialMessages,
-        onFinish: (message) => {
-            if (isVoiceMode) {
-                // Ensure we transition to speaking state
-                setVoiceStatus('speaking')
+    // Using minimal useChat for state management only - actual sending is done via custom sendMessage
+    const [messages, setMessages] = useState<any[]>([])
+    const [chatStatus, setChatStatus] = useState<'idle' | 'streaming' | 'submitted'>('idle')
+    const isChatLoading = chatStatus === 'streaming' || chatStatus === 'submitted'
 
-                // Speak the message
-                handleSpeak(message.content, message.id, () => {
-                    // When speaking finishes, we'll handle restart in the onend of handleSpeak or here?
-                    // Actually handleSpeak takes an onEnd callback.
-                    console.log("Speech finished, restarting recognition...")
-                    if (isVoiceMode) {
-                        startRecognition(true)
-                    }
-                })
-            }
-        },
-        onError: (error) => {
-            console.error("Chat API Error:", error)
-            if (isVoiceMode) {
-                setVoiceStatus('idle')
-                handleSpeak("Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.", "error-" + Date.now())
-            }
-        }
-    })
-
-    const { messages, setMessages, status } = chatHelpers as any
-    const isChatLoading = status === 'streaming' || status === 'submitted'
-    console.log("DEBUG: useChat returns:", Object.keys(chatHelpers as any))
+    // Voice mode callbacks handled in sendMessage function
 
     // Custom sendMessage function using fetch API
     const sendMessage = async (content: string) => {

@@ -1,5 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Exclude chrome-extension from Next.js build
+    webpack: (config, { isServer }) => {
+        config.watchOptions = {
+            ...config.watchOptions,
+            ignored: /chrome-extension/,
+        };
+        return config;
+    },
+    // Exclude chrome-extension from TypeScript compilation
+    typescript: {
+        ignoreBuildErrors: false,
+    },
     async headers() {
         return [
             {

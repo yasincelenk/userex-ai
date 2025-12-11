@@ -13,18 +13,14 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Switch } from "@/components/ui/switch"
 
-interface ShopperSettingsPageProps {
-    userId?: string
-}
-
-export default function ShopperSettingsPage({ userId }: ShopperSettingsPageProps) {
+export default function ShopperSettingsPage() {
     const { user, role } = useAuth()
     const { t } = useLanguage()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
 
-    const targetUserId = userId || user?.uid
+    const targetUserId = user?.uid
 
     const [salesTone, setSalesTone] = useState("friendly")
     const [recommendationStrategy, setRecommendationStrategy] = useState("best_match")

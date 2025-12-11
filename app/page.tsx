@@ -50,7 +50,7 @@ export default function LandingPage() {
     }
 
     const t = (key: keyof typeof translations['en']) => {
-        return translations[language][key] || translations['en'][key] || key
+        return (translations[language] as any)[key] || translations['en'][key] || key
     }
 
     const languageLabels: Record<string, string> = {

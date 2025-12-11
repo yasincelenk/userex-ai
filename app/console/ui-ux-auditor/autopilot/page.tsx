@@ -181,8 +181,10 @@ export default function AutopilotPage() {
                 addLog(`Test suite execution completed. Result: ${success ? 'PASS' : 'FAIL'}`);
                 if (!success) addLog(`Failure Reason: ${error}`);
 
-                // Save to DB
-                saveTestRun(activeTestId, success, error);
+                // Save to DB (only if we have a valid test ID)
+                if (activeTestId) {
+                    saveTestRun(activeTestId, success, error);
+                }
 
                 setActiveTestId(null);
             }

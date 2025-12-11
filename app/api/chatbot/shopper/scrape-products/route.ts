@@ -66,7 +66,6 @@ export async function POST(request: Request) {
 
             const result = await generateObject({
                 model: openai('gpt-4o'),
-                mode: 'json',
                 schema: z.object({
                     products: z.array(z.object({
                         name: z.string(),

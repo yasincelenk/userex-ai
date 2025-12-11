@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "node_modules_trash"
+    "node_modules_trash",
+    "chrome-extension"
   ]
 }
