@@ -607,10 +607,10 @@ export const translations = {
         circleIcon: "Circle (Icon)",
         squareIcon: "Square (Icon)",
         textOnly: "Text Only",
-        iconText: "Icon + Text",
 
 
-        custom: "Custom",
+
+
         searchIcons: "Search icons...",
 
 
