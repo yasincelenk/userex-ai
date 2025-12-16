@@ -328,8 +328,7 @@ export const translations = {
         avgMessagesPerChat: "Avg. Messages/Chat",
         engagementDepth: "Engagement depth",
         weeklyActivity: "Weekly Activity",
-        superAdminDashboard: "Super Admin Dashboard",
-        systemPerformanceOverview: "Overview of system performance.",
+
         totalTenants: "Total Tenants",
         registeredTenantAccounts: "Registered tenant accounts",
         activeTenants: "Active Tenants",
@@ -455,11 +454,11 @@ export const translations = {
         manageTenantsDescription: "Manage system users and their access.",
         addTenant: "Add Tenant",
         allTenants: "All Tenants",
-        searchTenants: "Search tenants...",
+
         role: "Role",
         status: "Status",
         createdAt: "Created At",
-        actions: "Actions",
+
 
         // New Tenant Fields
         accountInfo: "Account Information",
@@ -470,11 +469,7 @@ export const translations = {
         active: "Active",
         inactive: "Inactive",
         noResults: "No results found.",
-        addNewTenant: "Add New Tenant",
-        addNewTenantDescription: "Create a new tenant account. They will be assigned the TENANT_ADMIN role.",
-        cancel: "Cancel",
-        createTenant: "Create Tenant",
-        deleteTenantConfirm: "Are you sure you want to delete this tenant? This will delete all their data (Chatbots, Knowledge Base, History). This action cannot be undone.",
+
         tenantCreated: "Tenant created successfully.",
         tenantDeleted: "Tenant data deleted successfully.",
         userStatusUpdated: "User status updated successfully.",
