@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { ShoppingBag, ArrowRight, Mic } from "lucide-react"
+import { ShoppingBag, ArrowRight, Mic, MessageSquare } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/LanguageContext"
 import { useAuth } from "@/context/AuthContext"
@@ -15,16 +15,18 @@ import { useToast } from "@/hooks/use-toast"
 export default function ModulesPage() {
     const { t } = useLanguage()
     const router = useRouter()
-    const { user, enablePersonalShopper, enableVoiceAssistant } = useAuth()
+    const { user, enablePersonalShopper, enableVoiceAssistant, enableChatbot } = useAuth()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState(false)
     const [isActive, setIsActive] = useState(false)
     const [isVoiceActive, setIsVoiceActive] = useState(false)
+    const [isChatbotActive, setIsChatbotActive] = useState(false)
 
     useEffect(() => {
         setIsActive(!!enablePersonalShopper)
         setIsVoiceActive(!!enableVoiceAssistant)
-    }, [enablePersonalShopper, enableVoiceAssistant])
+        setIsChatbotActive(!!enableChatbot)
+    }, [enablePersonalShopper, enableVoiceAssistant, enableChatbot])
 
     const handleToggle = async (checked: boolean) => {
         if (!user) return
@@ -55,6 +57,34 @@ export default function ModulesPage() {
                 variant: "destructive"
             })
             setIsActive(!checked)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleChatbotToggle = async (checked: boolean) => {
+        if (!user) return
+        setIsLoading(true)
+        try {
+            const userRef = doc(db, "users", user.uid)
+            // Chatbot enablement logic
+            await updateDoc(userRef, {
+                enableChatbot: checked
+            })
+
+            setIsChatbotActive(checked)
+            toast({
+                title: checked ? (t('moduleEnabled') || "Modül Aktif Edildi") : (t('moduleDisabled') || "Modül Pasif Edildi"),
+                description: checked ? (t('chatbotModuleEnabledDesc') || "AI Chatbot active") : (t('chatbotModuleDisabledDesc') || "AI Chatbot disabled"),
+            })
+        } catch (error) {
+            console.error("Error updating chatbot module:", error)
+            toast({
+                title: "Error",
+                description: "Failed to update module status.",
+                variant: "destructive"
+            })
+            setIsChatbotActive(!checked)
         } finally {
             setIsLoading(false)
         }
@@ -106,6 +136,43 @@ export default function ModulesPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+                {/* AI Chatbot Card */}
+                <Card className="flex flex-col border transition-all hover:shadow-md">
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                        <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                            <MessageSquare className="w-6 h-6" />
+                        </div>
+                        <Switch
+                            checked={isChatbotActive}
+                            onCheckedChange={handleChatbotToggle}
+                            disabled={isLoading}
+                        />
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                        <CardTitle className="text-lg font-semibold mb-2">{t('aiChatbot') || "AI Chatbot"}</CardTitle>
+                        <CardDescription className="line-clamp-2">
+                            {t('aiChatbotDesc') || "Automate customer support and sales with a custom-trained AI assistant."}
+                        </CardDescription>
+
+                        <div className="mt-4 flex items-center gap-2 text-sm font-medium">
+                            <span className={`w-2 h-2 rounded-full ${isChatbotActive ? 'bg-green-500' : 'bg-gray-300'}`} />
+                            <span className={isChatbotActive ? 'text-green-600' : 'text-gray-500'}>
+                                {isChatbotActive ? (t('active') || "Active") : (t('inactive') || "Inactive")}
+                            </span>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                        <Button
+                            className="w-full gap-2"
+                            variant={isChatbotActive ? "default" : "outline"}
+                            disabled={!isChatbotActive}
+                            onClick={() => router.push("/console/chatbot")}
+                        >
+                            {t('manageModule') || "Manage Module"} <ArrowRight className="w-4 h-4" />
+                        </Button>
+                    </CardFooter>
+                </Card>
+
                 {/* Personal Shopper Card */}
                 <Card className="flex flex-col border transition-all hover:shadow-md">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
