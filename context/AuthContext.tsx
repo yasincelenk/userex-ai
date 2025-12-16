@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         console.log("AuthProvider: Mounting")
-        let unsubscribeSnapshot: () => void | undefined;
+        let unsubscribeSnapshot: (() => void) | undefined;
 
         // Ensure persistence is set to LOCAL
         setPersistence(auth, browserLocalPersistence)
@@ -90,7 +90,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             setEnableChatbot(data.enableChatbot ?? true);
                             setEnableCopywriter(data.enableCopywriter ?? true);
                             setEnableLeadFinder(data.enableLeadFinder ?? true);
-                            setEnableLeadFinder(data.enableLeadFinder ?? true);
                             setEnableVoiceAssistant(data.enableVoiceAssistant ?? false);
                             setCanManageModules(data.canManageModules || false);
                         } else {
@@ -114,7 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             setEnableChatbot(true);
                             setEnableCopywriter(true);
                             setEnableLeadFinder(true);
-                            setEnableLeadFinder(true);
                             setEnableVoiceAssistant(false);
                             setCanManageModules(false);
                         }
@@ -133,7 +131,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setEnablePersonalShopper(false)
                 setEnableChatbot(true)
                 setEnableCopywriter(true)
-                setEnableLeadFinder(true)
                 setEnableLeadFinder(true)
                 setEnableVoiceAssistant(false)
                 setCanManageModules(false)
@@ -158,7 +155,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             enablePersonalShopper,
             enableChatbot,
             enableCopywriter,
-            enableLeadFinder,
             enableLeadFinder,
             enableVoiceAssistant,
             canManageModules,
