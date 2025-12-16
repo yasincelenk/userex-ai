@@ -405,14 +405,36 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         )
     }
 
+
+    const getHeaderInfo = (tab: string) => {
+        switch (tab) {
+            case 'branding':
+                return { title: t('brandingTitle'), desc: t('brandingDesc') }
+            case 'appearance':
+                return { title: t('appearanceTitle'), desc: t('appearanceDesc') }
+            case 'behavior':
+                return { title: t('behaviorTitle'), desc: t('behaviorDesc') }
+            case 'triggers':
+                return { title: t('triggersTitle'), desc: t('triggersDesc') }
+            case 'engagement':
+                return { title: t('engagementTitle'), desc: t('engagementDesc') }
+            case 'availability':
+                return { title: t('availabilityTitle'), desc: t('availabilityDesc') }
+            default:
+                return { title: t('chatbotConfiguration'), desc: t('configureChatbotDesc') }
+        }
+    }
+
+    const { title: headerTitle, desc: headerDesc } = getHeaderInfo(activeTab)
+
     return (
         <div className="flex flex-col gap-8 lg:flex-row">
             {/* Left Panel: Settings with Tabs */}
             <div className="flex-1 space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-lg font-semibold tracking-tight">{t('chatbotConfiguration')}</h3>
-                        <p className="text-sm text-muted-foreground">{t('configureChatbotDesc')}</p>
+                        <h3 className="text-lg font-semibold tracking-tight">{headerTitle}</h3>
+                        <p className="text-sm text-muted-foreground">{headerDesc}</p>
                     </div>
                 </div>
 
