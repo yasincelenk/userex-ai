@@ -903,7 +903,7 @@ export const translations = {
         landingAllRights: "Tüm hakları saklıdır.",
 
         // Pricing Page
-        pricingTitle: "Basit, Şeffaf Fiyatlandırma",
+
         pricingSubtitle: "İşletmeniz için mükemmel planı seçin. Gizli ücret yok.",
         mostPopular: "EN POPÜLER",
         starterPlan: "Başlangıç",
@@ -1150,7 +1150,7 @@ export const translations = {
         role: "Rol",
         status: "Durum",
         createdAt: "Oluşturulma Tarihi",
-        actions: "İşlemler",
+
 
         // New Tenant Fields
         accountInfo: "Hesap Bilgileri",
@@ -1186,76 +1186,14 @@ export const translations = {
         featureLeadFinderTitle: "Müşteri Bulucu",
         featureLeadFinderDesc: "İdeal müşterilerinizi bulmak için otomatik araştırma.",
         // Widget Settings
-        widgetSettings: "Widget Ayarları",
-        chatbotConfiguration: "Chatbot Yapılandırması",
-        configureChatbotDesc: "Chatbot'unuzun görünümünü ve davranışını yapılandırın.",
-        themeDesignMode: "Tema & Tasarım Modu",
-        modeClassic: "Mod 1: Klasik",
-        modeClassicDesc: "Başlatıcı butonlu standart sohbet arayüzü.",
-        modeModern: "Mod 2: Modern AI",
-        modeModernDesc: "Merkezi odaklı fütüristik parlayan küre tasarımı.",
-        positionLayout: "Konum & Düzen",
-        widgetPosition: "Widget Konumu",
-        bottomLeft: "Sol Alt",
-        bottomCenter: "Orta Alt",
-        bottomRight: "Sağ Alt",
-        viewMode: "Görüntüleme Modu",
-        classicSmall: "Klasik (Küçük)",
-        wideModal: "Geniş Modal",
-        launcherAppearance: "Başlatıcı Görünümü",
-        launcherStyle: "Başlatıcı Stili",
-        circleIcon: "Daire (İkon)",
-        squareIcon: "Kare (İkon)",
-        textOnly: "Sadece Metin",
-        iconText: "İkon + Metin",
-        buttonText: "Buton Metni",
-        iconColor: "İkon Rengi",
-        launcherIcon: "Başlatıcı İkonu",
-        library: "Kütüphane",
-        custom: "Özel",
-        searchIcons: "İkon ara...",
-        effectsSpacing: "Efektler & Boşluklar",
-        verticalSpacing: "Dikey Boşluk (px)",
-        sideSpacing: "Yatay Boşluk (px)",
 
-        // Tenant Profile
-        profileSettings: "Profil Ayarları",
-        manageUserRole: "Kullanıcı rolünü ve erişim durumunu yönetin.",
-        emailAddress: "E-posta Adresi",
-        emailCannotChange: "E-posta doğrudan değiştirilemez.",
-        userRole: "Kullanıcı Rolü",
-        selectRole: "Rol seç",
-        tenantAdmin: "Kiracı Yöneticisi",
-        superAdmin: "Süper Yönetici",
-        industrySector: "Endüstri / Sektör",
-        selectIndustry: "Endüstri seç",
-        accountStatus: "Hesap Durumu",
-        userCanLogin: "Kullanıcı giriş yapabilir ve panele erişebilir.",
-        userSuspended: "Kullanıcı erişimi askıya alındı.",
-        saveChanges: "Değişiklikleri Kaydet",
-        backToTenants: "Kiracılara Dön",
-        returnToList: "Listeye dön",
-        editingAsSuperAdmin: "Süper Yönetici Olarak Düzenleniyor",
-        testFullPage: "Tam Sayfa Test Et",
-        testWidget: "Widget Test Et",
-        modules: "Modüller",
-        knowledgeBase: "Bilgi Tabanı",
-        branding: "Markalama",
-        appearance: "Görünüm",
-        triggers: "Tetikleyiciler",
-        availability: "Uygunluk",
-        integration: "Entegrasyon",
-        chats: "Sohbetler",
 
         featureAuditorDesc: "Sitenizin kapsamlı kullanılabilirliğini analiz edin ve optimize edin.",
 
         // Signup
         signupTitle: "Erişim Başvurusu",
         signupDesc: "Hesap başvurusu için aşağıdaki formu doldurun.",
-        firstName: "Ad",
-        lastName: "Soyad",
-        companyName: "Şirket Adı",
-        website: "Web Sitesi",
+
         confirmPassword: "Şifreyi Onayla",
         submitApplication: "Başvuruyu Gönder",
         submitting: "Gönderiliyor...",
@@ -1432,7 +1370,7 @@ export const translations = {
         brandingGeneral: "Genel",
         brandingGeneralDesc: "Chatbotunuzun kimliğini özelleştirin.",
         maxSize2MB: "Maks. boyut: 2MB",
-        recommendedSize: "Önerilen: 128x128px",
+
 
         // Widget Settings - Appearance
         themeAndDesign: "Tema ve Tasarım Modu",
@@ -1441,50 +1379,29 @@ export const translations = {
         themeModern: "Mod 2: Modern Yapay Zeka",
         themeModernDesc: "Merkezi odaklı fütüristik parlayan küre tasarımı.",
         positionAndLayout: "Konum ve Düzen",
-        widgetPosition: "Widget Konumu",
-        bottomLeft: "Sol Alt",
-        bottomCenter: "Alt Orta",
-        bottomRight: "Sağ Alt",
-        viewMode: "Görüntüleme Modu",
+
+
         viewModeClassic: "Klasik (Küçük)",
         viewModeWide: "Geniş Modal",
-        launcherAppearance: "Başlatıcı Görünümü",
-        launcherStyle: "Başlatıcı Stili",
+
         styleCircle: "Daire (Simge)",
         styleSquare: "Kare (Simge)",
         styleText: "Sadece Metin",
         styleIconText: "Simge + Metin",
-        buttonText: "Düğme Metni",
+
         launcherBgColor: "Arka Plan Rengi",
         launcherIconColor: "Simge Rengi",
-        launcherIcon: "Başlatıcı Simgesi",
+
         iconLibrary: "Kütüphane",
         iconCustom: "Özel",
         effectsAndSpacing: "Efektler ve Aralıklar",
-        verticalSpacing: "Dikey Aralık (px)",
-        sideSpacing: "Yan Aralık (px)",
+
         animationLoop: "Animasyon Döngüsü",
 
         // Widget Settings - Availability
-        selectTimezone: "Saat Dilimi Seçin",
-        startTime: "Başlangıç Saati",
-        endTime: "Bitiş Saati",
-        offlineMessagePlaceholder: "Mesaj girin...",
-        superAdminDashboard: "Kiracı Yönetimi",
-        systemPerformanceOverview: "Kiracılarınızı ve sistem performansını yönetin.",
-        totalTenants: "Toplam Kiracı",
-        registeredTenantAccounts: "Kayıtlı kiracı hesapları",
-        activeTenants: "Aktif Kiracılar",
-        currentlyActiveAccounts: "Şu anda aktif hesaplar",
-        totalChatbots: "Toplam Chatbotlar",
-        deployedChatbots: "Tüm kiracılarda dağıtılanlar",
-        addTenant: "Kiracı Ekle",
-        manageTenantsDescription: "Kullanıcıları, rolleri ve erişimi yönetin.",
-        searchTenants: "Kiracı ara...",
-        addNewTenant: "Yeni Kiracı Ekle",
-        addNewTenantDescription: "Yeni bir kiracı hesabı oluşturun. TENANT_ADMIN rolü atanacaktır.",
-        createTenant: "Kiracı Oluştur",
-        deleteTenantConfirm: "Bu kiracıyı silmek istediğinizden emin misiniz? Bu işlem tüm verilerini (Chatbotlar, Bilgi Tabanı, Geçmiş) silecektir. Bu işlem geri alınamaz.",
+
+
+
         deleteTenantSuccess: "Kiracı verileri başarıyla silindi. (Not: Yönetici SDK kullanılmıyorsa Kimlik Doğrulama kullanıcısı hala mevcut olabilir)",
     },
     de: {
