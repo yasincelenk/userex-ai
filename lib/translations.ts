@@ -709,25 +709,7 @@ export const translations = {
 
         animationLoop: "Animation Loop",
 
-        // Login Page Hero & Features
-        loginHeroTitle: "Transform Your Business with AI",
-        loginHeroSubtitle: "One platform, four powerful agents working together.",
-        featureCustSupportTitle: "AI Customer Support",
-        featureCustSupportDesc: "24/7 intelligent support that resolves 80% of queries instantly.",
-        featureShopperTitle: "Personal Shopper",
-        featureShopperDesc: "Smart product recommendations that boost conversion.",
-        featureCopywriterTitle: "AI Copywriter",
-        featureCopywriterDesc: "Generate high-converting content in seconds.",
-        featureLeadFinderTitle: "Lead Finder",
-        featureLeadFinderDesc: "Automated prospecting to find your perfect customers.",
-        featureAuditorTitle: "UI/UX Auditor",
-        featureAuditorDesc: "Analyze and optimize your site's comprehensive usability.",
 
-        // Widget Settings - Availability
-        selectTimezone: "Select Timezone",
-        startTime: "Start Time",
-        endTime: "End Time",
-        offlineMessagePlaceholder: "Enter message...",
     },
     tr: {
         dashboard: "Panel",
