@@ -208,6 +208,20 @@ export const translations = {
         landingContact: "Contact",
         landingAllRights: "All rights reserved.",
 
+        // Login Page Hero & Features
+        loginHeroTitle: "Transform Your Business with AI",
+        loginHeroSubtitle: "One platform, four powerful assistants working together.",
+        featureCustSupportTitle: "AI Customer Support",
+        featureCustSupportDesc: "24/7 intelligent support that resolves 80% of requests instantly.",
+        featureShopperTitle: "Personal Shopper",
+        featureShopperDesc: "Smart product recommendations that boost conversion.",
+        featureCopywriterTitle: "AI Copywriter",
+        featureCopywriterDesc: "Generate high-converting content in seconds.",
+        featureLeadFinderTitle: "Lead Finder",
+        featureLeadFinderDesc: "Automated research to find your ideal customers.",
+        featureAuditorTitle: "UI/UX Auditor",
+        featureAuditorDesc: "Analyze and optimize your site's comprehensive usability.",
+
         // Pricing Page
         pricingComingSoon: "Coming Soon",
         pricingFlexiblePlans: "Flexible Plans for<br />Every Stage",
