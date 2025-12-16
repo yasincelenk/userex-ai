@@ -60,13 +60,9 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
                 <ProductLauncher />
                 {showSidebarTrigger && <SidebarTrigger />}
                 <div className="flex items-center gap-2 ml-2">
-                    <Image
-                        src="/exai-logo-dark.png"
-                        alt="ex ai"
-                        width={100}
-                        height={24}
-                        className="h-6 w-auto object-contain"
-                    />
+                    <div className="flex items-center gap-2 ml-2">
+                        {/* Logo removed as per request */}
+                    </div>
                 </div>
                 <div className="ml-4 h-6 w-px bg-border" />
                 <Breadcrumbs />
