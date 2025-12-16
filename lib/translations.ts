@@ -594,37 +594,25 @@ export const translations = {
         visualAnalysisTitle: "Visual Layout Analysis",
         visualAnalysisDesc: "Upload screenshots to analyze hierarchy, whitespace, and alignment.",
         // Widget Settings
-        widgetSettings: "Widget Settings",
-        chatbotConfiguration: "Chatbot Configuration",
-        configureChatbotDesc: "Configure your chatbot's appearance and behavior.",
-        themeDesignMode: "Theme & Design Mode",
+
         modeClassic: "Mode 1: Classic",
         modeClassicDesc: "Standard chat interface with launcher button.",
         modeModern: "Mode 2: Modern AI",
         modeModernDesc: "Futuristic glowing orb design with centralized focus.",
-        positionLayout: "Position & Layout",
-        widgetPosition: "Widget Position",
-        bottomLeft: "Bottom Left",
-        bottomCenter: "Bottom Center",
-        bottomRight: "Bottom Right",
+
         viewMode: "View Mode",
         classicSmall: "Classic (Small)",
         wideModal: "Wide Modal",
-        launcherAppearance: "Launcher Appearance",
-        launcherStyle: "Launcher Style",
+
         circleIcon: "Circle (Icon)",
         squareIcon: "Square (Icon)",
         textOnly: "Text Only",
         iconText: "Icon + Text",
-        buttonText: "Button Text",
-        iconColor: "Icon Color",
-        launcherIcon: "Launcher Icon",
-        library: "Library",
+
+
         custom: "Custom",
         searchIcons: "Search icons...",
-        effectsSpacing: "Effects & Spacing",
-        verticalSpacing: "Vertical Spacing (px)",
-        sideSpacing: "Side Spacing (px)",
+
 
         // Tenant Profile
         profileSettings: "Profile Settings",
