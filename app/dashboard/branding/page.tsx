@@ -1,7 +1,7 @@
 "use client"
 
-import { BrandingSettings } from "@/components/branding-settings"
+import WidgetSettings from "@/components/widget-settings"
 
 export default function BrandingPage() {
-    return <BrandingSettings />
+    return <WidgetSettings />
 }

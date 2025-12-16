@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -10,7 +9,6 @@ import {
     CheckCircle2,
     Globe,
     Layout,
-    MessageSquare,
     Shield,
     Zap,
     ShoppingBag,
@@ -18,97 +16,21 @@ import {
     Search,
     BarChart3,
     Users,
-    ChevronDown
 } from "lucide-react"
 import Script from "next/script"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { translations, Language } from "@/lib/translations"
+
+import { PublicHeader } from "@/components/public-header"
+import { PublicFooter } from "@/components/public-footer"
+import { useLanguage } from "@/context/LanguageContext"
+import { useAuth } from "@/context/AuthContext"
 
 export default function LandingPage() {
-    const [language, setLanguage] = useState<Language>('en')
-
-    useEffect(() => {
-        const storedLang = localStorage.getItem('language') as Language
-        if (storedLang && ['en', 'tr'].includes(storedLang)) {
-            setLanguage(storedLang)
-        } else {
-            const browserLang = navigator.language.split('-')[0] as Language
-            if (['en', 'tr'].includes(browserLang)) {
-                setLanguage(browserLang)
-            }
-        }
-    }, [])
-
-    const handleLanguageChange = (lang: Language) => {
-        setLanguage(lang)
-        localStorage.setItem('language', lang)
-    }
-
-    const t = (key: keyof typeof translations['en']) => {
-        return (translations[language] as any)[key] || translations['en'][key] || key
-    }
-
-    const languageLabels: Record<string, string> = {
-        en: "English",
-        tr: "Türkçe"
-    }
+    const { t, language } = useLanguage()
+    const { user } = useAuth()
 
     return (
         <div className="dark min-h-screen bg-black text-white selection:bg-lime-500/20 font-sans">
-            {/* Navbar */}
-            <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl supports-[backdrop-filter]:bg-black/20">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-                        <Image
-                            src="/exai-logo.png"
-                            alt="ex ai"
-                            width={100}
-                            height={24}
-                            className="h-6 w-auto object-contain"
-                        />
-                    </div>
-                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-                        <Link href="#products" className="hover:text-white transition-colors">{t('landingProducts')}</Link>
-                        <Link href="#features" className="hover:text-white transition-colors">{t('landingFeatures')}</Link>
-                        <Link href="#pricing" className="hover:text-white transition-colors">{t('landingPricing')}</Link>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        {/* Language Selector */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 gap-1">
-                                    <Globe className="w-4 h-4" />
-                                    {languageLabels[language]}
-                                    <ChevronDown className="w-3 h-3" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-black border-white/10">
-                                <DropdownMenuItem onClick={() => handleLanguageChange('en')} className="text-white hover:bg-white/10 cursor-pointer">
-                                    English
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleLanguageChange('tr')} className="text-white hover:bg-white/10 cursor-pointer">
-                                    Türkçe
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Link href="/login">
-                            <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5">
-                                {t('login')}
-                            </Button>
-                        </Link>
-                        <Link href="/signup">
-                            <Button className="bg-white text-black hover:bg-white/90 font-medium shadow-lg shadow-white/10">
-                                {t('landingGetStarted')}
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </nav>
+            <PublicHeader transparent={true} />
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
@@ -132,12 +54,21 @@ export default function LandingPage() {
                             {t('landingHeroSubtitle')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                            <Link href="/signup">
-                                <Button className="h-12 px-8 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 w-full sm:w-auto transition-all hover:scale-105">
-                                    {t('landingStartFree')}
-                                    <ArrowRight className="ml-2 w-5 h-5" />
-                                </Button>
-                            </Link>
+                            {user ? (
+                                <Link href="/platform">
+                                    <Button className="h-12 px-8 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 w-full sm:w-auto transition-all hover:scale-105">
+                                        {language === 'tr' ? 'Panele Git' : 'Go to Console'}
+                                        <ArrowRight className="ml-2 w-5 h-5" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link href="/signup">
+                                    <Button className="h-12 px-8 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 w-full sm:w-auto transition-all hover:scale-105">
+                                        {t('landingStartFree')}
+                                        <ArrowRight className="ml-2 w-5 h-5" />
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -324,30 +255,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="border-t border-white/10 py-12 bg-black">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-xl">
-                            <Image
-                                src="/exai-logo.png"
-                                alt="ex ai"
-                                width={100}
-                                height={28}
-                                className="h-6 w-auto object-contain"
-                            />
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            © 2024 ex ai by Userex. {t('landingAllRights')}
-                        </div>
-                        <div className="flex gap-6 text-sm text-muted-foreground">
-                            <Link href="#" className="hover:text-white transition-colors">{t('landingPrivacy')}</Link>
-                            <Link href="#" className="hover:text-white transition-colors">{t('landingTerms')}</Link>
-                            <Link href="#" className="hover:text-white transition-colors">{t('landingContact')}</Link>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <PublicFooter />
             <Script
                 src="/widget.js"
                 data-chatbot-id="qqv4HRZyAuUwsApyYxoBEgTs4hC2"

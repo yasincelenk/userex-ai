@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth"
+import { createUserWithEmailAndPassword } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
 import { doc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, CheckCircle2, Bot, ShoppingBag, PenTool, Search } from "lucide-react"
+import { Loader2, CheckCircle2, Bot, ShoppingBag, PenTool, Search, Scan } from "lucide-react"
 import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -83,7 +83,7 @@ export default function SignUpForm() {
             setIsSuccess(true)
             toast({
                 title: t('success'),
-                description: "Application received successfully.",
+                description: t('applicationReceived'),
             })
         } catch (error: any) {
             console.error("Sign up error:", error)
@@ -121,8 +121,8 @@ export default function SignUpForm() {
                         </div>
                         <div className="space-y-8 max-w-md">
                             <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tight">Transform Your Business with AI</h2>
-                                <p className="text-gray-400">One platform, four powerful agents working together.</p>
+                                <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
+                                <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
                             </div>
                             <div className="grid gap-6">
                                 <div className="flex items-center gap-4">
@@ -130,8 +130,8 @@ export default function SignUpForm() {
                                         <Bot className="h-6 w-6 text-lime-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">AI Customer Support</h3>
-                                        <p className="text-sm text-gray-400">24/7 intelligent support that resolves 80% of queries instantly.</p>
+                                        <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
+                                        <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
@@ -139,8 +139,8 @@ export default function SignUpForm() {
                                         <ShoppingBag className="h-6 w-6 text-purple-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">Personal Shopper</h3>
-                                        <p className="text-sm text-gray-400">Smart product recommendations that boost conversion.</p>
+                                        <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
+                                        <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
@@ -148,8 +148,8 @@ export default function SignUpForm() {
                                         <PenTool className="h-6 w-6 text-pink-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">AI Copywriter</h3>
-                                        <p className="text-sm text-gray-400">Generate high-converting content in seconds.</p>
+                                        <h3 className="font-semibold text-lg">{t('featureCopywriterTitle')}</h3>
+                                        <p className="text-sm text-gray-400">{t('featureCopywriterDesc')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
@@ -157,33 +157,44 @@ export default function SignUpForm() {
                                         <Search className="h-6 w-6 text-green-400" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">Lead Finder</h3>
-                                        <p className="text-sm text-gray-400">Automated prospecting to find your perfect customers.</p>
+                                        <h3 className="font-semibold text-lg">{t('featureLeadFinderTitle')}</h3>
+                                        <p className="text-sm text-gray-400">{t('featureLeadFinderDesc')}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20">
+                                        <Scan className="h-6 w-6 text-orange-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">{t('featureAuditorTitle')}</h3>
+                                        <p className="text-sm text-gray-400">{t('featureAuditorDesc')}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="text-sm text-gray-400">
-                            © 2024 ex ai by Userex. All rights reserved.
+                            {t('copyright')}
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center justify-center py-12 relative">
+                    <div className="absolute top-4 right-4 md:top-8 md:right-8">
+                        <LanguageSwitcher />
+                    </div>
                     <div className="mx-auto grid w-[350px] gap-6 text-center">
                         <div className="flex justify-center mb-4">
                             <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                                 <CheckCircle2 className="h-6 w-6 text-blue-600" />
                             </div>
                         </div>
-                        <h1 className="text-3xl font-bold">Application Received</h1>
+                        <h1 className="text-3xl font-bold">{t('applicationReceived')}</h1>
                         <p className="text-muted-foreground">
-                            Thank you for applying! Your account has been created and is pending approval.
-                            Our team will review your application and contact you shortly.
+                            {t('applicationPendingMsg')}
                         </p>
                         <div className="grid gap-4">
                             <Link href="/login">
                                 <Button className="w-full">
-                                    Return to Login
+                                    {t('returnToLogin')}
                                 </Button>
                             </Link>
                         </div>
@@ -209,8 +220,8 @@ export default function SignUpForm() {
                     </div>
                     <div className="space-y-8 max-w-md">
                         <div className="space-y-2">
-                            <h2 className="text-3xl font-bold tracking-tight">Transform Your Business with AI</h2>
-                            <p className="text-gray-400">One platform, four powerful agents working together.</p>
+                            <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
+                            <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
                         </div>
                         <div className="grid gap-6">
                             <div className="flex items-center gap-4">
@@ -218,8 +229,8 @@ export default function SignUpForm() {
                                     <Bot className="h-6 w-6 text-lime-400" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg">AI Customer Support</h3>
-                                    <p className="text-sm text-gray-400">24/7 intelligent support that resolves 80% of queries instantly.</p>
+                                    <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
+                                    <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -227,8 +238,8 @@ export default function SignUpForm() {
                                     <ShoppingBag className="h-6 w-6 text-purple-400" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg">Personal Shopper</h3>
-                                    <p className="text-sm text-gray-400">Smart product recommendations that boost conversion.</p>
+                                    <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
+                                    <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -236,8 +247,8 @@ export default function SignUpForm() {
                                     <PenTool className="h-6 w-6 text-pink-400" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg">AI Copywriter</h3>
-                                    <p className="text-sm text-gray-400">Generate high-converting content in seconds.</p>
+                                    <h3 className="font-semibold text-lg">{t('featureCopywriterTitle')}</h3>
+                                    <p className="text-sm text-gray-400">{t('featureCopywriterDesc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -245,14 +256,23 @@ export default function SignUpForm() {
                                     <Search className="h-6 w-6 text-green-400" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-lg">Lead Finder</h3>
-                                    <p className="text-sm text-gray-400">Automated prospecting to find your perfect customers.</p>
+                                    <h3 className="font-semibold text-lg">{t('featureLeadFinderTitle')}</h3>
+                                    <p className="text-sm text-gray-400">{t('featureLeadFinderDesc')}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20">
+                                    <Scan className="h-6 w-6 text-orange-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg">{t('featureAuditorTitle')}</h3>
+                                    <p className="text-sm text-gray-400">{t('featureAuditorDesc')}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="text-sm text-gray-400">
-                        © 2024 ex ai by Userex. All rights reserved.
+                        {t('copyright')}
                     </div>
                 </div>
             </div>
@@ -262,9 +282,9 @@ export default function SignUpForm() {
                 </div>
                 <div className="mx-auto grid w-[350px] gap-6 my-8">
                     <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold">Apply for Access</h1>
+                        <h1 className="text-3xl font-bold">{t('signupTitle')}</h1>
                         <p className="text-balance text-muted-foreground">
-                            Fill out the form below to apply for an account.
+                            {t('signupDesc')}
                         </p>
                     </div>
 
@@ -278,7 +298,7 @@ export default function SignUpForm() {
                     <form onSubmit={handleSignUp} className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="firstName">First Name</Label>
+                                <Label htmlFor="firstName">{t('firstName')}</Label>
                                 <Input
                                     id="firstName"
                                     placeholder="John"
@@ -288,7 +308,7 @@ export default function SignUpForm() {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="lastName">Last Name</Label>
+                                <Label htmlFor="lastName">{t('lastName')}</Label>
                                 <Input
                                     id="lastName"
                                     placeholder="Doe"
@@ -299,17 +319,17 @@ export default function SignUpForm() {
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="companyName">Company Name</Label>
+                            <Label htmlFor="companyName">{t('companyName')}</Label>
                             <Input
                                 id="companyName"
-                                placeholder="Acme Inc."
+                                placeholder={t('companyName') === 'Şirket Adı' ? 'Acme A.Ş.' : 'Acme Inc.'}
                                 required
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="companyWebsite">Website</Label>
+                            <Label htmlFor="companyWebsite">{t('website')}</Label>
                             <Input
                                 id="companyWebsite"
                                 placeholder="https://example.com"
@@ -341,7 +361,7 @@ export default function SignUpForm() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
                             <Input
                                 id="confirmPassword"
                                 type="password"
@@ -354,10 +374,10 @@ export default function SignUpForm() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Submitting...
+                                    {t('submitting')}
                                 </>
                             ) : (
-                                "Submit Application"
+                                t('submitApplication')
                             )}
                         </Button>
                     </form>

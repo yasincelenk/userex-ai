@@ -26,8 +26,8 @@ import { useLanguage } from "@/context/LanguageContext"
 import { ProductLauncher } from "@/components/product-launcher"
 import Image from "next/image"
 
-export function SiteHeader() {
-    const { user } = useAuth()
+export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?: boolean }) {
+    const { user, role } = useAuth()
     const { t, language, setLanguage } = useLanguage()
     const router = useRouter()
     const { toast } = useToast()
@@ -58,7 +58,7 @@ export function SiteHeader() {
         <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 shadow-sm w-full">
             <div className="flex items-center gap-2">
                 <ProductLauncher />
-                <SidebarTrigger />
+                {showSidebarTrigger && <SidebarTrigger />}
                 <div className="flex items-center gap-2 ml-2">
                     <Image
                         src="/exai-logo-dark.png"
@@ -119,17 +119,13 @@ export function SiteHeader() {
                             <span>Türkçe</span>
                             {language === 'tr' && <Check className="ml-auto h-4 w-4" />}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setLanguage('de')}>
-                            <Globe className="mr-2 h-4 w-4" />
-                            <span>Deutsch</span>
-                            {language === 'de' && <Check className="ml-auto h-4 w-4" />}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setLanguage('es')}>
-                            <Globe className="mr-2 h-4 w-4" />
-                            <span>Español</span>
-                            {language === 'es' && <Check className="ml-auto h-4 w-4" />}
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {(role === 'admin' || role === 'SUPER_ADMIN') && (
+                            <DropdownMenuItem onClick={() => router.push("/admin")}>
+                                <LayoutDashboard className="mr-2 h-4 w-4 text-red-500" />
+                                <span className="text-red-500 font-medium">Manage Tenants</span>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>{t('logout')}</span>

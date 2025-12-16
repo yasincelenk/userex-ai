@@ -11,8 +11,11 @@ import {
 } from "@/components/ui/breadcrumb"
 import React from "react"
 
+import { useLanguage } from "@/context/LanguageContext"
+
 export function Breadcrumbs() {
     const pathname = usePathname()
+    const { t } = useLanguage()
     const segments = (pathname || "").split("/").filter((segment) => segment !== "")
 
     // Don't show breadcrumbs on the home page or platform page
@@ -31,6 +34,9 @@ export function Breadcrumbs() {
                     // Skip redundant segments
                     if (skipSegments.includes(segment)) return null
 
+                    // Special case: Inject "Modules" before "shopper"
+                    const showModulesLink = segment === "shopper" || segment === "copywriter" || segment === "lead-finder"
+
                     const href = `/${segments.slice(0, index + 1).join("/")}`
                     const isLast = index === segments.length - 1
 
@@ -40,22 +46,32 @@ export function Breadcrumbs() {
                         "shopper": "AI Personal Shopper",
                         "copywriter": "AI Copywriter",
                         "analytics": "Analytics",
-                        "knowledge": "Knowledge Base",
-                        "branding": "Branding",
+                        "knowledge": t('knowledgeBase'),
+                        "branding": t('branding'),
                         "integration": "Integrations",
-                        "chats": "Chats",
-                        "leads": "Leads",
-                        "tenants": "Tenants",
-                        "profile": "Profile",
+                        "chats": t('chats'),
+                        "leads": t('leads'),
+                        "tenants": t('tenants'),
+                        "admin": t('tenants'), // Map /admin to Tenants
+                        "profile": t('profile'),
                         "widget": "Widget",
-                        "catalog": "Catalog",
-                        "settings": "Settings"
+                        "catalog": t('productCatalog'),
+                        "settings": t('settings'),
+                        "modules": t('modules') || "Modules"
                     }
 
                     const title = labelMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1)
 
                     return (
                         <React.Fragment key={href}>
+                            {showModulesLink && (
+                                <>
+                                    <BreadcrumbSeparator />
+                                    <BreadcrumbItem>
+                                        <BreadcrumbLink href="/console/modules">{t('modules') || "Modules"}</BreadcrumbLink>
+                                    </BreadcrumbItem>
+                                </>
+                            )}
                             <BreadcrumbSeparator />
                             <BreadcrumbItem>
                                 {isLast ? (

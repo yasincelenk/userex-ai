@@ -14,6 +14,7 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
+    SidebarRail,
 } from "@/components/ui/sidebar"
 import {
     Package,
@@ -50,7 +51,7 @@ export function PlatformSidebar() {
     ]
 
     return (
-        <Sidebar className="!top-16 !h-[calc(100svh-4rem)]">
+        <Sidebar collapsible="icon" className="!top-16 !h-[calc(100svh-4rem)] border-r">
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -87,15 +88,16 @@ export function PlatformSidebar() {
                 )}
             </SidebarContent>
             <SidebarFooter>
-                <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
-                    onClick={handleLogout}
-                >
-                    <LogOut className="h-4 w-4" />
-                    Çıkış Yap
-                </Button>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton onClick={handleLogout}>
+                            <LogOut className="h-4 w-4" />
+                            <span>Çıkış Yap</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
+            <SidebarRail />
         </Sidebar>
     )
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -24,41 +23,21 @@ import {
     HeartHandshake,
     Target,
     ChevronDown,
-    ArrowLeft
+    ArrowLeft,
+    ChevronRight,
+    Home
 } from "lucide-react"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
+import { PublicHeader } from "@/components/public-header"
+import { PublicFooter } from "@/components/public-footer"
+import { useLanguage } from "@/context/LanguageContext"
 
 type SupportedLanguage = 'en' | 'tr'
 
 export default function AiSupportPage() {
-    const [language, setLanguage] = useState<SupportedLanguage>('en')
-
-    useEffect(() => {
-        const storedLang = localStorage.getItem('language') as SupportedLanguage
-        if (storedLang && ['en', 'tr'].includes(storedLang)) {
-            setLanguage(storedLang)
-        } else {
-            const browserLang = navigator.language.split('-')[0] as SupportedLanguage
-            if (['en', 'tr'].includes(browserLang)) {
-                setLanguage(browserLang)
-            }
-        }
-    }, [])
-
-    const handleLanguageChange = (lang: SupportedLanguage) => {
-        setLanguage(lang)
-        localStorage.setItem('language', lang)
-    }
-
-    const languageLabels: Record<string, string> = {
-        en: "English",
-        tr: "Türkçe"
-    }
+    const { language: globalLanguage } = useLanguage()
+    // Cast strict type or fallback
+    const language = (globalLanguage === 'tr' ? 'tr' : 'en') as SupportedLanguage
 
     const content = {
         en: {
@@ -218,15 +197,15 @@ export default function AiSupportPage() {
     const t = content[language]
 
     const features = [
-        { icon: Clock, title: t.feature1Title, desc: t.feature1Desc, color: "lime" },
-        { icon: Brain, title: t.feature2Title, desc: t.feature2Desc, color: "purple" },
-        { icon: Languages, title: t.feature3Title, desc: t.feature3Desc, color: "blue" },
-        { icon: Target, title: t.feature4Title, desc: t.feature4Desc, color: "green" },
-        { icon: HeartHandshake, title: t.feature5Title, desc: t.feature5Desc, color: "pink" },
-        { icon: Palette, title: t.feature6Title, desc: t.feature6Desc, color: "orange" },
-        { icon: Code, title: t.feature7Title, desc: t.feature7Desc, color: "cyan" },
-        { icon: BarChart3, title: t.feature8Title, desc: t.feature8Desc, color: "yellow" },
-        { icon: Smartphone, title: t.feature9Title, desc: t.feature9Desc, color: "rose" },
+        { icon: Clock, title: t.feature1Title, desc: t.feature1Desc, bgClass: "bg-lime-500/20", iconClass: "text-lime-400" },
+        { icon: Brain, title: t.feature2Title, desc: t.feature2Desc, bgClass: "bg-purple-500/20", iconClass: "text-purple-400" },
+        { icon: Languages, title: t.feature3Title, desc: t.feature3Desc, bgClass: "bg-blue-500/20", iconClass: "text-blue-400" },
+        { icon: Target, title: t.feature4Title, desc: t.feature4Desc, bgClass: "bg-green-500/20", iconClass: "text-green-400" },
+        { icon: HeartHandshake, title: t.feature5Title, desc: t.feature5Desc, bgClass: "bg-pink-500/20", iconClass: "text-pink-400" },
+        { icon: Palette, title: t.feature6Title, desc: t.feature6Desc, bgClass: "bg-orange-500/20", iconClass: "text-orange-400" },
+        { icon: Code, title: t.feature7Title, desc: t.feature7Desc, bgClass: "bg-cyan-500/20", iconClass: "text-cyan-400" },
+        { icon: BarChart3, title: t.feature8Title, desc: t.feature8Desc, bgClass: "bg-yellow-500/20", iconClass: "text-yellow-400" },
+        { icon: Smartphone, title: t.feature9Title, desc: t.feature9Desc, bgClass: "bg-rose-500/20", iconClass: "text-rose-400" },
     ]
 
     const useCases = [
@@ -239,57 +218,29 @@ export default function AiSupportPage() {
     ]
 
     return (
-        <div className="dark min-h-screen bg-black text-white selection:bg-lime-500/20 font-sans">
-            {/* Navbar */}
-            <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl supports-[backdrop-filter]:bg-black/20">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors">
-                            <ArrowLeft className="w-4 h-4" />
-                            {t.backToHome}
-                        </Link>
-                    </div>
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-                        <Image
-                            src="/exai-logo.png"
-                            alt="ex ai"
-                            width={100}
-                            height={24}
-                            className="h-6 w-auto object-contain"
-                        />
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white hover:bg-white/5 gap-1">
-                                    <Globe className="w-4 h-4" />
-                                    {languageLabels[language]}
-                                    <ChevronDown className="w-3 h-3" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-black border-white/10">
-                                <DropdownMenuItem onClick={() => handleLanguageChange('en')} className="text-white hover:bg-white/10 cursor-pointer">
-                                    English
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleLanguageChange('tr')} className="text-white hover:bg-white/10 cursor-pointer">
-                                    Türkçe
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Link href="/signup">
-                            <Button className="bg-lime-600 text-white hover:bg-lime-500 font-medium">
-                                {t.startFree}
-                            </Button>
-                        </Link>
-                    </div>
+        <div className="dark min-h-screen bg-black text-white selection:bg-lime-500/20 font-sans relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-lime-900/30 via-black to-black pointer-events-none fixed" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-lime-500/15 blur-[120px] rounded-full pointer-events-none fixed" />
+
+            <PublicHeader />
+
+            {/* Breadcrumb */}
+            <div className="container mx-auto px-4 pt-24 pb-4 relative z-10">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
+                        <Home className="w-4 h-4" />
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-white">Products</span>
+                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-lime-400">AI Support</span>
                 </div>
-            </nav>
+            </div>
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 md:pt-44 md:pb-28 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-lime-900/30 via-black to-black pointer-events-none" />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-lime-500/15 blur-[120px] rounded-full pointer-events-none" />
-
+            <section className="relative pt-12 pb-20 md:pt-24 md:pb-28 overflow-hidden">
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto text-center space-y-8">
                         <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-lime-500/10 border border-lime-500/30">
@@ -304,7 +255,7 @@ export default function AiSupportPage() {
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                             <Link href="/signup">
-                                <Button className="h-14 px-10 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 transition-all hover:scale-105">
+                                <Button className="h-14 px-10 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-lg shadow-lime-500/25 transition-all hover:scale-105 rounded-full">
                                     {t.startFree}
                                     <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
@@ -330,8 +281,8 @@ export default function AiSupportPage() {
                         {features.map((feature, i) => (
                             <div key={i} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 hover:bg-white/10 transition-all duration-300">
                                 <div className="relative z-10 space-y-4">
-                                    <div className={`w-12 h-12 rounded-xl bg-${feature.color}-500/20 flex items-center justify-center`}>
-                                        <feature.icon className={`w-6 h-6 text-${feature.color}-400`} />
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${feature.bgClass}`}>
+                                        <feature.icon className={`w-6 h-6 ${feature.iconClass}`} />
                                     </div>
                                     <h3 className="text-xl font-bold">{feature.title}</h3>
                                     <p className="text-muted-foreground text-sm leading-relaxed">
@@ -345,7 +296,7 @@ export default function AiSupportPage() {
             </section>
 
             {/* How it Works */}
-            <section className="py-24 bg-white/5">
+            <section className="py-24 bg-white/5 relative z-10">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold mb-4">{t.howItWorksTitle}</h2>
@@ -357,28 +308,28 @@ export default function AiSupportPage() {
                                 <FileText className="w-8 h-8 text-lime-400" />
                             </div>
                             <h3 className="text-2xl font-bold">{t.step1Title}</h3>
-                            <p className="text-muted-foreground">{t.step1Desc}</p>
+                            <p className="text-gray-400">{t.step1Desc}</p>
                         </div>
                         <div className="text-center space-y-4">
                             <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto">
                                 <Palette className="w-8 h-8 text-purple-400" />
                             </div>
                             <h3 className="text-2xl font-bold">{t.step2Title}</h3>
-                            <p className="text-muted-foreground">{t.step2Desc}</p>
+                            <p className="text-gray-400">{t.step2Desc}</p>
                         </div>
                         <div className="text-center space-y-4">
                             <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto">
                                 <Zap className="w-8 h-8 text-blue-400" />
                             </div>
                             <h3 className="text-2xl font-bold">{t.step3Title}</h3>
-                            <p className="text-muted-foreground">{t.step3Desc}</p>
+                            <p className="text-gray-400">{t.step3Desc}</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Use Cases */}
-            <section className="py-24">
+            <section className="py-24 relative z-10">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold">{t.useCasesTitle}</h2>
@@ -408,7 +359,7 @@ export default function AiSupportPage() {
                             {t.ctaSubtitle}
                         </p>
                         <Link href="/signup">
-                            <Button className="h-14 px-10 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-xl shadow-lime-500/20 transition-all hover:scale-105">
+                            <Button className="h-14 px-10 text-lg bg-lime-600 hover:bg-lime-500 text-white shadow-xl shadow-lime-500/20 transition-all hover:scale-105 rounded-full">
                                 {t.ctaButton}
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
@@ -419,29 +370,9 @@ export default function AiSupportPage() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-white/10 py-12 bg-black">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-xl">
-                            <Image
-                                src="/exai-logo.png"
-                                alt="ex ai"
-                                width={100}
-                                height={28}
-                                className="h-6 w-auto object-contain"
-                            />
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            © 2024 ex ai by Userex. {t.allRights}
-                        </div>
-                        <div className="flex gap-6 text-sm text-muted-foreground">
-                            <Link href="#" className="hover:text-white transition-colors">{t.privacy}</Link>
-                            <Link href="#" className="hover:text-white transition-colors">{t.terms}</Link>
-                            <Link href="#" className="hover:text-white transition-colors">{t.contact}</Link>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <div className="relative z-10">
+                <PublicFooter />
+            </div>
         </div>
     )
 }

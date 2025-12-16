@@ -34,6 +34,374 @@
     launcherBackgroundColor: ''
   };
 
+  // ============================================
+  // PROACTIVE ENGAGEMENT CONTROLLER
+  // ============================================
+
+  // Helper: Debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // Helper: Check if mobile device
+  function isMobileDevice() {
+    return window.innerWidth < 768;
+  }
+
+  // Engagement Controller Class
+  class EngagementController {
+    constructor(settings, baseUrl, chatbotId) {
+      if (!settings || !settings.enabled) {
+        return;
+      }
+
+      this.settings = settings;
+      this.baseUrl = baseUrl;
+      this.chatbotId = chatbotId;
+      this.bubble = null;
+      this.hasShown = false;
+      this.timers = [];
+      this.listeners = [];
+
+      // Session storage keys
+      this.shownCountKey = `userex_eng_shown_${chatbotId}`;
+      this.visitCountKey = `userex_eng_visits_${chatbotId}`;
+
+      // Check if we've exceeded max shows
+      const shownCount = parseInt(sessionStorage.getItem(this.shownCountKey) || '0');
+      if (shownCount >= (settings.bubble.maxShowCount || 3)) {
+        console.log('Engagement: Max shows reached for this session');
+        return;
+      }
+
+      this.init();
+    }
+
+    init() {
+      if (!this.settings) return;
+
+      console.log('Engagement Controller initialized', this.settings);
+      this.setupTriggers();
+    }
+
+    setupTriggers() {
+      const triggers = this.settings.triggers;
+
+      // 1. Time on Page Trigger
+      if (triggers.timeOnPage && triggers.timeOnPage > 0) {
+        const timer = setTimeout(() => {
+          console.log('Engagement: Time on page trigger fired');
+          this.showBubble();
+        }, triggers.timeOnPage * 1000);
+        this.timers.push(timer);
+      }
+
+      // 2. Scroll Depth Trigger
+      if (triggers.scrollDepth && triggers.scrollDepth > 0) {
+        const checkScroll = () => {
+          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+          if (scrollHeight <= 0) return; // No scroll possible
+
+          const scrolled = (window.scrollY / scrollHeight) * 100;
+          if (scrolled >= triggers.scrollDepth) {
+            console.log('Engagement: Scroll depth trigger fired');
+            this.showBubble();
+            window.removeEventListener('scroll', debouncedCheck);
+          }
+        };
+        const debouncedCheck = debounce(checkScroll, 200);
+        window.addEventListener('scroll', debouncedCheck);
+        this.listeners.push({ event: 'scroll', handler: debouncedCheck });
+      }
+
+      // 3. Exit Intent Trigger (Desktop only)
+      if (triggers.exitIntent && !isMobileDevice()) {
+        const handleMouseLeave = (e) => {
+          if (e.clientY <= 5 && !this.hasShown) {
+            console.log('Engagement: Exit intent trigger fired');
+            this.showBubble();
+          }
+        };
+        document.addEventListener('mouseleave', handleMouseLeave);
+        this.listeners.push({ event: 'mouseleave', handler: handleMouseLeave, target: document });
+      }
+
+      // 4. Page Revisit Trigger
+      if (triggers.pageRevisit && triggers.pageRevisit > 0) {
+        let visits = parseInt(localStorage.getItem(this.visitCountKey) || '0');
+        visits++;
+        localStorage.setItem(this.visitCountKey, visits.toString());
+
+        if (visits >= triggers.pageRevisit) {
+          console.log('Engagement: Page revisit trigger fired', visits);
+          this.showBubble();
+        }
+      }
+
+      // 5. Inactivity Trigger
+      if (triggers.inactivity && triggers.inactivity > 0) {
+        let inactivityTimer;
+        const resetTimer = () => {
+          clearTimeout(inactivityTimer);
+          if (!this.hasShown) {
+            inactivityTimer = setTimeout(() => {
+              console.log('Engagement: Inactivity trigger fired');
+              this.showBubble();
+            }, triggers.inactivity * 1000);
+          }
+        };
+
+        ['mousemove', 'keypress', 'scroll', 'click', 'touchstart'].forEach(event => {
+          const handler = debounce(resetTimer, 500);
+          document.addEventListener(event, handler);
+          this.listeners.push({ event, handler, target: document });
+        });
+
+        resetTimer(); // Start initial timer
+      }
+    }
+
+    showBubble() {
+      // Check if widget is already open
+      const container = document.getElementById('userex-chatbot-container');
+      const isWidgetOpen = container && container.style.display && container.style.display !== 'none';
+
+      if (this.hasShown || this.bubble || isWidgetOpen) return;
+
+      this.hasShown = true;
+
+      // Increment session counter
+      const shownCount = parseInt(sessionStorage.getItem(this.shownCountKey) || '0');
+      sessionStorage.setItem(this.shownCountKey, (shownCount + 1).toString());
+
+      // Clean up all triggers
+      this.cleanup();
+
+      // Select random message
+      const messages = this.settings.bubble.messages || ['Need help?'];
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+      // Get bubble config
+      const bubble = this.settings.bubble;
+      const position = bubble.position || 'top';
+      const style = bubble.style || {};
+      const animation = bubble.animation || 'bounce';
+
+      // Create bubble element
+      this.bubble = document.createElement('div');
+      this.bubble.id = 'userex-engagement-bubble';
+      this.bubble.innerHTML = `
+        <div class="bubble-content">${randomMessage}</div>
+        ${bubble.showCloseButton ? '<button class="bubble-close" aria-label="Close">×</button>' : ''}
+      `;
+
+      // Apply styles
+      const borderRadius = style.borderRadius !== undefined ? style.borderRadius : 12;
+      const shadows = {
+        'none': 'none',
+        'small': '0 2px 8px rgba(0,0,0,0.1)',
+        'medium': '0 4px 12px rgba(0,0,0,0.15)',
+        'large': '0 8px 24px rgba(0,0,0,0.2)'
+      };
+
+      this.bubble.style.cssText = `
+        position: fixed;
+        z-index: 999998;
+        background-color: ${style.backgroundColor || '#000000'};
+        color: ${style.textColor || '#FFFFFF'};
+        padding: 12px 16px;
+        border-radius: ${borderRadius}px;
+        box-shadow: ${shadows[style.shadow] || shadows.medium};
+        cursor: pointer;
+        max-width: 280px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      `;
+
+      // Position bubble relative to launcher
+      this.positionBubble(position);
+
+      // Style close button if exists
+      if (bubble.showCloseButton) {
+        const closeBtn = this.bubble.querySelector('.bubble-close');
+        closeBtn.style.cssText = `
+          background: none;
+          border: none;
+          color: ${style.textColor || '#FFFFFF'};
+          font-size: 20px;
+          cursor: pointer;
+          padding: 0;
+          margin-left: auto;
+          opacity: 0.7;
+          transition: opacity 0.2s;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
+        closeBtn.addEventListener('mouseenter', () => closeBtn.style.opacity = '1');
+        closeBtn.addEventListener('mouseleave', () => closeBtn.style.opacity = '0.7');
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.hideBubble();
+        });
+      }
+
+      // Add to DOM
+      document.body.appendChild(this.bubble);
+
+      // Trigger animation entry
+      setTimeout(() => {
+        this.bubble.style.opacity = '1';
+        this.bubble.style.transform = 'translateY(0)';
+      }, 10);
+
+      // Apply CSS animation
+      if (animation && animation !== 'none') {
+        this.addAnimationStyles();
+        setTimeout(() => {
+          this.bubble.classList.add(`userex-eng-${animation}`);
+        }, 300);
+      }
+
+      // Click handler - open chat
+      this.bubble.addEventListener('click', () => {
+        console.log('Engagement bubble clicked - opening chat');
+        const launcher = document.getElementById('userex-chatbot-launcher');
+        if (launcher) {
+          launcher.click();
+        }
+        this.hideBubble();
+      });
+
+      // Auto dismiss
+      if (bubble.autoDismiss) {
+        const delay = (bubble.autoDismissDelay || 10) * 1000;
+        setTimeout(() => {
+          this.hideBubble();
+        }, delay);
+      }
+    }
+
+    positionBubble(position) {
+      const launcher = document.getElementById('userex-chatbot-launcher');
+      if (!launcher) return;
+
+      const launcherRect = launcher.getBoundingClientRect();
+      const bubbleWidth = 280;
+      const gap = 16;
+
+      switch (position) {
+        case 'top':
+          // Above launcher
+          this.bubble.style.bottom = `${window.innerHeight - launcherRect.top + gap}px`;
+          this.bubble.style.right = `${window.innerWidth - launcherRect.right}px`;
+          break;
+        case 'left':
+          // Left of launcher
+          this.bubble.style.bottom = `${window.innerHeight - launcherRect.bottom}px`;
+          this.bubble.style.right = `${window.innerWidth - launcherRect.left + gap}px`;
+          break;
+        case 'right':
+          // Right of launcher  
+          this.bubble.style.bottom = `${window.innerHeight - launcherRect.bottom}px`;
+          this.bubble.style.left = `${launcherRect.right + gap}px`;
+          break;
+        default:
+          // Default: top
+          this.bubble.style.bottom = `${window.innerHeight - launcherRect.top + gap}px`;
+          this.bubble.style.right = `${window.innerWidth - launcherRect.right}px`;
+      }
+
+      // Mobile adjustments
+      if (isMobileDevice()) {
+        this.bubble.style.maxWidth = 'calc(100vw - 40px)';
+      }
+    }
+
+    addAnimationStyles() {
+      if (document.getElementById('userex-engagement-animations')) return;
+
+      const style = document.createElement('style');
+      style.id = 'userex-engagement-animations';
+      style.innerHTML = `
+        @keyframes userex-eng-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes userex-eng-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        @keyframes userex-eng-shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .userex-eng-bounce {
+          animation: userex-eng-bounce 1.5s ease-in-out infinite;
+        }
+        .userex-eng-pulse {
+          animation: userex-eng-pulse 2s ease-in-out infinite;
+        }
+        .userex-eng-shake {
+          animation: userex-eng-shake 0.5s ease-in-out infinite;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    hideBubble() {
+      if (!this.bubble) return;
+
+      this.bubble.style.opacity = '0';
+      this.bubble.style.transform = 'translateY(20px)';
+
+      setTimeout(() => {
+        if (this.bubble && this.bubble.parentNode) {
+          this.bubble.parentNode.removeChild(this.bubble);
+        }
+        this.bubble = null;
+      }, 300);
+    }
+
+    cleanup() {
+      // Clear all timers
+      this.timers.forEach(timer => clearTimeout(timer));
+      this.timers = [];
+
+      // Remove all event listeners
+      this.listeners.forEach(({ event, handler, target }) => {
+        (target || window).removeEventListener(event, handler);
+      });
+      this.listeners = [];
+    }
+
+    destroy() {
+      this.hideBubble();
+      this.cleanup();
+    }
+  }
+
+  // Global reference for cleanup
+  let engagementController = null;
+
   // Function to initialize widget
   function initWidget() {
     // Check if widget already exists
@@ -178,6 +546,58 @@
     // Create Launcher Button
     const launcher = document.createElement('div');
     launcher.id = 'userex-chatbot-launcher';
+
+    // Voice Launcher Logic
+    if (settings.enableVoiceAssistant) {
+      const voiceLauncher = document.createElement('div');
+      voiceLauncher.id = 'userex-voice-launcher';
+      const vlHeight = 50;
+      const vlWidth = 50;
+
+      Object.assign(voiceLauncher.style, {
+        position: 'fixed',
+        width: `${vlWidth}px`,
+        height: `${vlHeight}px`,
+        borderRadius: '50%',
+        backgroundColor: settings.launcherBackgroundColor || settings.primaryColor || '#000000',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        cursor: 'pointer',
+        zIndex: '999998', // Just below the main launcher if z-index collision occurs, but we want it visible
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+        ...horizontalStyle,
+        // Adjust vertical position to be above the main launcher
+        bottom: isBottom ? `${verticalSpacing + settings.launcherHeight + 16}px` : 'auto',
+        top: isTop ? `${verticalSpacing + settings.launcherHeight + 16}px` : 'auto',
+      });
+
+      // Adjust if centered or middle (simplified for now: stacks vertically)
+      if (isMiddle) {
+        // If middle, maybe stack horizontally? Let's stick to vertical stack for consistency
+        voiceLauncher.style.transform = `translateY(calc(-50% - ${settings.launcherHeight / 2 + 10}px))`;
+      }
+
+      voiceLauncher.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${settings.launcherIconColor || '#FFFFFF'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" x2="12" y1="19" y2="22"/>
+            </svg>
+        `;
+
+      voiceLauncher.onclick = (e) => {
+        e.stopPropagation();
+        toggleVoiceInterface();
+      };
+
+      // Hover effect
+      voiceLauncher.onmouseenter = () => { voiceLauncher.style.transform = (voiceLauncher.style.transform || '') + ' scale(1.1)'; };
+      voiceLauncher.onmouseleave = () => { voiceLauncher.style.transform = (voiceLauncher.style.transform || '').replace(' scale(1.1)', ''); };
+
+      document.body.appendChild(voiceLauncher);
+    }
 
     const isTextStyle = settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text';
 
@@ -383,9 +803,31 @@
       });
     }
 
+    // Check Availability
+    const isAvailable = checkAvailability();
+
     // Create Iframe
     const iframe = document.createElement('iframe');
-    iframe.src = `${baseUrl}/chatbot-view?id=${chatbotId}`;
+    let iframeSrc = `${baseUrl}/chatbot-view?id=${chatbotId}`;
+
+    // Append initial Context
+    const context = getPageContext();
+    const contextParams = new URLSearchParams({
+      url: context.url,
+      title: context.title,
+      desc: context.description ? context.description.substring(0, 200) : ''
+    }).toString();
+    iframeSrc += `&${contextParams}`;
+
+    // Add initial language if configured (not 'auto')
+    if (settings.initialLanguage && settings.initialLanguage !== 'auto') {
+      iframeSrc += `&lang=${settings.initialLanguage}`;
+    }
+
+    if (!isAvailable && settings.offlineMessage) {
+      iframeSrc += `&offlineMessage=${encodeURIComponent(settings.offlineMessage)}`;
+    }
+    iframe.src = iframeSrc;
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
@@ -397,6 +839,11 @@
     const toggleWidget = (forceState) => {
       isOpen = forceState !== undefined ? forceState : !isOpen;
       iframeContainer.style.display = isOpen ? 'block' : 'none';
+
+      // If opening, hide any engagement bubble
+      if (isOpen && engagementController) {
+        engagementController.hideBubble();
+      }
 
       // Update icon based on state
       renderLauncherContent(isOpen);
@@ -444,6 +891,54 @@
     // Append to body
     document.body.appendChild(launcher);
     document.body.appendChild(iframeContainer);
+
+    // Initialize Engagement Controller AFTER launcher is in DOM
+    // Must fetch engagement settings from the global settings object
+    fetch(`${baseUrl}/api/widget-settings?chatbotId=${chatbotId}&t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.engagement && data.engagement.enabled) {
+          console.log('Initializing Engagement Controller after launcher creation...');
+          engagementController = new EngagementController(data.engagement, baseUrl, chatbotId);
+        }
+      })
+      .catch(err => console.error('Failed to load engagement settings:', err));
+
+    // --- Triggers ---
+    if (isAvailable) {
+      // Auto Open
+      if (settings.autoOpenDelay > 0) {
+        setTimeout(() => {
+          if (!isOpen) toggleWidget(true);
+        }, settings.autoOpenDelay * 1000);
+      }
+
+      // Exit Intent
+      if (settings.openOnExitIntent && window.innerWidth >= 1024) { // Desktop only
+        const onMouseLeave = (e) => {
+          if (e.clientY <= 0) {
+            if (!isOpen) toggleWidget(true);
+            document.removeEventListener('mouseleave', onMouseLeave); // Trigger once
+          }
+        };
+        document.addEventListener('mouseleave', onMouseLeave);
+      }
+
+      // Scroll
+      if (settings.openOnScroll > 0) {
+        const onScroll = () => {
+          const scrollTop = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const scrollPercent = (scrollTop / docHeight) * 100;
+
+          if (scrollPercent >= settings.openOnScroll) {
+            if (!isOpen) toggleWidget(true);
+            window.removeEventListener('scroll', onScroll); // Trigger once
+          }
+        };
+        window.addEventListener('scroll', onScroll);
+      }
+    }
   }
 
   // Fetch settings from API
@@ -459,23 +954,31 @@
           viewMode: data.viewMode || 'classic',
           modalSize: data.modalSize || 'half',
           launcherStyle: data.launcherStyle || 'circle',
-          launcherText: data.launcherText || 'Chat',
+          launcherText: data.launcherText || 'Sohbet',
           launcherRadius: data.launcherRadius !== undefined ? data.launcherRadius : 50,
           launcherHeight: data.launcherHeight || 60,
           launcherWidth: data.launcherWidth || 60,
           launcherIcon: data.launcherIcon || 'message',
           launcherIconColor: data.launcherIconColor || '#FFFFFF',
-          // Only use launcherBackgroundColor if it's explicitly set (not empty string)
           launcherBackgroundColor: (data.launcherBackgroundColor && data.launcherBackgroundColor.trim()) ? data.launcherBackgroundColor : '',
           launcherIconUrl: data.launcherIconUrl || '',
           launcherLibraryIcon: data.launcherLibraryIcon || 'MessageSquare',
           bottomSpacing: data.bottomSpacing !== undefined ? data.bottomSpacing : 20,
           sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
           launcherShadow: data.launcherShadow || 'medium',
-          launcherAnimation: data.launcherAnimation || 'none'
+          launcherAnimation: data.launcherAnimation || 'none',
+          // Triggers
+          autoOpenDelay: data.autoOpenDelay || 0,
+          openOnExitIntent: data.openOnExitIntent || false,
+          openOnScroll: data.openOnScroll || 0,
+          // Availability
+          enableBusinessHours: data.enableBusinessHours || false,
+          timezone: data.timezone || 'UTC',
+          businessHoursStart: data.businessHoursStart || '09:00',
+          businessHoursEnd: data.businessHoursEnd || '17:00',
+          offlineMessage: data.offlineMessage || 'Şu anda çevrimdışıyız.'
         };
         console.log('Final settings object:', settings);
-        console.log('Launcher will use color:', settings.launcherBackgroundColor || settings.primaryColor);
       }
       initWidget();
     })
@@ -483,5 +986,171 @@
       console.error('Failed to load widget settings:', err);
       initWidget(); // Fallback to defaults
     });
+
+  // --- Context Awareness & Proactive Logic ---
+
+  // Helper to scrape metadata
+  function getPageContext() {
+    return {
+      url: window.location.href,
+      title: document.title,
+      description: document.querySelector('meta[name="description"]')?.content || '',
+      productName: document.querySelector('meta[property="og:title"]')?.content || document.title,
+      productImage: document.querySelector('meta[property="og:image"]')?.content || '',
+      productPrice: document.querySelector('meta[property="product:price:amount"]')?.content || ''
+    };
+  }
+
+  // Send context update to iframe
+  function sendContextUpdate() {
+    const iframe = document.querySelector('#userex-chatbot-container iframe');
+    if (iframe && iframe.contentWindow) {
+      const context = getPageContext();
+      iframe.contentWindow.postMessage({
+        type: 'USEREX_CONTEXT_UPDATE',
+        context: context
+      }, '*');
+    }
+  }
+
+  // Monkey-patch history API for SPA support
+  const originalPushState = history.pushState;
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args);
+    sendContextUpdate();
+  };
+
+  const originalReplaceState = history.replaceState;
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args);
+    sendContextUpdate();
+  };
+
+  window.addEventListener('popstate', sendContextUpdate);
+  // Also listen to hashchange just in case
+  window.addEventListener('hashchange', sendContextUpdate);
+
+  // Helper to check business hours
+
+  function checkAvailability() {
+    if (!settings.enableBusinessHours) return true;
+
+    try {
+      const now = new Date();
+      // Get current time in target timezone
+      const options = { timeZone: settings.timezone, hour: 'numeric', minute: 'numeric', hour12: false };
+      const formatter = new Intl.DateTimeFormat([], options);
+      const parts = formatter.formatToParts(now);
+      const hourPart = parts.find(p => p.type === 'hour');
+      const minutePart = parts.find(p => p.type === 'minute');
+
+      if (!hourPart || !minutePart) return true; // Fallback
+
+      const currentHour = parseInt(hourPart.value, 10);
+      const currentMinute = parseInt(minutePart.value, 10);
+      const currentTimeVal = currentHour * 60 + currentMinute;
+
+      const [startHour, startMinute] = settings.businessHoursStart.split(':').map(Number);
+      const [endHour, endMinute] = settings.businessHoursEnd.split(':').map(Number);
+      const startTimeVal = startHour * 60 + startMinute;
+      const endTimeVal = endHour * 60 + endMinute;
+
+      return currentTimeVal >= startTimeVal && currentTimeVal < endTimeVal;
+    } catch (e) {
+      console.error('Error checking availability:', e);
+      return true; // Fail open
+    }
+  }
+
+  // VOICE INTERFACE LOGIC
+  function toggleVoiceInterface() {
+    let overlay = document.getElementById('userex-voice-overlay');
+
+    if (overlay) {
+      // Toggle visibility
+      if (overlay.style.display === 'none') {
+        overlay.style.display = 'flex';
+        startVoiceSession();
+      } else {
+        overlay.style.display = 'none';
+        stopVoiceSession();
+      }
+    } else {
+      createVoiceOverlay();
+    }
+  }
+
+  function createVoiceOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'userex-voice-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      backdropFilter: 'blur(10px)',
+      zIndex: '999999',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      opacity: '0',
+      transition: 'opacity 0.3s ease'
+    });
+
+    overlay.innerHTML = `
+        <div style="position: absolute; top: 20px; right: 20px; cursor: pointer;" id="userex-voice-close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <div style="text-align: center; max-width: 90%;"> // <--- Fixed: added closing quote
+            <div id="userex-voice-status" style="font-size: 24px; font-weight: 500; margin-bottom: 20px;">Listening...</div>
+            <div id="userex-voice-visualizer" style="height: 60px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <div class="bar" style="width: 4px; height: 10px; background: white; border-radius: 2px;"></div>
+                <div class="bar" style="width: 4px; height: 20px; background: white; border-radius: 2px;"></div>
+                <div class="bar" style="width: 4px; height: 15px; background: white; border-radius: 2px;"></div>
+                <div class="bar" style="width: 4px; height: 25px; background: white; border-radius: 2px;"></div>
+                <div class="bar" style="width: 4px; height: 15px; background: white; border-radius: 2px;"></div>
+            </div>
+        </div>
+        <div id="userex-voice-controls" style="margin-top: 40px;">
+            <button id="userex-voice-mic-toggle" style="background: #ef4444; border: none; padding: 16px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </button>
+        </div>
+      `;
+
+    document.body.appendChild(overlay);
+
+    // Force reflow
+    overlay.offsetHeight;
+    overlay.style.opacity = '1';
+
+    document.getElementById('userex-voice-close').onclick = () => toggleVoiceInterface();
+
+    // Simple visualizer animation
+    const bars = overlay.querySelectorAll('.bar');
+    setInterval(() => {
+      bars.forEach(bar => {
+        bar.style.height = Math.random() * 40 + 10 + 'px';
+      });
+    }, 100);
+
+    startVoiceSession();
+  }
+
+  function startVoiceSession() {
+    // Placeholder for ElevenLabs/WebSpeech API logic
+    const statusEl = document.getElementById('userex-voice-status');
+    if (statusEl) statusEl.innerText = "Listening...";
+    console.log('Voice Session Started');
+  }
+
+  function stopVoiceSession() {
+    console.log('Voice Session Stopped');
+  }
 
 })();

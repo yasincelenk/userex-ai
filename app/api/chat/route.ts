@@ -3,11 +3,12 @@ import { openai } from "@ai-sdk/openai";
 import { generateAIResponse, saveMessageToSession, analyzeSentiment } from "@/lib/ai-service";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { trackAiUsage } from "@/lib/usage-tracker";
 
 export async function POST(req: Request) {
     try {
         console.log("Chat API: Request received");
-        const { messages, chatbotId, sessionId } = await req.json();
+        const { messages, chatbotId, sessionId, context, language, isVoice, shouldStream = true } = await req.json();
 
         // 0. Check if Session is Paused
         if (sessionId) {
@@ -28,19 +29,20 @@ export async function POST(req: Request) {
             }
         }
 
-        // Save user message before generating response
+        // Parallelize: Save user message and start generating AI response simultaneously
         const lastMessage = messages[messages.length - 1];
-        if (sessionId && lastMessage.role === "user") {
-            const sentiment = await analyzeSentiment(lastMessage.content);
-            await saveMessageToSession(sessionId, chatbotId, {
-                ...lastMessage,
-                role: "user",
-                sentiment
-            });
-        }
+        // We skip synchronous sentiment analysis to reduce latency
+        const [saveResult, result] = await Promise.all([
+            sessionId && lastMessage.role === "user"
+                ? saveMessageToSession(sessionId, chatbotId, { ...lastMessage, role: "user", sentiment: "Neutral" })
+                : Promise.resolve(),
+            generateAIResponse(chatbotId, messages, sessionId, shouldStream, context, isVoice, language)
+        ]);
 
-        // Generate AI response using streamText
-        const result = await generateAIResponse(chatbotId, messages, sessionId, true);
+        // Estimate Input Tokens (approx 4 chars = 1 token)
+        const inputContent = messages.map((m: any) => m.content).join(" ");
+        const estimatedInputTokens = Math.ceil(inputContent.length / 4);
+
 
         if (result.isStream) {
             // For streaming responses, we need to use the new ai SDK approach
@@ -68,7 +70,16 @@ export async function POST(req: Request) {
                                 role: "assistant",
                                 content: fullContent
                             });
+                            await saveMessageToSession(sessionId, chatbotId, {
+                                role: "assistant",
+                                content: fullContent
+                            });
                         }
+
+                        // Track Usage (Async, Fire-and-forget)
+                        const estimatedOutputTokens = Math.ceil(fullContent.length / 4);
+                        trackAiUsage(chatbotId, estimatedInputTokens, estimatedOutputTokens, "gpt-3.5-turbo");
+
 
                         controller.close();
                     } catch (error) {

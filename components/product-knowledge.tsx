@@ -35,14 +35,8 @@ export function ProductKnowledge() {
     const [isAdding, setIsAdding] = useState(false)
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false) // Renamed for clarity, was isOpen
 
-    // Import / Scraper / Feed State
+    // Import / Feed State
     const [isImportOpen, setIsImportOpen] = useState(false)
-    const [importUrl, setImportUrl] = useState("")
-    const [isScraping, setIsScraping] = useState(false)
-    const [scrapedProducts, setScrapedProducts] = useState<any[]>([])
-    const [selectedImportIndices, setSelectedImportIndices] = useState<Set<number>>(new Set())
-
-    // Feed Sync State
     const [feedUrl, setFeedUrl] = useState("")
     const [isSyncing, setIsSyncing] = useState(false)
 
@@ -133,93 +127,25 @@ export function ProductKnowledge() {
         }
     }
 
-
-    const handleScrape = async () => {
-        if (!importUrl) return
-        setIsScraping(true)
-        setScrapedProducts([])
-        try {
-            const res = await fetch('/api/chatbot/shopper/scrape-products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: importUrl })
-            })
-            const data = await res.json()
-            if (data.success && Array.isArray(data.products)) {
-                // Map to Product interface
-                const mapped = data.products.map((p: any) => ({
-                    ...p,
-                    price: parseFloat(p.price) || 0,
-                    inStock: true,
-                    createdAt: null
-                }))
-                setScrapedProducts(mapped)
-                // Select all by default
-                setSelectedImportIndices(new Set(mapped.map((_: any, i: number) => i)))
-            } else {
-                toast({ title: "Error", description: data.error || "Failed to find products", variant: "destructive" })
-            }
-        } catch (e) {
-            toast({ title: "Error", description: "Scraping failed", variant: "destructive" })
-        } finally {
-            setIsScraping(false)
-        }
-    }
-
-    const handleImportSelected = async () => {
-        if (!user?.uid) return
-        setIsAdding(true)
-        try {
-            const selected = scrapedProducts.filter((_, i) => selectedImportIndices.has(i))
-
-            // Bulk Add
-            for (const prod of selected) {
-                await addDoc(collection(db, "products"), {
-                    chatbotId: user.uid,
-                    name: prod.name,
-                    price: prod.price,
-                    currency: prod.currency,
-                    description: prod.description || "",
-                    imageUrl: prod.imageUrl || "",
-                    inStock: true,
-                    createdAt: serverTimestamp()
-                })
-            }
-
-            toast({ title: "Success", description: `${selected.length} products imported.` })
-            setIsImportOpen(false)
-            setScrapedProducts([])
-            setImportUrl("")
-            fetchProducts()
-        } catch (e) {
-            console.error(e)
-            toast({ title: "Error", description: "Import failed", variant: "destructive" })
-        } finally {
-            setIsAdding(false)
-        }
-    }
-
     const handleFeedSync = async () => {
         if (!feedUrl) return
         setIsSyncing(true)
         try {
+            const token = await user?.getIdToken()
             const res = await fetch('/api/chatbot/shopper/feed-sync', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ feedUrl })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ feedUrl, chatbotId: user?.uid })
             })
             const data = await res.json()
             if (data.success) {
                 toast({ title: "Success", description: `Synced ${data.count} products from feed.` })
                 setFeedUrl("")
                 setIsImportOpen(false) // Close the import dialog
-                // Refresh list
                 await fetchProducts()
-                // Assuming fetchStats is a function that exists elsewhere or can be removed if not needed
-                // await Promise.all([
-                //     fetchProducts(),
-                //     fetchStats()
-                // ])
             } else {
                 toast({ title: "Error", description: data.error, variant: "destructive" })
             }
@@ -253,56 +179,10 @@ export function ProductKnowledge() {
                                 <DialogDescription>Choose a method to import your products.</DialogDescription>
                             </DialogHeader>
 
-                            <Tabs defaultValue="url" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="url">Single Page Scan</TabsTrigger>
+                            <Tabs defaultValue="feed" className="w-full">
+                                <TabsList className="grid w-full grid-cols-1">
                                     <TabsTrigger value="feed">XML Feed (Bulk)</TabsTrigger>
                                 </TabsList>
-
-                                <TabsContent value="url" className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label>Website URL</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder="https://example.com/collection"
-                                                value={importUrl}
-                                                onChange={(e) => setImportUrl(e.target.value)}
-                                            />
-                                            <Button onClick={handleScrape} disabled={isScraping}>
-                                                {isScraping ? <Loader2 className="h-4 w-4 animate-spin" /> : "Scan Page"}
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    {scrapedProducts.length > 0 && (
-                                        <div className="border rounded-md max-h-[300px] overflow-y-auto p-2 space-y-2">
-                                            <div className="flex justify-between items-center p-2 bg-gray-50 sticky top-0 z-10">
-                                                <span className="text-sm font-medium">{scrapedProducts.length} Products Found</span>
-                                                <Button size="sm" onClick={handleImportSelected} disabled={selectedImportIndices.size === 0}>
-                                                    Import Selected ({selectedImportIndices.size})
-                                                </Button>
-                                            </div>
-                                            {scrapedProducts.map((p, i) => (
-                                                <div key={i} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded border-b last:border-0">
-                                                    <Checkbox
-                                                        checked={selectedImportIndices.has(i)}
-                                                        onCheckedChange={(checked) => {
-                                                            const next = new Set(selectedImportIndices)
-                                                            if (checked) next.add(i)
-                                                            else next.delete(i)
-                                                            setSelectedImportIndices(next)
-                                                        }}
-                                                    />
-                                                    {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="h-10 w-10 object-cover rounded" />}
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium truncate">{p.name}</p>
-                                                        <p className="text-xs text-gray-500">{p.price} {p.currency}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </TabsContent>
 
                                 <TabsContent value="feed" className="space-y-4 py-4">
                                     <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-700 mb-4">

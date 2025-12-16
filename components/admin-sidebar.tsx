@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/AuthContext"
+import Link from "next/link"
 
 import {
     Sidebar,
@@ -17,6 +18,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarFooter,
+    SidebarRail,
 } from "@/components/ui/sidebar"
 
 // Menu items for Super Admin
@@ -56,7 +58,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     }
 
     return (
-        <Sidebar {...props}>
+        <Sidebar collapsible="icon" className="!top-16 !h-[calc(100svh-4rem)] border-r" {...props}>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel>Super Admin Panel</SidebarGroupLabel>
@@ -65,10 +67,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        <Link href={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}
@@ -83,10 +85,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                             <SidebarMenu>
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <a href={`/admin/tenant/${userId}?tab=settings`}>
+                                        <Link href={`/admin/tenant/${userId}?tab=settings`}>
                                             <Settings />
                                             <span>Assistant Settings</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             </SidebarMenu>
@@ -94,6 +96,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     </SidebarGroup>
                 )}
             </SidebarContent>
+            <SidebarFooter>
+                {/* Optional footer content */}
+            </SidebarFooter>
+            <SidebarRail />
         </Sidebar>
     )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, getDocs, doc, updateDoc, onSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { INDUSTRY_CONFIG } from "@/lib/industry-config"
 import {
     Table,
     TableBody,
@@ -23,6 +24,13 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,6 +61,7 @@ export function TenantManagement() {
     const [newTenantLastName, setNewTenantLastName] = useState("")
     const [newTenantCompanyName, setNewTenantCompanyName] = useState("")
     const [newTenantWebsite, setNewTenantWebsite] = useState("")
+    const [newTenantIndustry, setNewTenantIndustry] = useState<string>("ecommerce")
     const [newTenantEnablePersonalShopper, setNewTenantEnablePersonalShopper] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
@@ -189,7 +198,8 @@ export function TenantManagement() {
                     companyWebsite: newTenantWebsite,
                     callerUid: user?.uid,
                     callerRole: role,
-                    enablePersonalShopper: newTenantEnablePersonalShopper
+                    enablePersonalShopper: newTenantEnablePersonalShopper,
+                    industry: newTenantIndustry
                 })
             })
 
@@ -209,6 +219,7 @@ export function TenantManagement() {
             setNewTenantLastName("")
             setNewTenantCompanyName("")
             setNewTenantWebsite("")
+            setNewTenantIndustry("ecommerce")
             setNewTenantEnablePersonalShopper(false)
             setCreateError(null)
             // fetchUsers() - No need to call this manually as onSnapshot will pick up the change
@@ -478,6 +489,21 @@ export function TenantManagement() {
                                 onChange={(e) => setNewTenantPassword(e.target.value)}
                                 placeholder="******"
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="industry">Industry</Label>
+                            <Select value={newTenantIndustry} onValueChange={setNewTenantIndustry}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select industry" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {config.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DialogFooter>

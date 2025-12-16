@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, Bot, ShoppingBag, PenTool, Search } from "lucide-react"
+import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan } from "lucide-react"
 import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -31,6 +31,8 @@ export default function LoginForm() {
     setError("")
 
     try {
+      // Ensure persistence is set before signing in
+      await setPersistence(auth, browserLocalPersistence)
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
 
       // Check if user is active in Firestore
@@ -82,8 +84,8 @@ export default function LoginForm() {
           </div>
           <div className="space-y-8 max-w-md">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">Transform Your Business with AI</h2>
-              <p className="text-gray-400">One platform, four powerful agents working together.</p>
+              <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
+              <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
             </div>
             <div className="grid gap-6">
               <div className="flex items-center gap-4">
@@ -91,8 +93,8 @@ export default function LoginForm() {
                   <Bot className="h-6 w-6 text-lime-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">AI Customer Support</h3>
-                  <p className="text-sm text-gray-400">24/7 intelligent support that resolves 80% of queries instantly.</p>
+                  <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -100,8 +102,8 @@ export default function LoginForm() {
                   <ShoppingBag className="h-6 w-6 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Personal Shopper</h3>
-                  <p className="text-sm text-gray-400">Smart product recommendations that boost conversion.</p>
+                  <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -109,8 +111,8 @@ export default function LoginForm() {
                   <PenTool className="h-6 w-6 text-pink-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">AI Copywriter</h3>
-                  <p className="text-sm text-gray-400">Generate high-converting content in seconds.</p>
+                  <h3 className="font-semibold text-lg">{t('featureCopywriterTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureCopywriterDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -118,14 +120,23 @@ export default function LoginForm() {
                   <Search className="h-6 w-6 text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Lead Finder</h3>
-                  <p className="text-sm text-gray-400">Automated prospecting to find your perfect customers.</p>
+                  <h3 className="font-semibold text-lg">{t('featureLeadFinderTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureLeadFinderDesc')}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20">
+                  <Scan className="h-6 w-6 text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{t('featureAuditorTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureAuditorDesc')}</p>
                 </div>
               </div>
             </div>
           </div>
           <div className="text-sm text-gray-400">
-            © 2024 ex ai by Userex. All rights reserved.
+            {t('copyright')}
           </div>
         </div>
       </div>
@@ -164,7 +175,7 @@ export default function LoginForm() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">{t('password')}</Label>
                 <Link href="/forgot-password" className="text-sm text-muted-foreground hover:underline">
-                  Forgot Password?
+                  {t('forgotPassword')}
                 </Link>
               </div>
               <Input

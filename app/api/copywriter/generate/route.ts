@@ -1,5 +1,6 @@
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
+import { trackAiUsage } from "@/lib/usage-tracker";
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -35,6 +36,12 @@ export async function POST(req: Request) {
         });
 
         const generatedText = response.choices[0].message.content;
+
+        // Track Usage
+        if (response.usage) {
+            // We don't have chatbotId here, assume 'system' or 'admin'
+            await trackAiUsage("admin-copywriter", response.usage.prompt_tokens, response.usage.completion_tokens, "gpt-4o");
+        }
 
         return NextResponse.json({ content: generatedText });
 

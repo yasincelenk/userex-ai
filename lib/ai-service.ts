@@ -2,6 +2,7 @@ import { OpenAI } from "openai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc, arrayUnion, setDoc, getDoc } from "firebase/firestore";
+import { INDUSTRY_CONFIG } from "@/lib/industry-config";
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -20,10 +21,13 @@ export async function generateAIResponse(
     chatbotId: string,
     messages: AIMessage[],
     sessionId?: string,
-    streamResponse: boolean = true
+    streamResponse: boolean = true,
+    userContext?: { url: string, title: string, desc: string },
+    isVoice?: boolean,
+    language?: string
 ) {
     try {
-        console.log("AI Service: Generating response", { chatbotId, sessionId, messageCount: messages.length });
+        console.log("AI Service: Generating response", { chatbotId, sessionId, messageCount: messages.length, isVoice });
         const lastMessage = messages[messages.length - 1];
 
         // 1. Get Chatbot Config & Shopper Settings
@@ -31,6 +35,8 @@ export async function generateAIResponse(
         const chatbotSnap = await getDoc(chatbotRef);
         const chatbotData = chatbotSnap.exists() ? chatbotSnap.data() : null;
         const shopperConfig = chatbotData?.shopperConfig;
+        const industry = (chatbotData?.industry || 'ecommerce') as keyof typeof INDUSTRY_CONFIG;
+        const industryConfig = INDUSTRY_CONFIG[industry] || INDUSTRY_CONFIG['ecommerce'];
 
         // 2. Get Context from Pinecone
         const index = pc.index("chatbot-knowledge");
@@ -58,7 +64,7 @@ export async function generateAIResponse(
             .join("\n\n");
 
         // 3. Prepare System Prompt
-        let systemPrompt = `You are a helpful AI assistant for ${chatbotId}.`;
+        let systemPrompt = `You are a helpful AI assistant for ${chatbotId}. ${industryConfig.systemPrompt}`;
 
         if (shopperConfig) {
             const tone = shopperConfig.salesTone || "friendly";
@@ -73,6 +79,18 @@ export async function generateAIResponse(
             If you recommend a product, mention its name, price, and why it fits the user's request.
             If the product has a URL, provide it.
             `;
+        }
+
+        // Add language instruction if language is specified
+        if (language && language !== 'auto') {
+            const languageNames: Record<string, string> = {
+                'en': 'English',
+                'tr': 'Turkish',
+                'de': 'German',
+                'es': 'Spanish'
+            };
+            const langName = languageNames[language] || 'English';
+            systemPrompt += `\n\nIMPORTANT: Respond in ${langName} language. All your responses should be in ${langName}.`;
         }
 
         systemPrompt += `
@@ -103,6 +121,30 @@ export async function generateAIResponse(
     IMPORTANT: If the user provides their contact information (Name, Surname, Company, Phone, Email) in response to your request, politely thank them and confirm that a customer representative will reach out to them soon.
     `;
 
+        if (userContext) {
+            systemPrompt += `
+    CURRENT USER CONTEXT:
+    The user is currently browsing this page:
+    URL: ${userContext.url}
+    Title: ${userContext.title}
+    Description: ${userContext.desc}
+    
+    Use this information to provide more relevant answers. If the user asks "how much is this?", refer to the product on the current page if applicable.
+            `;
+        }
+
+        if (isVoice) {
+            systemPrompt += `
+    VOICE MODE ACTIVATED:
+    The user is speaking to you via a Voice Interface (Speech-to-Text).
+    1. Reply as if you are having a conversation. 
+    2. Do NOT say "I am a text-based AI" or "I cannot hear you". You ARE hearing them through transcription.
+    3. Acknowledge that you heard them.
+    4. Keep your responses slightly shorter and more conversational (spoken style).
+    5. Avoid long lists or complex formatting (like markdown tables) unless necessary, as it will be read aloud.
+            `;
+        }
+
         const fullMessages = [
             { role: "system", content: systemPrompt },
             ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -119,17 +161,24 @@ export async function generateAIResponse(
             });
             return { response, isStream: true, context };
         } else {
+            console.log("AI Service: Requesting Atomic OpenAI Completion...");
+            const start = Date.now();
             const response = await openai.chat.completions.create({
                 model: "gpt-3.5-turbo",
                 stream: false,
                 messages: fullMessages,
             });
+            console.log(`AI Service: OpenAI Atomic received in ${Date.now() - start}ms`);
+
             const content = response.choices[0].message.content || "";
 
-            // Save to Firestore if not streaming (streaming saves are handled by the caller or a callback)
+            // Save to Firestore if not streaming
             if (sessionId) {
-                await saveMessageToSession(sessionId, chatbotId, lastMessage);
+                // User message is saved by route.ts parallel call. Only save assistant response.
+                console.log("AI Service: Saving atomic response to Firestore...");
+                const dbStart = Date.now();
                 await saveMessageToSession(sessionId, chatbotId, { role: "assistant", content });
+                console.log(`AI Service: Firestore save took ${Date.now() - dbStart}ms`);
             }
 
             return { content, isStream: false, context };

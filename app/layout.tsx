@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { CookieConsent } from "@/components/cookie-consent";
 
 export default function RootLayout({
   children,
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <LanguageProvider>
           <AuthProvider>
+            <CookieConsent />
             {children}
           </AuthProvider>
         </LanguageProvider>

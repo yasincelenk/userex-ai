@@ -1,10 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
     LayoutDashboard,
     MessageSquare,
@@ -24,315 +23,296 @@ import {
     FileText,
     GitMerge,
     TrendingUp,
-    Bot
+    Bot,
+    Sparkles,
+    Activity,
+    Package
 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/LanguageContext"
 import { useAuth } from "@/context/AuthContext"
+import { PricingModal } from "./billing/pricing-modal"
+import { useState } from "react"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarRail,
+} from "@/components/ui/sidebar"
 
 export function ConsoleSidebar() {
     const pathname = usePathname() || ""
+    const searchParams = useSearchParams()
     const router = useRouter()
     const { t } = useLanguage()
-    const { role, enablePersonalShopper } = useAuth()
+    const { user, role, enablePersonalShopper, canManageModules } = useAuth()
+    const [showPricing, setShowPricing] = useState(false)
 
     const handleLogout = async () => {
         await signOut(auth)
         router.push("/login")
     }
 
-
-
     return (
-        <div className="hidden border-r bg-gray-100/40 lg:block dark:bg-gray-800/40 w-64 flex-shrink-0">
-            <div className="flex h-full flex-col gap-2 pt-4">
-                {/* Header removed as it is now global */}
-                <div className="flex-1">
-                    <ScrollArea className="h-[calc(100vh-65px)]">
-                        <nav className="grid items-start px-2 text-sm font-medium lg:px-4 gap-4">
-                            {pathname.startsWith("/console/copywriter") ? (
-                                <>
-                                    {/* Copywriter Menu */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Overview
-                                        </div>
-                                        <Link
-                                            href="/console/copywriter"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/copywriter" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <LayoutDashboard className="h-4 w-4" />
-                                            Generator
-                                        </Link>
-                                    </div>
-                                </>
-                            ) : pathname.startsWith("/console/lead-finder") ? (
-                                <>
-                                    {/* Lead Finder Menu */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Overview
-                                        </div>
-                                        <Link
-                                            href="/console/lead-finder"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/lead-finder" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <LayoutDashboard className="h-4 w-4" />
-                                            Lead Search
-                                        </Link>
-                                    </div>
-                                </>
-                            ) : pathname.startsWith("/console/ui-ux-auditor") ? (
-                                <>
-                                    {/* UI/UX Auditor Menu */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            {t('analysisTools')}
-                                        </div>
-                                        <Link
-                                            href="/console/ui-ux-auditor/autopilot"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/autopilot" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Bot className="h-4 w-4" />
-                                            Autopilot (Beta)
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/visual"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/visual" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                            {t('visualAnalysis')}
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/accessibility"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/accessibility" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <ScanLine className="h-4 w-4" />
-                                            {t('accessibility')}
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/heuristic"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/heuristic" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CheckSquare className="h-4 w-4" />
-                                            {t('heuristicEval')}
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/copy"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/copy" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <FileText className="h-4 w-4" />
-                                            {t('copyTone')}
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/user-flow"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/user-flow" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <GitMerge className="h-4 w-4" />
-                                            {t('userFlow')}
-                                        </Link>
-                                        <Link
-                                            href="/console/ui-ux-auditor/cro"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/ui-ux-auditor/cro" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <TrendingUp className="h-4 w-4" />
-                                            {t('optimization')}
-                                        </Link>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* Chatbot Menu (Existing) */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Overview
-                                        </div>
-                                        <Link
-                                            href="/console/chatbot"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot" && !pathname.startsWith("/console/chatbot/shopper") ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <LayoutDashboard className="h-4 w-4" />
-                                            {t('dashboard')}
-                                        </Link>
-                                        <Link
-                                            href="/console/chatbot/analytics"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/analytics" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <BarChart3 className="h-4 w-4" />
-                                            Analytics
-                                        </Link>
-                                    </div>
-
-                                    {/* Personal Shopper Group */}
-                                    {(role === 'SUPER_ADMIN' || enablePersonalShopper) && (
-                                        <div>
-                                            <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                                Personal Shopper
-                                            </div>
-                                            <Link
-                                                href="/console/chatbot/shopper"
-                                                className={cn(
-                                                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                    pathname === "/console/chatbot/shopper" ? "bg-muted text-primary" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                <ShoppingBag className="h-4 w-4" />
-                                                Overview
+        <>
+            <Sidebar collapsible="icon" className="!top-16 !h-[calc(100svh-4rem)] border-r">
+                <SidebarContent>
+                    {pathname.startsWith("/console/copywriter") ? (
+                        /* Copywriter Menu */
+                        <SidebarGroup>
+                            <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={pathname === "/console/copywriter"}>
+                                            <Link href="/console/copywriter">
+                                                <LayoutDashboard />
+                                                <span>{t('generator')}</span>
                                             </Link>
-                                            <Link
-                                                href="/console/chatbot/shopper/catalog"
-                                                className={cn(
-                                                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                    pathname === "/console/chatbot/shopper/catalog" ? "bg-muted text-primary" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                <Database className="h-4 w-4" />
-                                                Product Catalog
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    ) : pathname.startsWith("/console/lead-finder") ? (
+                        /* Lead Finder Menu */
+                        <SidebarGroup>
+                            <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={pathname === "/console/lead-finder"}>
+                                            <Link href="/console/lead-finder">
+                                                <LayoutDashboard />
+                                                <span>{t('leadSearch')}</span>
                                             </Link>
-                                            <Link
-                                                href="/console/chatbot/shopper/settings"
-                                                className={cn(
-                                                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                    pathname === "/console/chatbot/shopper/settings" ? "bg-muted text-primary" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                <Settings className="h-4 w-4" />
-                                                Shopper Settings
-                                            </Link>
-                                        </div>
-                                    )}
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    ) : pathname.startsWith("/console/ui-ux-auditor") ? (
+                        /* UI/UX Auditor Menu */
+                        <SidebarGroup>
+                            <SidebarGroupLabel>{t('analysisTools')}</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    {[
+                                        { href: "/console/ui-ux-auditor/autopilot", icon: Bot, label: t('autopilot') },
+                                        { href: "/console/ui-ux-auditor/visual", icon: Eye, label: t('visualAnalysis') },
+                                        { href: "/console/ui-ux-auditor/accessibility", icon: ScanLine, label: t('accessibility') },
+                                        { href: "/console/ui-ux-auditor/heuristic", icon: CheckSquare, label: t('heuristicEval') },
+                                        { href: "/console/ui-ux-auditor/copy", icon: FileText, label: t('copyTone') },
+                                        { href: "/console/ui-ux-auditor/user-flow", icon: GitMerge, label: t('userFlow') },
+                                        { href: "/console/ui-ux-auditor/cro", icon: TrendingUp, label: t('optimization') },
+                                    ].map((item) => (
+                                        <SidebarMenuItem key={item.href}>
+                                            <SidebarMenuButton asChild isActive={pathname === item.href}>
+                                                <Link href={item.href}>
+                                                    <item.icon />
+                                                    <span>{item.label}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    ) : (
+                        /* Chatbot & Default Menu */
+                        <>
+                            <SidebarGroup>
+                                <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot" && !pathname.startsWith("/console/chatbot/shopper")}>
+                                                <Link href="/console/chatbot">
+                                                    <LayoutDashboard />
+                                                    <span>{t('dashboard')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/analytics"}>
+                                                <Link href="/console/chatbot/analytics">
+                                                    <BarChart3 />
+                                                    <span>{t('analytics')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
 
-                                    {/* Communication Group */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Communication
-                                        </div>
-                                        <Link
-                                            href="/console/chatbot/chats"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/chats" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <MessageSquare className="h-4 w-4" />
-                                            {t('chats')}
-                                        </Link>
-                                        <Link
-                                            href="/console/chatbot/leads"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/leads" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Users className="h-4 w-4" />
-                                            Leads
-                                        </Link>
-                                    </div>
+                            <SidebarGroup>
+                                <SidebarGroupLabel>{t('configuration')}</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/knowledge"}>
+                                                <Link href="/console/knowledge">
+                                                    <Database />
+                                                    <span>{t('knowledgeBase')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
 
-                                    {/* Configuration Group */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Configuration
-                                        </div>
-                                        <Link
-                                            href="/console/knowledge"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/knowledge" ? "bg-muted text-primary" : "text-muted-foreground"
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/widget" && !searchParams.get('tab')}>
+                                                <Link href="/console/chatbot/widget">
+                                                    <Settings />
+                                                    <span>{t('widgetSettings')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                            {pathname.startsWith("/console/chatbot/widget") && (
+                                                <SidebarMenuSub>
+                                                    {[
+                                                        { tab: "branding", label: t('branding') },
+                                                        { tab: "appearance", label: t('appearance') },
+                                                        { tab: "behavior", label: t('behavior') },
+                                                        { tab: "triggers", label: t('triggers') },
+                                                        { tab: "availability", label: t('availability') },
+                                                        { tab: "engagement", label: t('engagement') },
+                                                    ].map((item) => (
+                                                        <SidebarMenuSubItem key={item.tab}>
+                                                            <SidebarMenuSubButton asChild isActive={searchParams.get('tab') === item.tab || (!searchParams.get('tab') && item.tab === "branding" && pathname === "/console/chatbot/widget")}>
+                                                                <Link href={`/console/chatbot/widget?tab=${item.tab}`}>
+                                                                    <span>{item.label}</span>
+                                                                </Link>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
                                             )}
-                                        >
-                                            <Database className="h-4 w-4" />
-                                            {t('knowledgeBase')}
-                                        </Link>
-                                        <Link
-                                            href="/console/chatbot/widget"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/widget" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Settings className="h-4 w-4" />
-                                            Widget Settings
-                                        </Link>
-                                        <Link
-                                            href="/console/chatbot/integration"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/integration" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <Plug className="h-4 w-4" />
-                                            {t('integration')}
-                                        </Link>
-                                    </div>
+                                        </SidebarMenuItem>
 
-                                    {/* Settings Group */}
-                                    <div>
-                                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                                            Settings
-                                        </div>
-                                        <Link
-                                            href="/console/chatbot/profile"
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                                                pathname === "/console/chatbot/profile" ? "bg-muted text-primary" : "text-muted-foreground"
-                                            )}
-                                        >
-                                            <UserCircle className="h-4 w-4" />
-                                            {t('profile')}
-                                        </Link>
-                                    </div>
-                                </>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/integration"}>
+                                                <Link href="/console/chatbot/integration">
+                                                    <Plug />
+                                                    <span>{t('integration')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+
+                                        {(canManageModules || role === 'SUPER_ADMIN') && (
+                                            <>
+                                                <SidebarMenuItem>
+                                                    <SidebarMenuButton asChild isActive={pathname.startsWith("/console/modules") || pathname.startsWith("/console/chatbot/shopper")}>
+                                                        <Link href="/console/modules">
+                                                            <Package />
+                                                            <span>{t('modules') || "Modüller"}</span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+
+                                                </SidebarMenuItem>
+                                            </>
+                                        )}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+
+                            <SidebarGroup>
+                                <SidebarGroupLabel>{t('communication')}</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/chats"}>
+                                                <Link href="/console/chatbot/chats">
+                                                    <MessageSquare />
+                                                    <span>{t('chats')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/leads"}>
+                                                <Link href="/console/chatbot/leads">
+                                                    <Users />
+                                                    <span>{t('leads')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+
+                            <SidebarGroup>
+                                <SidebarGroupLabel>{t('settings')}</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/profile"}>
+                                                <Link href="/console/chatbot/profile">
+                                                    <UserCircle />
+                                                    <span>{t('profile')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+
+                            {role === 'admin' && (
+                                <SidebarGroup>
+                                    <SidebarGroupLabel>Admin</SidebarGroupLabel>
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton asChild isActive={pathname === "/admin"}>
+                                                    <Link href="/admin">
+                                                        <Users />
+                                                        <span>{t('tenants')}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
                             )}
-                        </nav>
-                    </ScrollArea>
-                </div>
-                <div className="mt-auto p-4 border-t">
-                    <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-                        onClick={handleLogout}
-                    >
-                        <LogOut className="h-4 w-4" />
-                        {t('logout')}
-                    </Button>
-                </div>
-            </div>
-        </div >
+                        </>
+                    )}
+                </SidebarContent>
+
+                <SidebarFooter>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                size="lg"
+                                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            >
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold">
+                                    {user?.email?.[0].toUpperCase() || 'U'}
+                                </div>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-semibold">{user?.displayName || 'User'}</span>
+                                    <span className="truncate text-xs">{user?.email}</span>
+                                </div>
+                                <LogOut className="ml-auto size-4" onClick={handleLogout} />
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+                <SidebarRail />
+            </Sidebar>
+
+            <PricingModal
+                isOpen={showPricing}
+                onClose={() => setShowPricing(false)}
+                currentPlan="free"
+            />
+        </>
     )
 }

@@ -30,7 +30,10 @@ export async function POST(req: Request) {
         // Verify the token and get user info
         // Note: This is a simplified check. Ideally we'd use Firebase Admin SDK to verify the token
         // For now, we rely on client-side checks and verify the user's role from Firestore
-        const { email, password, firstName, lastName, companyName, companyWebsite, callerUid, callerRole, enablePersonalShopper } = await req.json();
+        // Verify the token and get user info
+        // Note: This is a simplified check. Ideally we'd use Firebase Admin SDK to verify the token
+        // For now, we rely on client-side checks and verify the user's role from Firestore
+        const { email, password, firstName, lastName, companyName, companyWebsite, phone, callerUid, callerRole, enablePersonalShopper, industry } = await req.json();
 
         // Check if caller is SUPER_ADMIN
         if (callerRole !== 'SUPER_ADMIN') {
@@ -61,12 +64,28 @@ export async function POST(req: Request) {
             email: user.email,
             firstName: firstName || "",
             lastName: lastName || "",
+            phone: phone || "",
             companyName: companyName || "",
             companyWebsite: companyWebsite || "",
             role: "TENANT_ADMIN",
             createdAt: new Date().toISOString(),
             isActive: true,
-            enablePersonalShopper: enablePersonalShopper || false
+            enablePersonalShopper: enablePersonalShopper || false,
+            industry: industry || "ecommerce"
+        });
+
+        // Initialize Chatbot Document with Industry
+        await setDoc(doc(secondaryDb, "chatbots", user.uid), {
+            id: user.uid,
+            companyName: companyName || "My Company",
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            industry: industry || "ecommerce",
+            welcomeMessage: "Hello! How can I help you today?",
+            brandColor: "#000000",
+            launcherStyle: "circle",
+            position: "bottom-right",
+            allowedDomains: companyWebsite ? [new URL(companyWebsite).hostname] : []
         });
 
         // Sign out from secondary app immediately

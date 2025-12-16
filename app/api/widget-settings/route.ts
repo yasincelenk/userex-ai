@@ -41,6 +41,20 @@ export async function GET(req: Request) {
                 launcherShadow: data.launcherShadow || "medium",
                 launcherAnimation: data.launcherAnimation || "none",
                 initialLanguage: data.initialLanguage || "auto",
+                // Triggers
+                autoOpenDelay: data.autoOpenDelay || 0,
+                openOnExitIntent: data.openOnExitIntent || false,
+                openOnScroll: data.openOnScroll || 0,
+                // Availability
+                enableBusinessHours: data.enableBusinessHours || false,
+                timezone: data.timezone || "UTC",
+                businessHoursStart: data.businessHoursStart || "09:00",
+                businessHoursEnd: data.businessHoursEnd || "17:00",
+                offlineMessage: data.offlineMessage || "We are currently offline.",
+                // Engagement
+                engagement: data.engagement || null,
+                enableVoiceAssistant: data.enableVoiceAssistant || false,
+                enablePersonalShopper: data.enablePersonalShopper || false,
             }, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',
@@ -57,7 +71,7 @@ export async function GET(req: Request) {
                 viewMode: "classic",
                 modalSize: "half",
                 launcherStyle: "circle",
-                launcherText: "Chat",
+                launcherText: "Sohbet",
                 launcherRadius: 50,
                 launcherHeight: 60,
                 launcherWidth: 60,
@@ -71,6 +85,7 @@ export async function GET(req: Request) {
                 launcherShadow: "medium",
                 launcherAnimation: "none",
                 initialLanguage: "auto",
+                engagement: null,
             }, {
                 headers: {
                     'Access-Control-Allow-Origin': '*',

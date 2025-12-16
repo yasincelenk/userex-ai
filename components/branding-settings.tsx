@@ -30,8 +30,7 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
         brandColor: "#000000",
         brandLogo: "",
         suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
-        enableLeadCollection: false,
-        initialLanguage: "auto" // auto, en, tr
+        enableLeadCollection: false
     })
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
@@ -61,8 +60,7 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         brandColor: data.brandColor || "#000000",
                         brandLogo: data.brandLogo || "",
                         suggestedQuestions: data.suggestedQuestions || ["What are your pricing plans?", "How do I get started?", "Contact support"],
-                        enableLeadCollection: data.enableLeadCollection || false,
-                        initialLanguage: data.initialLanguage || "auto"
+                        enableLeadCollection: data.enableLeadCollection || false
                     }
                     setSettings(loadedSettings)
                     setInitialSettings(loadedSettings)
@@ -73,8 +71,7 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
                         brandColor: "#000000",
                         brandLogo: "",
                         suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
-                        enableLeadCollection: false,
-                        initialLanguage: "auto"
+                        enableLeadCollection: false
                     }
                     setSettings(defaultSettings)
                     setInitialSettings(defaultSettings)

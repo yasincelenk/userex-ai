@@ -16,12 +16,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const storedLang = localStorage.getItem('language') as Language;
-        if (storedLang && ['en', 'tr', 'de', 'es'].includes(storedLang)) {
+        if (storedLang && ['en', 'tr'].includes(storedLang)) {
             setLanguage(storedLang);
         } else {
             // Try to detect browser language
             const browserLang = navigator.language.split('-')[0] as Language;
-            if (['en', 'tr', 'de', 'es'].includes(browserLang)) {
+            if (['en', 'tr'].includes(browserLang)) {
                 setLanguage(browserLang);
             }
         }

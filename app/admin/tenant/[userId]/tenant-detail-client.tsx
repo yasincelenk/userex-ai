@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useAuth } from "@/context/AuthContext"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, Calendar, Shield } from "lucide-react"
+import { ArrowLeft, Loader2, Calendar, Shield, LayoutDashboard, Database, Settings, MessageSquare, Users, UserCircle, Plug, ShoppingBag, Eye, ScanLine, CheckSquare, FileText, GitMerge, TrendingUp, Bot, LogOut, Box } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { BrandingSettings } from "@/components/branding-settings"
 import { ChatsList } from "@/components/chats-list"
 import { KnowledgeBase } from "@/components/knowledge-base"
+import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -23,11 +22,31 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { updateDoc } from "firebase/firestore"
 import IntegrationPage from "@/components/integration-page"
 import WidgetSettings from "@/components/widget-settings"
 import { TenantPermissions } from "@/components/tenant-permissions"
-// ShopperSettingsPage is a page component, not imported here
+import { cn } from "@/lib/utils"
+import { useLanguage } from "@/context/LanguageContext"
+import { LanguageSwitcher } from "@/components/language-switcher"
+// import { ScrollArea } from "@/components/ui/scroll-area" // Removed as Sidebar handles scrolling
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarRail,
+    useSidebar,
+    SidebarInset
+} from "@/components/ui/sidebar"
 
 interface TenantData {
     email: string
@@ -38,30 +57,44 @@ interface TenantData {
     enableChatbot?: boolean
     enableCopywriter?: boolean
     enableLeadFinder?: boolean
+    industry?: string
+    canManageModules?: boolean
 }
 
 function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantData, userId: string, onUpdate: (data: Partial<TenantData>) => void }) {
     const [role, setRole] = useState(tenant.role)
     const [isActive, setIsActive] = useState(tenant.isActive)
+    const [canManageModules, setCanManageModules] = useState(tenant.canManageModules || false)
+    const [industry, setIndustry] = useState(tenant.industry || "ecommerce")
     const [isSaving, setIsSaving] = useState(false)
     const { toast } = useToast()
+    const { t } = useLanguage()
+    const { user } = useAuth() // Get current user for token
 
     const handleSave = async () => {
         setIsSaving(true)
         try {
             await updateDoc(doc(db, "users", userId), {
                 role,
-                isActive
+                isActive,
+                canManageModules,
+                industry
             })
-            onUpdate({ role, isActive })
+
+            // Also update the chatbot document to keep industry in sync
+            await updateDoc(doc(db, "chatbots", userId), {
+                industry
+            })
+
+            onUpdate({ role, isActive, canManageModules, industry })
             toast({
-                title: "Success",
+                title: t('success'),
                 description: "Profile updated successfully.",
             })
         } catch (error) {
             console.error("Error updating profile:", error)
             toast({
-                title: "Error",
+                title: t('error'),
                 description: "Failed to update profile.",
                 variant: "destructive",
             })
@@ -73,35 +106,51 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
     return (
         <div className="space-y-8 max-w-2xl">
             <div>
-                <h3 className="text-lg font-semibold tracking-tight">Profile Settings</h3>
-                <p className="text-sm text-muted-foreground">Manage user role and access status.</p>
+                <h3 className="text-lg font-semibold tracking-tight">{t('profileSettings')}</h3>
+                <p className="text-sm text-muted-foreground">{t('manageUserRole')}</p>
             </div>
 
             <div className="grid gap-6">
                 <div className="grid gap-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">{t('emailAddress')}</Label>
                     <Input id="email" value={tenant.email} disabled className="bg-muted/50" />
-                    <p className="text-[0.8rem] text-muted-foreground">Email cannot be changed directly.</p>
+                    <p className="text-[0.8rem] text-muted-foreground">{t('emailCannotChange')}</p>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="role">User Role</Label>
+                    <Label htmlFor="role">{t('userRole')}</Label>
                     <Select value={role} onValueChange={setRole}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
+                            <SelectValue placeholder={t('selectRole')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="TENANT_ADMIN">Tenant Admin</SelectItem>
-                            <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                            <SelectItem value="TENANT_ADMIN">{t('tenantAdmin')}</SelectItem>
+                            <SelectItem value="SUPER_ADMIN">{t('superAdmin')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="industry">{t('industrySector')}</Label>
+                    <Select value={industry} onValueChange={setIndustry}>
+                        <SelectTrigger>
+                            <SelectValue placeholder={t('selectIndustry')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
+                                <SelectItem key={key} value={key}>
+                                    {config.label}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-4">
                     <div className="space-y-0.5">
-                        <Label className="text-base">Account Status</Label>
+                        <Label className="text-base">{t('accountStatus')}</Label>
                         <p className="text-sm text-muted-foreground">
-                            {isActive ? "User can log in and access the dashboard." : "User access is suspended."}
+                            {isActive ? t('userCanLogin') : t('userSuspended')}
                         </p>
                     </div>
                     <Switch
@@ -110,10 +159,77 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                     />
                 </div>
 
+                {/* Password Reset Section */}
+                <div className="rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900/50 dark:bg-red-900/10">
+                    <div className="mb-4">
+                        <h4 className="text-base font-semibold text-red-700 dark:text-red-400">Password Management</h4>
+                        <p className="text-sm text-muted-foreground">Override user password manually.</p>
+                    </div>
+                    <div className="flex gap-4">
+                        <Input
+                            type="text"
+                            placeholder="New Password"
+                            className="bg-background"
+                            id="new-password-input"
+                        />
+                        <Button
+                            variant="destructive"
+                            onClick={async () => {
+                                const input = document.getElementById('new-password-input') as HTMLInputElement;
+                                const newPassword = input.value;
+                                if (!newPassword || newPassword.length < 6) {
+                                    toast({
+                                        title: "Invalid Password",
+                                        description: "Password must be at least 6 characters.",
+                                        variant: "destructive"
+                                    });
+                                    return;
+                                }
+
+                                try {
+                                    const token = await user?.getIdToken();
+                                    const response = await fetch('/api/admin/reset-password', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify({
+                                            targetUserId: userId,
+                                            newPassword
+                                        })
+                                    });
+
+                                    const data = await response.json();
+
+                                    if (!response.ok) {
+                                        throw new Error(data.error || 'Failed to reset password');
+                                    }
+
+                                    toast({
+                                        title: "Success",
+                                        description: "User password has been updated.",
+                                    });
+                                    input.value = ''; // Clear input
+                                } catch (error: any) {
+                                    console.error("Reset error:", error);
+                                    toast({
+                                        title: "Error",
+                                        description: error.message || "Failed to reset password.",
+                                        variant: "destructive"
+                                    });
+                                }
+                            }}
+                        >
+                            Reset
+                        </Button>
+                    </div>
+                </div>
+
                 <div className="pt-4">
                     <Button onClick={handleSave} disabled={isSaving}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
+                        {t('saveChanges')}
                     </Button>
                 </div>
             </div>
@@ -121,22 +237,184 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
     )
 }
 
-// ... imports
+const WIDGET_TABS = ['branding', 'appearance', 'behavior', 'triggers', 'availability']
 
+function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeTab: string, onTabChange: (tab: string) => void, enablePersonalShopper?: boolean }) {
+    const isWidgetActive = activeTab === 'widget' || WIDGET_TABS.includes(activeTab)
+    const { t } = useLanguage()
 
-// ... (keep TenantData and TenantProfileSettings)
+    return (
+        <SidebarContent>
+            {/* Overview Group */}
+            <SidebarGroup>
+                <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={activeTab === "profile"}
+                                onClick={() => onTabChange("profile")}
+                            >
+                                <UserCircle />
+                                <span>{t('profileSettings')}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Configuration Group */}
+            <SidebarGroup>
+                <SidebarGroupLabel>{t('configuration')}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={activeTab === "modules"}
+                                onClick={() => onTabChange("modules")}
+                            >
+                                <Box />
+                                <span>{t('modules')}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={activeTab === "knowledge"}
+                                onClick={() => onTabChange("knowledge")}
+                            >
+                                <Database />
+                                <span>{t('knowledgeBase')}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={isWidgetActive}
+                                onClick={() => onTabChange("widget")}
+                            >
+                                <Settings />
+                                <span>{t('widgetSettings')}</span>
+                            </SidebarMenuButton>
+                            {isWidgetActive && (
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "branding"}
+                                            onClick={() => onTabChange("branding")}
+                                        >
+                                            <span>{t('branding')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "appearance"}
+                                            onClick={() => onTabChange("appearance")}
+                                        >
+                                            <span>{t('appearance')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "behavior"}
+                                            onClick={() => onTabChange("behavior")}
+                                        >
+                                            <span>{t('behavior')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "triggers"}
+                                            onClick={() => onTabChange("triggers")}
+                                        >
+                                            <span>{t('triggers')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "availability"}
+                                            onClick={() => onTabChange("availability")}
+                                        >
+                                            <span>{t('availability')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            )}
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={activeTab === "integration"}
+                                onClick={() => onTabChange("integration")}
+                            >
+                                <Plug />
+                                <span>{t('integration')}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Personal Shopper Group */}
+            {enablePersonalShopper && (
+                <SidebarGroup>
+                    <SidebarGroupLabel>Personal Shopper</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <div className="px-2 text-sm text-muted-foreground italic">
+                            Shopper settings managed in specific module.
+                        </div>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            )}
+
+            {/* Communication Group */}
+            <SidebarGroup>
+                <SidebarGroupLabel>Communication</SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                isActive={activeTab === "chats"}
+                                onClick={() => onTabChange("chats")}
+                            >
+                                <MessageSquare />
+                                <span>{t('chats')}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+        </SidebarContent>
+    )
+}
 
 export default function TenantDetailClient({ userId }: { userId: string }) {
     const { user, role } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
-    const currentTab = searchParams.get('tab')
+    const { t } = useLanguage()
+
+    // Default tab or read from URL
+    const [activeTab, setActiveTab] = useState("profile")
 
     const [tenant, setTenant] = useState<TenantData | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        // Protect route
+        const tabParam = searchParams.get('tab')
+        if (tabParam) {
+            setActiveTab(tabParam)
+        }
+    }, [searchParams])
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab)
+        // Optionally update URL without reload
+        const url = new URL(window.location.href)
+        url.searchParams.set('tab', tab)
+        window.history.pushState({}, '', url)
+    }
+
+    useEffect(() => {
         if (role && role !== "SUPER_ADMIN") {
             router.push("/dashboard")
             return
@@ -182,91 +460,97 @@ export default function TenantDetailClient({ userId }: { userId: string }) {
         )
     }
 
+    // Helper to get translated tab name
+    const getTabTitle = (tab: string) => {
+        if (WIDGET_TABS.includes(tab) || tab === 'widget') return t('widgetSettings');
+        return t(tab) || tab;
+    }
+
     return (
-        <div className="flex flex-col min-h-screen bg-background/50">
-            {/* Header Section */}
-            <div className="bg-background/50 backdrop-blur-sm sticky top-0 z-10 border-b border-border/40">
-                <div className="container mx-auto py-4 px-4 md:px-8">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                                <Button variant="link" className="p-0 h-auto text-muted-foreground hover:text-foreground" onClick={() => router.push("/platform/tenants")}>
-                                    Tenants
-                                </Button>
-                                <span>/</span>
-                                <span className="text-foreground font-medium">{tenant.email}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-xl font-bold tracking-tight">{tenant.email}</h1>
-                                <Badge variant={tenant.isActive ? "outline" : "destructive"} className={tenant.isActive ? "text-green-600 border-green-600/20 bg-green-50" : ""}>
-                                    {tenant.isActive ? "Active" : "Inactive"}
-                                </Badge>
-                                <Badge variant="secondary" className="bg-secondary/50">
-                                    {tenant.role}
-                                </Badge>
-                            </div>
+        <div className="flex w-full h-full">
+            {/* Use full width/height for flex container inside SidebarProvider */}
+            <Sidebar collapsible="icon" className="border-r">
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" onClick={() => router.push("/platform/tenants")}>
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                    <ArrowLeft className="size-4" />
+                                </div>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-semibold">{t('backToTenants')}</span>
+                                    <span className="truncate text-xs">{t('returnToList')}</span>
+                                </div>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
+                <SidebarNav activeTab={activeTab} onTabChange={handleTabChange} enablePersonalShopper={tenant.enablePersonalShopper} />
+                <SidebarFooter>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                    {tenant.email.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-semibold">{tenant.email}</span>
+                                    <span className="truncate text-xs">{tenant.role}</span>
+                                </div>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
+                <SidebarRail />
+            </Sidebar>
+
+            {/* Main Content wrapped in SidebarInset for proper spacing behavior */}
+            <SidebarInset className="overflow-hidden">
+                <div className="flex flex-col h-full bg-muted/10 overflow-hidden">
+                    {/* Header */}
+                    <div className="h-[60px] flex shrink-0 items-center justify-between px-8 border-b bg-background/50 backdrop-blur-sm">
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-lg font-semibold capitalize">{tenant.email}</h1>
+                            <Badge variant={tenant.isActive ? "outline" : "destructive"} className={tenant.isActive ? "text-green-600 border-green-600/20 bg-green-50" : ""}>
+                                {tenant.isActive ? t('active') : t('inactive')}
+                            </Badge>
                         </div>
                         <div className="flex items-center gap-2">
+                            <div className="text-sm text-muted-foreground mr-4">
+                                {t('editingAsSuperAdmin')}
+                            </div>
                             <Button variant="outline" size="sm" className="bg-background" onClick={() => window.open(`/chatbot-view?id=${userId}`, '_blank')}>
-                                <ArrowLeft className="w-4 h-4 mr-2 rotate-180" />
-                                Test Full Page
+                                {t('testFullPage')}
                             </Button>
                             <Button size="sm" onClick={() => window.open(`/widget-test?id=${userId}`, '_blank')}>
-                                Test Widget
+                                {t('testWidget')}
                             </Button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="container mx-auto py-8 px-4 md:px-8">
-                <Tabs defaultValue="profile" className="w-full space-y-6">
-                    <div className="flex items-center justify-between">
-                        <TabsList className="h-auto bg-transparent p-0 gap-2 flex-wrap">
-                            {["profile", "permissions", "branding", "widget", "chats", "knowledge", "integration"].map((tab) => (
-                                <TabsTrigger
-                                    key={tab}
-                                    value={tab}
-                                    className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-muted-foreground data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-border/50 transition-all"
-                                >
-                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm border border-border/50 min-h-[500px]">
-                        <TabsContent value="profile" className="m-0 p-6">
+                    {/* Content Area - Scrollable */}
+                    <div className="flex-1 overflow-y-auto p-8">
+                        {activeTab === "profile" && (
                             <TenantProfileSettings tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
-                        </TabsContent>
-
-                        <TabsContent value="permissions" className="m-0 p-6">
+                        )}
+                        {activeTab === "modules" && (
                             <TenantPermissions tenant={tenant} userId={userId} onUpdate={(updated) => setTenant({ ...tenant, ...updated })} />
-                        </TabsContent>
-
-                        <TabsContent value="branding" className="m-0 p-6">
-                            <BrandingSettings targetUserId={userId} />
-                        </TabsContent>
-
-                        <TabsContent value="widget" className="m-0 p-6">
-                            <WidgetSettings userId={userId} />
-                        </TabsContent>
-
-                        <TabsContent value="chats" className="m-0 p-6">
-                            <ChatsList targetUserId={userId} embedded={true} />
-                        </TabsContent>
-
-                        <TabsContent value="knowledge" className="m-0 p-6">
+                        )}
+                        {activeTab === "knowledge" && (
                             <KnowledgeBase targetUserId={userId} embedded={true} />
-                        </TabsContent>
-
-                        <TabsContent value="integration" className="m-0 p-6">
+                        )}
+                        {(activeTab === "widget" || WIDGET_TABS.includes(activeTab)) && (
+                            <WidgetSettings userId={userId} />
+                        )}
+                        {activeTab === "integration" && (
                             <IntegrationPage userId={userId} />
-                        </TabsContent>
+                        )}
+                        {activeTab === "chats" && (
+                            <ChatsList targetUserId={userId} embedded={true} />
+                        )}
                     </div>
-                </Tabs>
-            </div>
+                </div>
+            </SidebarInset>
         </div>
     )
 }
