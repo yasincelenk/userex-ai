@@ -2259,4 +2259,7 @@ export const translations = {
         dragDropScreens: "Arrastra y suelta pantallas aquí o haz clic para buscar",
 
     },
+    fr: {},
+    pt: {},
+    ar: {},
 };
