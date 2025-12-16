@@ -706,8 +706,7 @@ export const translations = {
         iconLibrary: "Library",
         iconCustom: "Custom",
         effectsAndSpacing: "Effects & Spacing",
-        verticalSpacing: "Vertical Spacing (px)",
-        sideSpacing: "Side Spacing (px)",
+
         animationLoop: "Animation Loop",
 
         // Login Page Hero & Features
