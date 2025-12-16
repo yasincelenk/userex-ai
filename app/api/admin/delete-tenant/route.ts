@@ -87,12 +87,13 @@ export async function POST(req: Request) {
         // Assuming strictly < 500 items for now for a simple tenant
 
         const deleteCollection = async (collectionName: string, queryField: string) => {
-            const q = adminDb.collection(collectionName).where(queryField, "==", userId);
+            // adminDb is verified at the top of the handler
+            const q = adminDb!.collection(collectionName).where(queryField, "==", userId);
             const snapshot = await q.get();
 
             if (snapshot.empty) return;
 
-            const batch = adminDb.batch();
+            const batch = adminDb!.batch();
             snapshot.docs.forEach(doc => {
                 batch.delete(doc.ref);
             });
