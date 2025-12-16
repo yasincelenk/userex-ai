@@ -600,7 +600,7 @@ export const translations = {
         modeModern: "Mode 2: Modern AI",
         modeModernDesc: "Futuristic glowing orb design with centralized focus.",
 
-        viewMode: "View Mode",
+
         classicSmall: "Classic (Small)",
         wideModal: "Wide Modal",
 
