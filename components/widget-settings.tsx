@@ -1583,7 +1583,11 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                             {/* Header */}
                                             <div className="p-5 flex items-center justify-between z-20 relative">
                                                 <div className="flex items-center gap-2">
-                                                    <Sparkles className="w-5 h-5 text-blue-500 fill-blue-500" />
+                                                    {settings.brandLogo ? (
+                                                        <img src={settings.brandLogo} alt="Logo" className="w-8 h-8 rounded-full object-cover" />
+                                                    ) : (
+                                                        <Sparkles className="w-5 h-5 text-blue-500 fill-blue-500" />
+                                                    )}
                                                     <span className="font-semibold text-gray-800 text-base">{settings.companyName || "AI Assist"}</span>
                                                 </div>
                                                 <button onClick={() => setIsPreviewOpen(false)}>
@@ -1650,8 +1654,12 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                 style={{ backgroundColor: settings.brandColor }}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                                                        <MessageSquare className="w-5 h-5 text-white" />
+                                                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                                                        {settings.brandLogo ? (
+                                                            <img src={settings.brandLogo} alt="Logo" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <MessageSquare className="w-5 h-5 text-white" />
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <h3 className="font-semibold text-sm">{settings.companyName}</h3>
@@ -1723,8 +1731,9 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                             <button
                                                 onClick={() => setIsPreviewOpen(true)}
                                                 style={{
-                                                    width: `${Math.min(settings.launcherWidth, 80)}px`,
-                                                    height: `${Math.min(settings.launcherHeight, 80)}px`,
+                                                    // Removed artificial 80px limit to allow user setting to take effect
+                                                    width: `${settings.launcherWidth}px`,
+                                                    height: `${settings.launcherHeight}px`,
                                                     borderRadius: `${settings.launcherRadius}px`,
                                                     backgroundColor: settings.launcherBackgroundColor || settings.brandColor,
                                                     boxShadow: settings.launcherShadow === 'none' ? 'none' :
@@ -1736,10 +1745,14 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                     } ${settings.theme === 'modern' ? 'shadow-[0_0_20px_rgba(79,70,229,0.5)]' : ''}`}
                                             >
                                                 {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
-                                                    <MessageSquare className="w-5 h-5" style={{ color: settings.launcherIconColor }} />
+                                                    settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
+                                                        <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                                    ) : (
+                                                        renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
+                                                    )
                                                 )}
                                                 {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
-                                                    <span className="text-xs" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
+                                                    <span className="text-sm" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
                                                 )}
                                             </button>
                                         </div>
@@ -1798,7 +1811,11 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                             }`}
                                     >
                                         {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
-                                            <MessageSquare className="w-6 h-6" style={{ color: settings.launcherIconColor }} />
+                                            settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
+                                                <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                            ) : (
+                                                renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
+                                            )
                                         )}
                                         {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
                                             <span className="text-sm" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
