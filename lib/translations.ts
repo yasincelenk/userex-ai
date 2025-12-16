@@ -681,7 +681,7 @@ export const translations = {
         brandingGeneral: "General",
         brandingGeneralDesc: "Customize your chatbot's identity.",
         maxSize2MB: "Max size: 2MB",
-        recommendedSize: "Recommended: 128x128px",
+
 
         // Widget Settings - Appearance
         themeAndDesign: "Theme & Design Mode",
@@ -690,23 +690,19 @@ export const translations = {
         themeModern: "Mode 2: Modern AI",
         themeModernDesc: "Futuristic glowing orb design with centralized focus.",
         positionAndLayout: "Position & Layout",
-        widgetPosition: "Widget Position",
-        bottomLeft: "Bottom Left",
-        bottomCenter: "Bottom Center",
-        bottomRight: "Bottom Right",
-        viewMode: "View Mode",
+
+
         viewModeClassic: "Classic (Small)",
         viewModeWide: "Wide Modal",
-        launcherAppearance: "Launcher Appearance",
-        launcherStyle: "Launcher Style",
+
         styleCircle: "Circle (Icon)",
         styleSquare: "Square (Icon)",
         styleText: "Text Only",
         styleIconText: "Icon + Text",
-        buttonText: "Button Text",
+
         launcherBgColor: "Background Color",
         launcherIconColor: "Icon Color",
-        launcherIcon: "Launcher Icon",
+
         iconLibrary: "Library",
         iconCustom: "Custom",
         effectsAndSpacing: "Effects & Spacing",
