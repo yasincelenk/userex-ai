@@ -162,13 +162,13 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                 {/* Password Reset Section */}
                 <div className="rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900/50 dark:bg-red-900/10">
                     <div className="mb-4">
-                        <h4 className="text-base font-semibold text-red-700 dark:text-red-400">Password Management</h4>
-                        <p className="text-sm text-muted-foreground">Override user password manually.</p>
+                        <h4 className="text-base font-semibold text-red-700 dark:text-red-400">{t('passwordManagement')}</h4>
+                        <p className="text-sm text-muted-foreground">{t('overridePasswordDesc')}</p>
                     </div>
                     <div className="flex gap-4">
                         <Input
                             type="text"
-                            placeholder="New Password"
+                            placeholder={t('newPassword')}
                             className="bg-background"
                             id="new-password-input"
                         />
@@ -179,7 +179,7 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                                 const newPassword = input.value;
                                 if (!newPassword || newPassword.length < 6) {
                                     toast({
-                                        title: "Invalid Password",
+                                        title: t('error'),
                                         description: "Password must be at least 6 characters.",
                                         variant: "destructive"
                                     });
@@ -207,21 +207,21 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                                     }
 
                                     toast({
-                                        title: "Success",
+                                        title: t('success'),
                                         description: "User password has been updated.",
                                     });
                                     input.value = ''; // Clear input
                                 } catch (error: any) {
                                     console.error("Reset error:", error);
                                     toast({
-                                        title: "Error",
+                                        title: t('error'),
                                         description: error.message || "Failed to reset password.",
                                         variant: "destructive"
                                     });
                                 }
                             }}
                         >
-                            Reset
+                            {t('reset')}
                         </Button>
                     </div>
                 </div>
@@ -301,6 +301,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "branding"}
                                             onClick={() => onTabChange("branding")}
+                                            className="cursor-pointer"
                                         >
                                             <span>{t('branding')}</span>
                                         </SidebarMenuSubButton>
@@ -309,6 +310,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "appearance"}
                                             onClick={() => onTabChange("appearance")}
+                                            className="cursor-pointer"
                                         >
                                             <span>{t('appearance')}</span>
                                         </SidebarMenuSubButton>
@@ -317,6 +319,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "behavior"}
                                             onClick={() => onTabChange("behavior")}
+                                            className="cursor-pointer"
                                         >
                                             <span>{t('behavior')}</span>
                                         </SidebarMenuSubButton>
@@ -325,6 +328,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "triggers"}
                                             onClick={() => onTabChange("triggers")}
+                                            className="cursor-pointer"
                                         >
                                             <span>{t('triggers')}</span>
                                         </SidebarMenuSubButton>
@@ -333,6 +337,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "availability"}
                                             onClick={() => onTabChange("availability")}
+                                            className="cursor-pointer"
                                         >
                                             <span>{t('availability')}</span>
                                         </SidebarMenuSubButton>
