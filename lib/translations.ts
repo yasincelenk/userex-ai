@@ -1050,7 +1050,7 @@ export const translations = {
         dashboardOverview: "Panel Genel Bakış",
         lifetimeConversations: "Ömür boyu konuşmalar",
         totalMessagesProcessed: "İşlenen mesajlar",
-        avgMessagesPerChat: "Ort. Mesaj/Sohbet",
+
         engagementDepth: "Etkileşim derinliği",
         weeklyActivity: "Haftalık Aktivite",
         superAdminDashboard: "Süper Yönetici Paneli",
