@@ -481,10 +481,7 @@ export const translations = {
         // Signup
         signupTitle: "Apply for Access",
         signupDesc: "Fill out the form below to apply for an account.",
-        firstName: "First Name",
-        lastName: "Last Name",
-        companyName: "Company Name",
-        website: "Website",
+
         confirmPassword: "Confirm Password",
         submitApplication: "Submit Application",
         submitting: "Submitting...",
