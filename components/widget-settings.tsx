@@ -957,19 +957,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                 />
                             </div>
 
-                            {/* Industry Greeting Toggle */}
-                            <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-muted/20">
-                                <div className="space-y-0.5">
-                                    <Label className="text-base">Industry Specific Greetings</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Use industry-specific welcome messages instead of the standard greeting.
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={settings.enableIndustryGreeting ?? false}
-                                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableIndustryGreeting: checked }))}
-                                />
-                            </div>
+
 
                             {settings.engagement.enabled && (
                                 <>

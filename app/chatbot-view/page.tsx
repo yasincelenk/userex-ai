@@ -411,15 +411,19 @@ function ChatbotViewContent() {
             const config = INDUSTRY_CONFIG[industry] || INDUSTRY_CONFIG[DEFAULT_INDUSTRY]
 
             // 1. Try to use configured Engagement Bubble Message
+            // NOTE: We do NOT use engagement.bubble.messages here anymore.
+            // Those are strictly for the Launcher Bubble (outside the chat).
+            // Inside the chat, we only want:
+            // a) Nothing (Default Welcome Screen)
+            // b) Industry Greeting (if enabled)
             let greeting = ""
 
-            if (settings.engagement && settings.engagement.enabled && settings.engagement.bubble?.messages?.length > 0) {
-                // Use the first active message or just the first one
-                const bubbleMsg = settings.engagement.bubble.messages.find((m: any) => m.isActive) || settings.engagement.bubble.messages[0]
-                if (bubbleMsg && bubbleMsg.text) {
-                    greeting = bubbleMsg.text
-                }
-            }
+            // NOTE: We do NOT use engagement.bubble.messages here anymore.
+            // Those are strictly for the Launcher Bubble (outside the chat).
+            // Inside the chat, we only want:
+            // a) Nothing (Default Welcome Screen)
+            // b) Industry Greeting (if enabled)
+
 
 
             // 2. If no Custom Bubble, use Industry Context (Product/Page specific)
