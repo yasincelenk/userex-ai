@@ -70,10 +70,7 @@ export async function POST(req: Request) {
                                 role: "assistant",
                                 content: fullContent
                             });
-                            await saveMessageToSession(sessionId, chatbotId, {
-                                role: "assistant",
-                                content: fullContent
-                            });
+
                         }
 
                         // Track Usage (Async, Fire-and-forget)

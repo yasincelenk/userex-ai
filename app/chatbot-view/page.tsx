@@ -246,7 +246,7 @@ function ChatbotViewContent() {
                     chatbotId,
                     sessionId,
                     context: pageContext,
-                    language, // Pass current language to AI
+                    language: settings.initialLanguage || 'auto', // Pass current language to AI
                     isVoice: shouldSpeakResponse, // Tell AI to be concise if we'll speak it
                     shouldStream: true // Always use streaming for speed
                 }),
@@ -357,7 +357,9 @@ function ChatbotViewContent() {
         industry: "ecommerce" as string,
         enableVoiceSupport: false,
         theme: "classic" as string,
+
         enableIndustryGreeting: false,
+        initialLanguage: "auto",
         engagement: {
             enabled: false,
             bubble: {
@@ -385,6 +387,7 @@ function ChatbotViewContent() {
                         enableVoiceSupport: data.enableVoiceSupport || false,
                         theme: data.theme || "classic",
                         enableIndustryGreeting: data.enableIndustryGreeting !== undefined ? data.enableIndustryGreeting : false,
+                        initialLanguage: data.initialLanguage || "auto",
                         engagement: data.engagement || { enabled: false, bubble: { messages: [] } }
                     })
                 }
