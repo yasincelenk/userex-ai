@@ -86,11 +86,38 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                 industry
             })
 
+            // Check if user is being activated
+            if (!tenant.isActive && isActive) {
+                try {
+                    await fetch('/api/admin/notify-approval', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: tenant.email,
+                            name: tenant.email.split('@')[0]
+                        })
+                    })
+                    toast({
+                        title: t('success'),
+                        description: "User activated and notification email sent.",
+                    })
+                } catch (emailError) {
+                    console.error("Failed to send approval email:", emailError)
+                    toast({
+                        title: t('warning'),
+                        description: "User activated, but failed to send email.",
+                        variant: "destructive"
+                    })
+                }
+            } else {
+                toast({
+                    title: t('success'),
+                    description: "Profile updated successfully.",
+                })
+            }
+
             onUpdate({ role, isActive, canManageModules, industry })
-            toast({
-                title: t('success'),
-                description: "Profile updated successfully.",
-            })
+
         } catch (error) {
             console.error("Error updating profile:", error)
             toast({

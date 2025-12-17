@@ -64,6 +64,21 @@ export default function SignUpForm() {
                 isActive: false // User must be approved by admin
             })
 
+            // Send notification to admin
+            try {
+                await fetch('/api/admin/notify-signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user.email,
+                        name: `${firstName} ${lastName}`,
+                        company: companyName
+                    })
+                })
+            } catch (notifyError) {
+                console.error("Failed to send admin notification:", notifyError)
+            }
+
             // Create default chatbot document
             await setDoc(doc(db, "chatbots", user.uid), {
                 companyName: companyName || "Acme Corp",

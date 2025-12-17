@@ -356,7 +356,13 @@ function ChatbotViewContent() {
         enableLeadCollection: false,
         industry: "ecommerce" as string,
         enableVoiceSupport: false,
-        theme: "classic" as string
+        theme: "classic" as string,
+        engagement: {
+            enabled: false,
+            bubble: {
+                messages: [] as any[]
+            }
+        }
     })
     const [isLoading, setIsLoading] = useState(true)
 
@@ -376,7 +382,8 @@ function ChatbotViewContent() {
                         enableLeadCollection: data.enableLeadCollection || false,
                         industry: data.industry || "ecommerce",
                         enableVoiceSupport: data.enableVoiceSupport || false,
-                        theme: data.theme || "classic"
+                        theme: data.theme || "classic",
+                        engagement: data.engagement || { enabled: false, bubble: { messages: [] } }
                     })
                 }
             } catch (error) {
@@ -396,44 +403,62 @@ function ChatbotViewContent() {
             const industry = (settings.industry || DEFAULT_INDUSTRY) as IndustryType
             const config = INDUSTRY_CONFIG[industry] || INDUSTRY_CONFIG[DEFAULT_INDUSTRY]
 
-            let greeting: string = settings.welcomeMessage || config.greeting_general
+            // 1. Try to use configured Engagement Bubble Message
+            let greeting = ""
 
-            // Context-based logic
-            const isProductPage = pageContext.url.includes('/product/') || pageContext.url.includes('/shop/') || pageContext.url.includes('/room/') || pageContext.url.includes('/property/')
-            const isCartPage = pageContext.url.includes('/cart') || pageContext.url.includes('/checkout') || pageContext.url.includes('/booking')
+            if (settings.engagement && settings.engagement.enabled && settings.engagement.bubble?.messages?.length > 0) {
+                // Use the first active message or just the first one
+                // Ideally we would cycle or pick random, but for now take the first one to match "Bubble" content
+                const bubbleMsg = settings.engagement.bubble.messages.find((m: any) => m.isActive) || settings.engagement.bubble.messages[0]
+                if (bubbleMsg && bubbleMsg.text) {
+                    greeting = bubbleMsg.text
+                }
+            }
 
-            if (isProductPage) {
-                if (pageContext.title) {
-                    // Try to make it more personal if we have a title
-                    if (industry === 'ecommerce') {
-                        greeting = `👋 ${pageContext.title} harika bir seçim! Özellikleri veya fiyatı hakkında sorunuz var mı?`
-                    } else if (industry === 'booking') {
-                        greeting = `👋 ${pageContext.title} için müsaitlik durumuna bakmamı ister misiniz?`
-                    } else if (industry === 'real_estate') {
-                        greeting = `👋 ${pageContext.title} ilgini çekti mi? Randevu oluşturabilirim.`
+            // 2. If no Custom Bubble, use Industry Context (Product/Page specific)
+            if (!greeting) {
+                // Context-based logic
+                const isProductPage = pageContext.url.includes('/product/') || pageContext.url.includes('/shop/') || pageContext.url.includes('/room/') || pageContext.url.includes('/property/')
+                const isCartPage = pageContext.url.includes('/cart') || pageContext.url.includes('/checkout') || pageContext.url.includes('/booking')
+
+                if (isProductPage) {
+                    if (pageContext.title) {
+                        // Try to make it more personal if we have a title
+                        if (industry === 'ecommerce') {
+                            greeting = `👋 ${pageContext.title} harika bir seçim! Özellikleri veya fiyatı hakkında sorunuz var mı?`
+                        } else if (industry === 'booking') {
+                            greeting = `👋 ${pageContext.title} için müsaitlik durumuna bakmamı ister misiniz?`
+                        } else if (industry === 'real_estate') {
+                            greeting = `👋 ${pageContext.title} ilgini çekti mi? Randevu oluşturabilirim.`
+                        } else {
+                            greeting = config.greeting_product
+                        }
                     } else {
                         greeting = config.greeting_product
                     }
+                } else if (isCartPage) {
+                    greeting = config.greeting_cart
                 } else {
-                    greeting = config.greeting_product
+                    // Fallback to Industry General Greeting (NEVER welcomeMessage)
+                    greeting = config.greeting_general
                 }
-            } else if (isCartPage) {
-                greeting = config.greeting_cart
             }
 
-            const proactiveMsg = {
-                id: 'proactive-' + Date.now(),
-                role: 'assistant',
-                content: greeting,
-                createdAt: new Date()
+            if (greeting) {
+                const proactiveMsg = {
+                    id: 'proactive-' + Date.now(),
+                    role: 'assistant',
+                    content: greeting,
+                    createdAt: new Date()
+                }
+                setMessages(prev => [...prev, proactiveMsg as any])
+                setHasProactiveTriggered(true)
             }
-            setMessages(prev => [...prev, proactiveMsg as any])
-            setHasProactiveTriggered(true)
 
         }, 12000) // 12 seconds delay
 
         return () => clearTimeout(timer)
-    }, [hasProactiveTriggered, messages.length, pageContext, isLoading, settings.industry])
+    }, [hasProactiveTriggered, messages.length, pageContext, isLoading, settings.industry, settings.engagement])
 
     const contactMessages = {
         tr: "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?",
