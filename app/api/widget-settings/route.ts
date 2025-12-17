@@ -14,6 +14,23 @@ export async function GET(req: Request) {
     }
 
     try {
+        // Fetch user doc as well for permissions
+        const userDocRef = doc(db, "users", chatbotId);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.exists() ? userDocSnap.data() : null;
+
+        const isChatbotEnabled = userData?.enableChatbot !== false; // Default to true if not set, or strict? Permissions usually default to false if undefined but let's check legacy.
+        // Looking at tenant-permissions, it defaults to true if undefined likely? 
+        // Actually earlier code: `enableChatbot: tenant.enableChatbot || false` in some places?
+        // Let's assume strict check: userData?.enableChatbot === true is safer, but let's see. 
+        // In the screenshot it's a toggle.
+        // Let's rely on what's in the DB. If undefined, maybe it should be active? 
+        // Let's check permissions component again... `tenant.enableChatbot || false`. It defaults to false.
+
+        const isAccountActive = userData?.isActive !== false; // Default true? Usually isActive is critical.
+
+        const shouldEnable = isChatbotEnabled && isAccountActive;
+
         const docRef = doc(db, "chatbots", chatbotId);
         const docSnap = await getDoc(docRef);
 
@@ -21,6 +38,7 @@ export async function GET(req: Request) {
             const data = docSnap.data();
             // Return only public settings
             return NextResponse.json({
+                isEnabled: shouldEnable,
                 companyName: data.companyName || "Acme Corp",
                 brandColor: data.brandColor || "#000000",
                 position: data.position || "bottom-right", // 'bottom-right' | 'bottom-left'

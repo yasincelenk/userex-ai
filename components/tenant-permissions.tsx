@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft } from "lucide-react"
+import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft, LayoutDashboard, ScanLine, Bot } from "lucide-react"
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -20,9 +19,16 @@ import { Badge } from "@/components/ui/badge"
 
 interface TenantData {
     enablePersonalShopper?: boolean
-    enableChatbot?: boolean
+    visiblePersonalShopper?: boolean
+    enableVoiceAssistant?: boolean
+    visibleVoiceAssistant?: boolean
     enableCopywriter?: boolean
+    visibleCopywriter?: boolean
     enableLeadFinder?: boolean
+    visibleLeadFinder?: boolean
+    enableUiUxAuditor?: boolean
+    visibleUiUxAuditor?: boolean
+    canManageModules?: boolean
     [key: string]: any
 }
 
@@ -34,7 +40,8 @@ interface TenantPermissionsProps {
 
 interface ModuleConfig {
     id: string
-    key: keyof TenantData
+    usageKey: keyof TenantData
+    visibilityKey: keyof TenantData
     title: string
     description: string
     icon: any
@@ -42,10 +49,21 @@ interface ModuleConfig {
     bgColor: string
 }
 
-const MODULES: ModuleConfig[] = [
+const INTEGRATED_MODULES: ModuleConfig[] = [
+    {
+        id: "core-chatbot",
+        usageKey: "enableChatbot",
+        visibilityKey: "visibleChatbot",
+        title: "AI Satış Chatbotu",
+        description: "Temel yapay zeka satış asistanınız. 7/24 müşterilerinizle etkileşime geçer.",
+        icon: Bot,
+        color: "text-primary",
+        bgColor: "bg-primary/10",
+    },
     {
         id: "personal-shopper",
-        key: "enablePersonalShopper",
+        usageKey: "enablePersonalShopper",
+        visibilityKey: "visiblePersonalShopper",
         title: "Kişisel Alışveriş Asistanı",
         description: "Smart product recommendations and catalog management.",
         icon: ShoppingBag,
@@ -54,16 +72,21 @@ const MODULES: ModuleConfig[] = [
     },
     {
         id: "voice-assistant",
-        key: "enableChatbot", // Assuming Chatbot maps to Voice Assistant in this context as per user image
+        usageKey: "enableVoiceAssistant",
+        visibilityKey: "visibleVoiceAssistant",
         title: "Sesli Asistan",
         description: "Kullanıcıların chatbot ile konuşmasına (Ses-Metin) ve yanıtları duymasına (Metin-Ses) izin verin.",
         icon: Mic,
         color: "text-blue-600",
         bgColor: "bg-blue-100",
-    },
+    }
+]
+
+const STANDALONE_MODULES: ModuleConfig[] = [
     {
         id: "copywriter",
-        key: "enableCopywriter",
+        usageKey: "enableCopywriter",
+        visibilityKey: "visibleCopywriter",
         title: "AI Copywriter",
         description: "Generate compelling marketing copy and product descriptions automatically.",
         icon: FileText,
@@ -72,153 +95,206 @@ const MODULES: ModuleConfig[] = [
     },
     {
         id: "lead-finder",
-        key: "enableLeadFinder",
+        usageKey: "enableLeadFinder",
+        visibilityKey: "visibleLeadFinder",
         title: "Lead Finder",
         description: "Identify and engage potential customers using AI-driven insights.",
         icon: Users,
         color: "text-green-600",
         bgColor: "bg-green-100",
+    },
+    {
+        id: "ui-ux-auditor",
+        usageKey: "enableUiUxAuditor",
+        visibilityKey: "visibleUiUxAuditor",
+        title: "UI/UX Denetçisi",
+        description: "Sitenizin kapsamlı kullanılabilirliğini analiz edin ve optimize edin.",
+        icon: ScanLine,
+        color: "text-orange-600",
+        bgColor: "bg-orange-100",
     }
 ]
 
 export function TenantPermissions({ tenant, userId, onUpdate }: TenantPermissionsProps) {
     const [permissions, setPermissions] = useState({
         enablePersonalShopper: tenant.enablePersonalShopper || false,
-        enableChatbot: tenant.enableChatbot ?? true,
+        visiblePersonalShopper: tenant.visiblePersonalShopper ?? true,
+        enableVoiceAssistant: tenant.enableVoiceAssistant ?? true,
+        visibleVoiceAssistant: tenant.visibleVoiceAssistant ?? true,
         enableCopywriter: tenant.enableCopywriter ?? true,
+        visibleCopywriter: tenant.visibleCopywriter ?? true,
         enableLeadFinder: tenant.enableLeadFinder ?? true,
+        visibleLeadFinder: tenant.visibleLeadFinder ?? true,
+        enableUiUxAuditor: tenant.enableUiUxAuditor ?? true,
+        visibleUiUxAuditor: tenant.visibleUiUxAuditor ?? true,
     })
-    const [activeModuleId, setActiveModuleId] = useState<string | null>(null)
-    const [isSaving, setIsSaving] = useState(false)
+    const [loading, setLoading] = useState<Record<string, boolean>>({})
     const { toast } = useToast()
 
-    const handlePermissionChange = async (key: string, value: boolean) => {
-        const newPermissions = { ...permissions, [key]: value }
-        setPermissions(newPermissions)
+    const handleToggle = async (key: string) => {
+        const newValue = !permissions[key as keyof typeof permissions]
+        const previousValue = permissions[key as keyof typeof permissions]
 
-        // Auto-save on toggle
-        setIsSaving(true)
+        setPermissions(prev => ({ ...prev, [key]: newValue }))
+
+        // Find if this is a usage key for an integrated module
+        const integratedModule = INTEGRATED_MODULES.find(m => m.usageKey === key)
+        if (integratedModule) {
+            // Sync visible state locally as well
+            setPermissions(prev => ({ ...prev, [integratedModule.visibilityKey]: newValue }))
+        }
+
+        setLoading(prev => ({ ...prev, [key]: true }))
+
         try {
-            await updateDoc(doc(db, "users", userId), { [key]: value })
-            onUpdate({ [key]: value })
-            toast({
-                title: "Success",
-                description: "Module status updated.",
-            })
+            const userRef = doc(db, "users", userId)
+            const chatbotRef = doc(db, "chatbots", userId)
+
+            const updates: Record<string, any> = {
+                [key]: newValue
+            }
+
+            // Sync visibility if it is an integrated module usage toggle
+            if (integratedModule) {
+                updates[integratedModule.visibilityKey] = newValue
+            }
+
+            await updateDoc(userRef, updates)
+
+            // Sycn Integrated Modules to Chatbot config (legacy support)
+            if (key === 'enablePersonalShopper') {
+                await updateDoc(chatbotRef, {
+                    enablePersonalShopper: newValue
+                }).catch(e => console.log("Chatbot doc might not exist yet:", e))
+            } else if (key === 'enableVoiceAssistant') {
+                await updateDoc(chatbotRef, {
+                    enableVoiceSupport: newValue
+                }).catch(e => console.log("Chatbot doc might not exist yet:", e))
+            }
+
+            onUpdate({ [key]: newValue, ...(integratedModule ? { [integratedModule.visibilityKey]: newValue } : {}) })
         } catch (error) {
-            console.error("Error updating permissions:", error)
-            setPermissions(permissions) // Revert state
+            console.error("Error updating permission:", error)
+            setPermissions(prev => ({ ...prev, [key]: previousValue }))
+            if (integratedModule) {
+                // Revert visibility as well
+                const oldVis = !newValue
+                setPermissions(prev => ({ ...prev, [integratedModule.visibilityKey]: oldVis }))
+            }
             toast({
-                title: "Error",
-                description: "Failed to update status.",
-                variant: "destructive",
+                title: "Hata",
+                description: "Ayarlar güncellenirken bir sorun oluştu.",
+                variant: "destructive"
             })
         } finally {
-            setIsSaving(false)
+            setLoading(prev => ({ ...prev, [key]: false }))
         }
     }
 
-    const activeModule = MODULES.find(m => m.id === activeModuleId)
+    const renderModuleCard = (module: ModuleConfig) => {
+        const isEnabled = permissions[module.usageKey as keyof typeof permissions]
+        const isVisible = permissions[module.visibilityKey as keyof typeof permissions]
+        const isLoading = loading[module.usageKey as string] || loading[module.visibilityKey as string]
 
-    if (activeModuleId && activeModule) {
+        const isIntegrated = INTEGRATED_MODULES.some(m => m.id === module.id)
+
         return (
-            <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" onClick={() => setActiveModuleId(null)} className="gap-2 pl-0 hover:bg-transparent hover:text-primary">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Modules
-                    </Button>
+            <Card key={module.id} className="relative overflow-hidden transition-all hover:shadow-md border-border/50">
+                <div className={`absolute top-0 right-0 p-3`}>
+                    <Badge
+                        variant={isEnabled ? "default" : "secondary"}
+                        className={`${isEnabled ? "bg-green-500 hover:bg-green-600" : "bg-muted text-muted-foreground"} transition-colors`}
+                    >
+                        {isEnabled ? "Aktif" : "Pasif"}
+                    </Badge>
                 </div>
-
-                <div className="border rounded-lg p-8 text-center bg-muted/20">
-                    <div className={`mx-auto w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${activeModule.bgColor}`}>
-                        <activeModule.icon className={`h-6 w-6 ${activeModule.color}`} />
+                <CardHeader>
+                    <div className={`w-10 h-10 rounded-lg ${module.bgColor} flex items-center justify-center mb-2`}>
+                        <module.icon className={`h-5 w-5 ${module.color}`} />
                     </div>
-                    <h2 className="text-2xl font-semibold tracking-tight mb-2">{activeModule.title} Settings</h2>
-                    <p className="text-muted-foreground max-w-md mx-auto">
-                        Detailed configuration for {activeModule.title} will be displayed here.
-                        Use the "Back to Modules" button to return to the overview.
-                    </p>
+                    <CardTitle className="text-base">{module.title}</CardTitle>
+                    <CardDescription className="line-clamp-2 text-xs">
+                        {module.description}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    checked={isEnabled}
+                                    onCheckedChange={() => handleToggle(module.usageKey as string)}
+                                    disabled={isLoading}
+                                />
+                                <span className="text-xs text-muted-foreground">Kullanım</span>
+                            </div>
+                        </div>
 
-                    {/* Placeholder for actual settings components */}
-                    <div className="mt-8 p-4 border border-dashed rounded bg-background/50">
-                        <p className="text-sm font-mono text-muted-foreground">Component: {activeModule.id}-settings</p>
+                        {!isIntegrated && (
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        checked={isVisible}
+                                        onCheckedChange={() => handleToggle(module.visibilityKey as string)}
+                                        disabled={isLoading}
+                                    />
+                                    <span className="text-xs text-muted-foreground">Görünürlük</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         )
     }
 
     return (
         <div className="space-y-8">
-            <div>
-                <h3 className="text-2xl font-bold tracking-tight">Modüller</h3>
-                <p className="text-muted-foreground">Yapay zeka asistanlarını ve araçlarını yönetin.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold tracking-tight">Modüller</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Yapay zeka asistanlarını ve araçlarını yönetin.
+                    </p>
+                </div>
+                {Object.keys(loading).some(k => loading[k]) && (
+                    <div className="flex items-center text-sm text-muted-foreground animate-pulse">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Kaydediliyor...
+                    </div>
+                )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {MODULES.map((module) => {
-                    const isEnabled = permissions[module.key as keyof typeof permissions]
+            <div className="space-y-10">
+                <div>
+                    <div className="mb-4">
+                        <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
+                            <Mic className="h-4 w-4" />
+                            Chatbot Entegrasyonları
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                            Bu modüller, web sitenizdeki Chatbot widget'ının yeteneklerini ve davranışını doğrudan etkiler.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {INTEGRATED_MODULES.map(renderModuleCard)}
+                    </div>
+                </div>
 
-                    return (
-                        <Card
-                            key={module.id}
-                            className={`h-full transition-all duration-300 hover:shadow-lg border hover:border-primary/20 group relative overflow-hidden bg-gradient-to-br from-white to-gray-50/50 ${!isEnabled && 'opacity-70 grayscale hover:grayscale-0 hover:opacity-100'}`}
-                        >
-                            <div className={`absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
-                                {/* Optional: Add an external link icon or status here if needed */}
-                            </div>
-
-                            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                                <div className={`p-2.5 rounded-xl ${module.color} bg-opacity-10 group-hover:bg-opacity-20 transition-all duration-300`}>
-                                    <module.icon className={`h-6 w-6 ${module.color}`} />
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <Badge variant={isEnabled ? "default" : "secondary"} className={isEnabled ? "bg-green-500 hover:bg-green-600" : ""}>
-                                        {isEnabled ? "Aktif" : "Pasif"}
-                                    </Badge>
-                                    {/* module.role is not defined in ModuleConfig, omitting for now */}
-                                    {/* <Badge variant="outline" className="text-xs font-normal opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {module.role}
-                                        </Badge> */}
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="mb-4">
-                                    <h3 className="font-semibold text-lg tracking-tight mb-1 group-hover:text-primary transition-colors">
-                                        {module.title}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                                        {module.description}
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
-                                    <div className="flex items-center gap-2">
-                                        <Switch
-                                            checked={isEnabled as boolean}
-                                            onCheckedChange={(checked) => handlePermissionChange(module.key as string, checked)}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <span className="text-xs text-muted-foreground font-medium">
-                                            {isEnabled ? "Açık" : "Kapalı"}
-                                        </span>
-                                    </div>
-
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="gap-1 hover:bg-primary hover:text-primary-foreground group/btn transition-all duration-300 ml-auto"
-                                        onClick={() => setActiveModuleId(module.id)}
-                                    >
-                                        <span className="sr-only md:not-sr-only text-xs">Yönet</span>
-                                        <ArrowRight className="h-3 w-3 group-hover/btn:translate-x-1 transition-transform" />
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
+                <div className="border-t pt-8">
+                    <div className="mb-4">
+                        <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
+                            <LayoutDashboard className="h-4 w-4" />
+                            Bağımsız Araçlar
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                            Bu araçlar, yönetim panelinden bağımsız olarak kullanılır ve chatbot widget'ını etkilemez.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {STANDALONE_MODULES.map(renderModuleCard)}
+                    </div>
+                </div>
             </div>
         </div>
     )

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { doc, getDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { guestDb as db, signInAsGuest } from "@/lib/firebase-guest"
 import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff } from "lucide-react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -40,6 +40,13 @@ function ChatbotViewContent() {
 
     // Context State
     const [pageContext, setPageContext] = useState<{ url: string, title: string, desc: string } | null>(null)
+
+    // Ensure Guest Authentication (using isolated firebase instance)
+    useEffect(() => {
+        signInAsGuest().catch((error: Error) => {
+            console.error("Guest login failed:", error)
+        })
+    }, [])
 
     // Handle initial context from URL
     useEffect(() => {

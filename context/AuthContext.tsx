@@ -10,10 +10,17 @@ interface AuthContextType {
     user: User | null
     role: string | null
     enablePersonalShopper: boolean
+    visiblePersonalShopper: boolean
     enableChatbot: boolean
+    visibleChatbot: boolean
     enableCopywriter: boolean
+    visibleCopywriter: boolean
     enableLeadFinder: boolean
-    enableVoiceAssistant?: boolean
+    visibleLeadFinder: boolean
+    enableUiUxAuditor: boolean
+    visibleUiUxAuditor: boolean
+    enableVoiceAssistant: boolean
+    visibleVoiceAssistant: boolean
     canManageModules: boolean
     loading: boolean
 }
@@ -22,10 +29,17 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     role: null,
     enablePersonalShopper: false,
+    visiblePersonalShopper: true,
     enableChatbot: true,
+    visibleChatbot: true,
     enableCopywriter: true,
+    visibleCopywriter: true,
     enableLeadFinder: true,
+    visibleLeadFinder: true,
+    enableUiUxAuditor: true,
+    visibleUiUxAuditor: true,
     enableVoiceAssistant: false,
+    visibleVoiceAssistant: true,
     canManageModules: false,
     loading: true,
 })
@@ -34,10 +48,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
     const [role, setRole] = useState<string | null>(null)
     const [enablePersonalShopper, setEnablePersonalShopper] = useState(false)
+    const [visiblePersonalShopper, setVisiblePersonalShopper] = useState(true)
     const [enableChatbot, setEnableChatbot] = useState(true)
+    const [visibleChatbot, setVisibleChatbot] = useState(true)
     const [enableCopywriter, setEnableCopywriter] = useState(true)
+    const [visibleCopywriter, setVisibleCopywriter] = useState(true)
     const [enableLeadFinder, setEnableLeadFinder] = useState(true)
+    const [visibleLeadFinder, setVisibleLeadFinder] = useState(true)
+    const [enableUiUxAuditor, setEnableUiUxAuditor] = useState(true)
+    const [visibleUiUxAuditor, setVisibleUiUxAuditor] = useState(true)
     const [enableVoiceAssistant, setEnableVoiceAssistant] = useState(false)
+    const [visibleVoiceAssistant, setVisibleVoiceAssistant] = useState(true)
     const [canManageModules, setCanManageModules] = useState(false)
     const [loading, setLoading] = useState(true)
     const pathname = usePathname()
@@ -78,8 +99,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             setUser(currentUser)
                             setRole(userRole)
                             setEnableChatbot(userData.enableChatbot !== false)
+                            setVisibleChatbot(userData.visibleChatbot !== false)
                             setEnablePersonalShopper(userData.enablePersonalShopper === true)
+                            setVisiblePersonalShopper(userData.visiblePersonalShopper !== false)
+                            setEnableCopywriter(userData.enableCopywriter === true)
+                            setVisibleCopywriter(userData.visibleCopywriter !== false)
+                            setEnableLeadFinder(userData.enableLeadFinder === true)
+                            setVisibleLeadFinder(userData.visibleLeadFinder !== false)
+                            setEnableUiUxAuditor(userData.enableUiUxAuditor === true)
+                            setVisibleUiUxAuditor(userData.visibleUiUxAuditor !== false)
                             setEnableVoiceAssistant(userData.enableVoiceAssistant === true)
+                            setVisibleVoiceAssistant(userData.visibleVoiceAssistant !== false)
                             setCanManageModules(userData.canManageModules === true)
                         } else {
                             // User doc doesn't exist but Firebase user does
@@ -118,13 +148,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         <AuthContext.Provider value={{
             user,
             role,
+            loading,
             enablePersonalShopper,
+            visiblePersonalShopper,
             enableChatbot,
+            visibleChatbot,
             enableCopywriter,
+            visibleCopywriter,
             enableLeadFinder,
+            visibleLeadFinder,
+            enableUiUxAuditor,
+            visibleUiUxAuditor,
             enableVoiceAssistant,
-            canManageModules,
-            loading
+            visibleVoiceAssistant,
+            canManageModules
         }}>
             {children}
         </AuthContext.Provider>

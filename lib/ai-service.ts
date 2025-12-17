@@ -35,6 +35,7 @@ export async function generateAIResponse(
         const chatbotSnap = await getDoc(chatbotRef);
         const chatbotData = chatbotSnap.exists() ? chatbotSnap.data() : null;
         const shopperConfig = chatbotData?.shopperConfig;
+        const isShopperEnabled = chatbotData?.enablePersonalShopper === true;
         const industry = (chatbotData?.industry || 'ecommerce') as keyof typeof INDUSTRY_CONFIG;
         const industryConfig = INDUSTRY_CONFIG[industry] || INDUSTRY_CONFIG['ecommerce'];
 
@@ -66,7 +67,7 @@ export async function generateAIResponse(
         // 3. Prepare System Prompt
         let systemPrompt = `You are a helpful AI assistant for ${chatbotId}. ${industryConfig.systemPrompt}`;
 
-        if (shopperConfig) {
+        if (isShopperEnabled && shopperConfig) {
             const tone = shopperConfig.salesTone || "friendly";
             const strategy = shopperConfig.recommendationStrategy || "best_match";
 

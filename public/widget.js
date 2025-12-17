@@ -992,6 +992,12 @@
     .then(res => res.json())
     .then(data => {
       console.log('Widget Settings API Response:', data);
+
+      if (data.isEnabled === false) {
+        console.warn('Userex Widget is disabled for this account.');
+        return;
+      }
+
       if (!data.error) {
         settings = {
           brandColor: data.brandColor,

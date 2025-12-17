@@ -10,7 +10,7 @@ import { ArrowLeft, Loader2, Calendar, Shield, LayoutDashboard, Database, Settin
 import { Badge } from "@/components/ui/badge"
 import { ChatsList } from "@/components/chats-list"
 import { KnowledgeBase } from "@/components/knowledge-base"
-import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
+
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -54,9 +54,15 @@ interface TenantData {
     createdAt: any
     isActive: boolean
     enablePersonalShopper?: boolean
+    visiblePersonalShopper?: boolean
     enableChatbot?: boolean
+    visibleChatbot?: boolean
     enableCopywriter?: boolean
+    visibleCopywriter?: boolean
     enableLeadFinder?: boolean
+    visibleLeadFinder?: boolean
+    enableUiUxAuditor?: boolean
+    visibleUiUxAuditor?: boolean
     industry?: string
     canManageModules?: boolean
 }
@@ -65,7 +71,10 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
     const [role, setRole] = useState(tenant.role)
     const [isActive, setIsActive] = useState(tenant.isActive)
     const [canManageModules, setCanManageModules] = useState(tenant.canManageModules || false)
+
     const [industry, setIndustry] = useState(tenant.industry || "ecommerce")
+    const [newPassword, setNewPassword] = useState("")
+    const [isResettingPassword, setIsResettingPassword] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const { toast } = useToast()
     const { t } = useLanguage()
@@ -77,14 +86,9 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
             await updateDoc(doc(db, "users", userId), {
                 role,
                 isActive,
-                canManageModules,
-                industry
+                canManageModules
             })
 
-            // Also update the chatbot document to keep industry in sync
-            await updateDoc(doc(db, "chatbots", userId), {
-                industry
-            })
 
             // Check if user is being activated
             if (!tenant.isActive && isActive) {
@@ -116,7 +120,7 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                 })
             }
 
-            onUpdate({ role, isActive, canManageModules, industry })
+            onUpdate({ role, isActive, canManageModules })
 
         } catch (error) {
             console.error("Error updating profile:", error)
@@ -127,6 +131,55 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
             })
         } finally {
             setIsSaving(false)
+        }
+
+    }
+
+    const handlePasswordReset = async () => {
+        if (!newPassword || newPassword.length < 6) {
+            toast({
+                title: t('error'),
+                description: "Password must be at least 6 characters.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setIsResettingPassword(true);
+        try {
+            const token = await user?.getIdToken();
+            const response = await fetch('/api/admin/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    targetUserId: userId,
+                    newPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to reset password');
+            }
+
+            toast({
+                title: t('success'),
+                description: "User password has been updated.",
+            });
+            setNewPassword(""); // Clear input
+        } catch (error: any) {
+            console.error("Reset error:", error);
+            toast({
+                title: t('error'),
+                description: error.message || "Failed to reset password.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsResettingPassword(false);
         }
     }
 
@@ -157,21 +210,7 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                     </Select>
                 </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor="industry">{t('industrySector')}</Label>
-                    <Select value={industry} onValueChange={setIndustry}>
-                        <SelectTrigger>
-                            <SelectValue placeholder={t('selectIndustry')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
-                                <SelectItem key={key} value={key}>
-                                    {config.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+
 
                 <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-4">
                     <div className="space-y-0.5">
@@ -197,57 +236,15 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
                             type="text"
                             placeholder={t('newPassword')}
                             className="bg-background"
-                            id="new-password-input"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
                         />
                         <Button
                             variant="destructive"
-                            onClick={async () => {
-                                const input = document.getElementById('new-password-input') as HTMLInputElement;
-                                const newPassword = input.value;
-                                if (!newPassword || newPassword.length < 6) {
-                                    toast({
-                                        title: t('error'),
-                                        description: "Password must be at least 6 characters.",
-                                        variant: "destructive"
-                                    });
-                                    return;
-                                }
-
-                                try {
-                                    const token = await user?.getIdToken();
-                                    const response = await fetch('/api/admin/reset-password', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': `Bearer ${token}`
-                                        },
-                                        body: JSON.stringify({
-                                            targetUserId: userId,
-                                            newPassword
-                                        })
-                                    });
-
-                                    const data = await response.json();
-
-                                    if (!response.ok) {
-                                        throw new Error(data.error || 'Failed to reset password');
-                                    }
-
-                                    toast({
-                                        title: t('success'),
-                                        description: "User password has been updated.",
-                                    });
-                                    input.value = ''; // Clear input
-                                } catch (error: any) {
-                                    console.error("Reset error:", error);
-                                    toast({
-                                        title: t('error'),
-                                        description: error.message || "Failed to reset password.",
-                                        variant: "destructive"
-                                    });
-                                }
-                            }}
+                            disabled={isResettingPassword}
+                            onClick={handlePasswordReset}
                         >
+                            {isResettingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {t('reset')}
                         </Button>
                     </div>
@@ -349,6 +346,15 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                             className="cursor-pointer"
                                         >
                                             <span>{t('behavior')}</span>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            isActive={activeTab === "engagement"}
+                                            onClick={() => onTabChange("engagement")}
+                                            className="cursor-pointer"
+                                        >
+                                            <span>{t('engagement')}</span>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
 
