@@ -396,7 +396,7 @@ function ChatbotViewContent() {
             const industry = (settings.industry || DEFAULT_INDUSTRY) as IndustryType
             const config = INDUSTRY_CONFIG[industry] || INDUSTRY_CONFIG[DEFAULT_INDUSTRY]
 
-            let greeting: string = config.greeting_general
+            let greeting: string = settings.welcomeMessage || config.greeting_general
 
             // Context-based logic
             const isProductPage = pageContext.url.includes('/product/') || pageContext.url.includes('/shop/') || pageContext.url.includes('/room/') || pageContext.url.includes('/property/')
@@ -937,20 +937,7 @@ function ChatbotViewContent() {
                         ) : (
                             <>
                                 {/* Welcome Message as first item if desired, or just chat flow */}
-                                <div className="flex gap-4 max-w-3xl mx-auto">
-                                    <div
-                                        className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs text-white mt-1"
-                                        style={{ backgroundColor: settings.brandColor }}
-                                    >
-                                        AI
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-semibold text-gray-500">{settings.companyName}</p>
-                                        <div className="text-sm text-gray-800 leading-relaxed">
-                                            {settings.welcomeMessage}
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 {messages.map((m: any) => (
                                     <div key={m.id} className={`flex gap-4 max-w-3xl mx-auto ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>

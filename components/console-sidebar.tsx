@@ -183,7 +183,7 @@ export function ConsoleSidebar() {
                                                         { tab: "branding", label: t('branding') },
                                                         { tab: "appearance", label: t('appearance') },
                                                         { tab: "behavior", label: t('behavior') },
-                                                        { tab: "triggers", label: t('triggers') },
+
                                                         { tab: "availability", label: t('availability') },
                                                         { tab: "engagement", label: t('engagement') },
                                                     ].map((item) => (

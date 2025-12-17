@@ -4,10 +4,11 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, MessageSquare, Activity, Users, RefreshCw } from "lucide-react"
+import { Loader2, MessageSquare, Activity, Users } from "lucide-react"
 import { AnalyticsSummary } from "@/lib/analytics"
 import { useToast } from "@/hooks/use-toast"
 import { useLanguage } from "@/context/LanguageContext"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
     LineChart,
     Line,
@@ -19,36 +20,39 @@ import {
     PieChart,
     Pie,
     Cell,
-    Legend,
-    BarChart,
-    Bar
+    Legend
 } from "recharts"
 import { format, subDays } from "date-fns"
+import { tr, enUS } from "date-fns/locale"
 
 export default function AnalyticsPage() {
     const { user } = useAuth()
     const { toast } = useToast()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
     const [isLoading, setIsLoading] = useState(true)
     const [data, setData] = useState<AnalyticsSummary | null>(null)
-    const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-        from: subDays(new Date(), 7),
-        to: new Date()
-    })
+
+    // Split state into two
+    const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30))
+    const [endDate, setEndDate] = useState<Date | undefined>(new Date())
+
+    const locale = language === 'tr' ? tr : enUS
 
     useEffect(() => {
-        if (user) {
+        if (user && startDate && endDate) {
             fetchAnalytics()
         }
-    }, [user, dateRange])
+    }, [user, startDate, endDate])
 
     const fetchAnalytics = async () => {
+        if (!startDate || !endDate) return
+
         setIsLoading(true)
         try {
             const queryParams = new URLSearchParams({
                 chatbotId: user!.uid,
-                startDate: dateRange.from.toISOString(),
-                endDate: dateRange.to.toISOString()
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString()
             })
 
             const res = await fetch(`/api/analytics?${queryParams}`)
@@ -76,13 +80,18 @@ export default function AnalyticsPage() {
 
     return (
         <div className="p-8 space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{t('analytics')}</h1>
                     <p className="text-muted-foreground">{t('analyticsSubtitle')}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                        <DatePicker date={startDate} setDate={setStartDate} placeholder={t('startDate')} />
+                        <span className="text-muted-foreground">-</span>
+                        <DatePicker date={endDate} setDate={setEndDate} placeholder={t('endDate')} />
+                    </div>
                     <Button variant="outline" onClick={fetchAnalytics}>
                         {t('refresh')}
                     </Button>
@@ -137,7 +146,7 @@ export default function AnalyticsPage() {
                                         fontSize={12}
                                         tickLine={false}
                                         axisLine={false}
-                                        tickFormatter={(str) => format(new Date(str), "MMM d")}
+                                        tickFormatter={(str) => format(new Date(str), "d MMM", { locale })}
                                     />
                                     <YAxis
                                         stroke="#888888"
@@ -147,7 +156,7 @@ export default function AnalyticsPage() {
                                     />
                                     <Tooltip
                                         contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }}
-                                        labelFormatter={(str) => format(new Date(str), "MMM d, yyyy")}
+                                        labelFormatter={(str) => format(new Date(str), "d MMMM yyyy", { locale })}
                                     />
                                     <Legend />
                                     <Line type="monotone" dataKey="conversations" stroke="#2563eb" strokeWidth={2} name={t('totalConversations')} />

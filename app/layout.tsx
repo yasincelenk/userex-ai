@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: "AI Chatbot Assistant",
 };
 
-import { AuthProvider } from "@/context/AuthContext";
+import { ConditionalAuthProvider } from "@/components/conditional-auth-provider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CookieConsent } from "@/components/cookie-consent";
 
@@ -22,10 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <LanguageProvider>
-          <AuthProvider>
+          <ConditionalAuthProvider>
             <CookieConsent />
             {children}
-          </AuthProvider>
+          </ConditionalAuthProvider>
         </LanguageProvider>
       </body>
     </html>

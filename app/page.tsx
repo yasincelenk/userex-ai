@@ -17,7 +17,7 @@ import {
     BarChart3,
     Users,
 } from "lucide-react"
-import Script from "next/script"
+import { ChatbotLoader } from "@/components/chatbot-loader"
 
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
@@ -256,11 +256,7 @@ export default function LandingPage() {
             </section>
 
             <PublicFooter />
-            <Script
-                src="/widget.js"
-                data-chatbot-id="qqv4HRZyAuUwsApyYxoBEgTs4hC2"
-                strategy="afterInteractive"
-            />
+            <ChatbotLoader chatbotId="qqv4HRZyAuUwsApyYxoBEgTs4hC2" />
         </div>
     )
 }

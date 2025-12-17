@@ -2,23 +2,20 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore"
-import { db } from "@/lib/firebase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Loader2, MessageSquare, Users, Activity } from "lucide-react"
-import { format, subDays, isSameDay, startOfDay } from "date-fns"
+import { format, subDays, startOfDay } from "date-fns"
 import { useLanguage } from "@/context/LanguageContext"
-
-interface ChatSession {
-    id: string
-    createdAt: any
-    messages: any[]
-}
+import { AnalyticsSummary } from "@/lib/analytics"
+import { tr, enUS } from "date-fns/locale"
 
 export function DashboardStats() {
     const { user } = useAuth()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
+
+    const locale = language === 'tr' ? tr : enUS
+
     const [stats, setStats] = useState({
         totalChats: 0,
         totalMessages: 0,
@@ -32,49 +29,35 @@ export function DashboardStats() {
             if (!user?.uid) return
 
             try {
-                const q = query(
-                    collection(db, "chat_sessions"),
-                    where("chatbotId", "==", user.uid),
-                    orderBy("createdAt", "desc")
-                )
-                const querySnapshot = await getDocs(q)
-                const sessions: ChatSession[] = []
-                querySnapshot.forEach((doc) => {
-                    sessions.push({ id: doc.id, ...doc.data() } as ChatSession)
+                // Fetch from API to get correct aggregations and ISO date handling
+                const queryParams = new URLSearchParams({
+                    chatbotId: user.uid,
+                    startDate: subDays(new Date(), 30).toISOString(), // Last 30 days default
+                    endDate: new Date().toISOString()
                 })
 
-                // Calculate Stats
-                const totalChats = sessions.length
-                const totalMessages = sessions.reduce((acc, session) => acc + (session.messages?.length || 0), 0)
-                const avgMessagesPerChat = totalChats > 0 ? Math.round(totalMessages / totalChats) : 0
+                const res = await fetch(`/api/analytics?${queryParams}`)
+                if (!res.ok) throw new Error("Failed to fetch analytics")
+
+                const data: AnalyticsSummary = await res.json()
 
                 setStats({
-                    totalChats,
-                    totalMessages,
-                    avgMessagesPerChat,
+                    totalChats: data.totalConversations,
+                    totalMessages: data.totalMessages,
+                    avgMessagesPerChat: data.averageMessagesPerConversation,
                 })
 
-                // Prepare Chart Data (Last 7 Days)
-                const last7Days = Array.from({ length: 7 }, (_, i) => {
-                    const d = subDays(new Date(), 6 - i)
-                    return startOfDay(d)
-                })
-
-                const data = last7Days.map((date) => {
-                    const daySessions = sessions.filter((session) => {
-                        if (!session.createdAt?.seconds) return false
-                        const sessionDate = new Date(session.createdAt.seconds * 1000)
-                        return isSameDay(sessionDate, date)
-                    })
-
+                // Format Chart Data
+                const formattedChartData = data.dailyStats.map(dayStat => {
+                    const date = new Date(dayStat.date)
                     return {
-                        name: format(date, "EEE"), // Mon, Tue, etc.
-                        chats: daySessions.length,
-                        fullDate: format(date, "MMM d"),
+                        name: format(date, "EEE", { locale }),
+                        chats: dayStat.conversations,
+                        fullDate: format(date, "d MMM", { locale }),
                     }
                 })
 
-                setChartData(data)
+                setChartData(formattedChartData)
 
             } catch (error) {
                 console.error("Error fetching dashboard stats:", error)

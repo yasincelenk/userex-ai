@@ -27,8 +27,6 @@
     launcherHeight: 60,
     launcherRadius: 50,
     launcherText: 'Chat',
-    launcherRadius: 50,
-    launcherText: 'Chat',
     launcherIcon: 'message',
     launcherIconColor: '#FFFFFF',
     launcherBackgroundColor: ''
@@ -70,6 +68,7 @@
       this.hasShown = false;
       this.timers = [];
       this.listeners = [];
+      this.targetMessage = null; // Store selected message
 
       // Session storage keys
       this.shownCountKey = `userex_eng_shown_${chatbotId}`;
@@ -89,18 +88,45 @@
       if (!this.settings) return;
 
       console.log('Engagement Controller initialized', this.settings);
+
+      // Pre-select message to determine delay if needed
+      this.selectMessage();
+
       this.setupTriggers();
+    }
+
+    selectMessage() {
+      const rawMessages = this.settings.bubble.messages || ['Need help?'];
+
+      // Filter active messages and normalize structure
+      const activeMessages = rawMessages.map(m => {
+        if (typeof m === 'string') return { text: m, delay: 0, isActive: true };
+        return m;
+      }).filter(m => m.isActive !== false); // Default to true if undefined
+
+      if (activeMessages.length === 0) return;
+
+      this.targetMessage = activeMessages[Math.floor(Math.random() * activeMessages.length)];
+      console.log('Engagement: Selected target message', this.targetMessage);
     }
 
     setupTriggers() {
       const triggers = this.settings.triggers;
 
-      // 1. Time on Page Trigger
-      if (triggers.timeOnPage && triggers.timeOnPage > 0) {
+      // 1. Time on Page Trigger (Global OR Message Specific)
+      let timeOnPage = triggers.timeOnPage;
+
+      // Check message specific delay if global trigger is not set
+      if ((!timeOnPage || timeOnPage <= 0) && this.targetMessage && this.targetMessage.delay > 0) {
+        console.log(`Engagement: Using message specific delay (${this.targetMessage.delay}s) as trigger`);
+        timeOnPage = this.targetMessage.delay;
+      }
+
+      if (timeOnPage && timeOnPage > 0) {
         const timer = setTimeout(() => {
           console.log('Engagement: Time on page trigger fired');
           this.showBubble();
-        }, triggers.timeOnPage * 1000);
+        }, timeOnPage * 1000);
         this.timers.push(timer);
       }
 
@@ -175,6 +201,7 @@
       const isWidgetOpen = container && container.style.display && container.style.display !== 'none';
 
       if (this.hasShown || this.bubble || isWidgetOpen) return;
+      if (!this.targetMessage) return; // No message to show
 
       this.hasShown = true;
 
@@ -185,21 +212,19 @@
       // Clean up all triggers
       this.cleanup();
 
-      // Select random message
-      const messages = this.settings.bubble.messages || ['Need help?'];
-      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-
       // Get bubble config
       const bubble = this.settings.bubble;
       const position = bubble.position || 'top';
       const style = bubble.style || {};
       const animation = bubble.animation || 'bounce';
 
+      const messageText = this.targetMessage.text;
+
       // Create bubble element
       this.bubble = document.createElement('div');
       this.bubble.id = 'userex-engagement-bubble';
       this.bubble.innerHTML = `
-        <div class="bubble-content">${randomMessage}</div>
+        <div class="bubble-content">${messageText}</div>
         ${bubble.showCloseButton ? '<button class="bubble-close" aria-label="Close">×</button>' : ''}
       `;
 
@@ -562,7 +587,7 @@
         backgroundColor: settings.launcherBackgroundColor || settings.primaryColor || '#000000',
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         cursor: 'pointer',
-        zIndex: '999998', // Just below the main launcher if z-index collision occurs, but we want it visible
+        zIndex: '999998',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -575,7 +600,6 @@
 
       // Adjust if centered or middle (simplified for now: stacks vertically)
       if (isMiddle) {
-        // If middle, maybe stack horizontally? Let's stick to vertical stack for consistency
         voiceLauncher.style.transform = `translateY(calc(-50% - ${settings.launcherHeight / 2 + 10}px))`;
       }
 
@@ -598,6 +622,28 @@
 
       document.body.appendChild(voiceLauncher);
     }
+
+    // Main Launcher Styles
+    const isTextMode = settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text';
+
+    Object.assign(launcher.style, {
+      position: 'fixed',
+      width: isTextMode ? 'auto' : `${settings.launcherWidth}px`,
+      minWidth: isTextMode ? `${settings.launcherWidth}px` : undefined,
+      height: `${settings.launcherHeight}px`,
+      padding: isTextMode ? '0 24px' : '0',
+      borderRadius: `${settings.launcherRadius}px`,
+      backgroundColor: settings.launcherBackgroundColor || settings.brandColor,
+      boxShadow: shadowStyle,
+      cursor: 'pointer',
+      zIndex: '999999',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+      ...horizontalStyle,
+      ...verticalStyle
+    });
 
     const isTextStyle = settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text';
 

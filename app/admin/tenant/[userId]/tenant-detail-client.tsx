@@ -237,7 +237,7 @@ function TenantProfileSettings({ tenant, userId, onUpdate }: { tenant: TenantDat
     )
 }
 
-const WIDGET_TABS = ['branding', 'appearance', 'behavior', 'triggers', 'availability']
+const WIDGET_TABS = ['branding', 'appearance', 'behavior', 'availability']
 
 function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeTab: string, onTabChange: (tab: string) => void, enablePersonalShopper?: boolean }) {
     const isWidgetActive = activeTab === 'widget' || WIDGET_TABS.includes(activeTab)
@@ -324,15 +324,7 @@ function SidebarNav({ activeTab, onTabChange, enablePersonalShopper }: { activeT
                                             <span>{t('behavior')}</span>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
-                                    <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton
-                                            isActive={activeTab === "triggers"}
-                                            onClick={() => onTabChange("triggers")}
-                                            className="cursor-pointer"
-                                        >
-                                            <span>{t('triggers')}</span>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
+
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton
                                             isActive={activeTab === "availability"}

@@ -27,6 +27,13 @@ import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
 
+interface EngagementMessage {
+    text: string;
+    delay: number; // Seconds
+    isActive: boolean;
+}
+
+
 interface WidgetSettingsProps {
     userId?: string
 }
@@ -88,7 +95,10 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                 inactivity: null as number | null,
             },
             bubble: {
-                messages: ["Yardıma ihtiyacınız var mı? 👋", "Size nasıl yardımcı olabilirim?"],
+                messages: [
+                    { text: "Yardıma ihtiyacınız var mı? 👋", delay: 0, isActive: true },
+                    { text: "Size özel tekliflerimizi gördünüz mü?", delay: 5, isActive: true }
+                ] as EngagementMessage[],
                 position: "top" as "top" | "left" | "right",
                 style: {
                     backgroundColor: "#000000",
@@ -103,6 +113,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                 maxShowCount: 3
             }
         },
+
         // Availability
         enableBusinessHours: false,
         timezone: "UTC",
@@ -122,7 +133,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
     // Sync active tab with URL parameter
     useEffect(() => {
         const tabParam = searchParams.get('tab')
-        if (tabParam && ['branding', 'appearance', 'behavior', 'triggers', 'engagement', 'availability'].includes(tabParam)) {
+        if (tabParam && ['branding', 'appearance', 'behavior', 'engagement', 'availability'].includes(tabParam)) {
             setActiveTab(tabParam)
         }
     }, [searchParams])
@@ -183,17 +194,22 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         engagement: data.engagement || {
                             enabled: false,
                             triggers: {
-                                timeOnPage: null,
-                                scrollDepth: null,
-                                exitIntent: false,
-                                pageRevisit: null,
-                                inactivity: null,
+                                timeOnPage: data.engagement?.triggers?.timeOnPage || null,
+                                scrollDepth: data.engagement?.triggers?.scrollDepth || null,
+                                exitIntent: data.engagement?.triggers?.exitIntent || false,
+                                pageRevisit: data.engagement?.triggers?.pageRevisit || null,
+                                inactivity: data.engagement?.triggers?.inactivity || null,
                             },
                             bubble: {
-                                messages: ["Yardıma ihtiyacınız var mı? 👋", "Size nasıl yardımcı olabilirim?"],
-                                position: "top",
+                                messages: (data.engagement?.bubble?.messages || []).map((m: any) =>
+                                    typeof m === 'string'
+                                        ? { text: m, delay: 0, isActive: true }
+                                        : m
+                                ),
+                                position: data.engagement?.bubble?.position || "top",
                                 style: {
-                                    backgroundColor: "#000000",
+                                    backgroundColor: data.engagement?.bubble?.style?.backgroundColor || "#000000",
+
                                     textColor: "#FFFFFF",
                                     borderRadius: 12,
                                     shadow: "medium"
@@ -357,15 +373,16 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                 ...prev.engagement,
                 bubble: {
                     ...prev.engagement.bubble,
-                    messages: [...prev.engagement.bubble.messages, ""]
+                    messages: [...prev.engagement.bubble.messages, { text: "", delay: 0, isActive: true }]
                 }
             }
         }))
     }
 
-    const updateEngagementMessage = (index: number, value: string) => {
+
+    const updateEngagementMessage = (index: number, field: keyof EngagementMessage, value: any) => {
         const newMessages = [...settings.engagement.bubble.messages]
-        newMessages[index] = value
+        newMessages[index] = { ...newMessages[index], [field]: value }
         setSettings(prev => ({
             ...prev,
             engagement: {
@@ -377,6 +394,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
             }
         }))
     }
+
 
     const removeEngagementMessage = (index: number) => {
         const newMessages = settings.engagement.bubble.messages.filter((_, i) => i !== index)
@@ -414,8 +432,6 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                 return { title: t('appearanceTitle'), desc: t('appearanceDesc') }
             case 'behavior':
                 return { title: t('behaviorTitle'), desc: t('behaviorDesc') }
-            case 'triggers':
-                return { title: t('triggersTitle'), desc: t('triggersDesc') }
             case 'engagement':
                 return { title: t('engagementTitle'), desc: t('engagementDesc') }
             case 'availability':
@@ -915,86 +931,12 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                     <p className="text-xs text-muted-foreground">{t('langDesc')}</p>
                                 </div>
 
-                                <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base">{t('voiceAssistant')}</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('voiceAssistantDesc')}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={settings.enableVoiceAssistant}
-                                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableVoiceAssistant: checked }))}
-                                    />
-                                </div>
 
-                                <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base">{t('personalShopper') || "Personal Shopper"}</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('personalShopperDesc') || "Smart product recommendations."}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={settings.enablePersonalShopper}
-                                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enablePersonalShopper: checked }))}
-                                    />
-                                </div>
                             </div>
                         </div>
                     </TabsContent>
 
-                    {/* Triggers Tab */}
-                    <TabsContent value="triggers" className="space-y-6 mt-6">
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('triggers')}</h4>
-                            <div className="grid gap-6">
-                                <div className="space-y-2">
-                                    <Label>{t('autoOpenDelay')}</Label>
-                                    <p className="text-sm text-muted-foreground">{t('autoOpenDelayDesc')}</p>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            className="w-24"
-                                            value={settings.autoOpenDelay}
-                                            onChange={(e) => setSettings(prev => ({ ...prev, autoOpenDelay: parseInt(e.target.value) || 0 }))}
-                                        />
-                                        <span className="text-sm">{t('seconds')}</span>
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base">{t('openOnExitIntent')}</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('openOnExitIntentDesc')}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={settings.openOnExitIntent}
-                                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, openOnExitIntent: checked }))}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>{t('openOnScroll')}</Label>
-                                    <p className="text-sm text-muted-foreground">{t('openOnScrollDesc')}</p>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            className="w-24"
-                                            value={settings.openOnScroll}
-                                            onChange={(e) => setSettings(prev => ({ ...prev, openOnScroll: parseInt(e.target.value) || 0 }))}
-                                        />
-                                        <span className="text-sm">{t('percent')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </TabsContent>
 
                     {/* Engagement Tab */}
                     <TabsContent value="engagement" className="space-y-6 mt-6">
@@ -1150,30 +1092,62 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                         <h5 className="text-sm font-medium">{t('bubbleMessages')}</h5>
                                         <p className="text-xs text-muted-foreground">{t('bubbleMessagesDescription')}</p>
 
-                                        <div className="space-y-2">
+                                        <div className="space-y-4">
                                             {settings.engagement.bubble.messages.map((message, index) => (
-                                                <div key={index} className="flex items-center gap-2">
-                                                    <Input
-                                                        value={message}
-                                                        onChange={(e) => updateEngagementMessage(index, e.target.value)}
-                                                        placeholder={`Message ${index + 1}`}
-                                                    />
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => removeEngagementMessage(index)}
-                                                        className="shrink-0"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
+                                                <div key={index} className="flex flex-col gap-3 p-4 border rounded-lg bg-gray-50/50">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <Label className="text-sm font-medium">{t('message')} {index + 1}</Label>
+                                                            <Switch
+                                                                checked={message.isActive}
+                                                                onCheckedChange={(checked) => updateEngagementMessage(index, 'isActive', checked)}
+                                                                className="scale-75"
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => removeEngagementMessage(index)}
+                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="grid gap-3">
+                                                        <div className="grid gap-1.5">
+                                                            <Label className="text-xs text-muted-foreground">{t('messageText')}</Label>
+                                                            <Input
+                                                                value={message.text}
+                                                                onChange={(e) => updateEngagementMessage(index, 'text', e.target.value)}
+                                                                placeholder={t('enterMessage')}
+                                                                className="bg-white"
+                                                            />
+                                                        </div>
+
+                                                        <div className="grid gap-1.5">
+                                                            <Label className="text-xs text-muted-foreground">{t('triggerDelay')}</Label>
+                                                            <div className="flex items-center gap-2">
+                                                                <Input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={message.delay}
+                                                                    onChange={(e) => updateEngagementMessage(index, 'delay', parseInt(e.target.value) || 0)}
+                                                                    className="w-24 bg-white"
+                                                                />
+                                                                <span className="text-xs text-muted-foreground">{t('waitBeforeShowing')}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                             {settings.engagement.bubble.messages.length < 5 && (
-                                                <Button variant="outline" size="sm" onClick={addEngagementMessage}>
-                                                    {t('addMessage')}
+                                                <Button variant="outline" size="sm" onClick={addEngagementMessage} className="w-full border-dashed">
+                                                    {t('addMessage') || "+ Add Message"}
                                                 </Button>
                                             )}
                                         </div>
+
                                     </div>
 
                                     {/* Bubble Appearance */}
@@ -1754,7 +1728,8 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                 onClick={() => setIsPreviewOpen(true)}
                                                 style={{
                                                     // Removed artificial 80px limit to allow user setting to take effect
-                                                    width: `${settings.launcherWidth}px`,
+                                                    width: (settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? 'auto' : `${settings.launcherWidth}px`,
+                                                    minWidth: (settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? `${settings.launcherWidth}px` : undefined,
                                                     height: `${settings.launcherHeight}px`,
                                                     borderRadius: `${settings.launcherRadius}px`,
                                                     backgroundColor: settings.launcherBackgroundColor || settings.brandColor,
@@ -1762,8 +1737,9 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                         settings.launcherShadow === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' :
                                                             settings.launcherShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.3)',
                                                 }}
-                                                className={`flex items-center justify-center gap-2 text-white font-medium transition-transform hover:scale-105 ${settings.launcherAnimation === 'pulse' ? 'animate-pulse' :
-                                                    settings.launcherAnimation === 'bounce' ? 'animate-bounce' : ''
+                                                className={`flex items-center justify-center gap-2 text-white font-medium transition-transform hover:scale-105 ${(settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? 'px-6' : ''
+                                                    } ${settings.launcherAnimation === 'pulse' ? 'animate-pulse' :
+                                                        settings.launcherAnimation === 'bounce' ? 'animate-bounce' : ''
                                                     } ${settings.theme === 'modern' ? 'shadow-[0_0_20px_rgba(79,70,229,0.5)]' : ''}`}
                                             >
                                                 {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
