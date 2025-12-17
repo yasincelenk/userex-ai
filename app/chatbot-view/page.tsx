@@ -465,7 +465,14 @@ function ChatbotViewContent() {
 
                 // Replace the welcome message if it exists, otherwise append
                 setMessages(prev => {
-                    // Filter out the static welcome message if it confusingly exists as a bubble
+                    // Aggressive Logic:
+                    // If there is only 1 message and it is from the assistant, assume it is the generic Welcome Message
+                    // and REPLACE it with the Industry Greeting to avoid "Double Bubbles".
+                    if (prev.length === 1 && prev[0].role === 'assistant') {
+                        return [proactiveMsg as any]
+                    }
+
+                    // Fallback: If there are multiple messages, try to remove the welcome message specifically (just in case)
                     const filtered = prev.filter(m => m.content !== settings.welcomeMessage)
                     return [...filtered, proactiveMsg as any]
                 })
