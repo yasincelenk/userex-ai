@@ -104,10 +104,7 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
                             <User className="mr-2 h-4 w-4" />
                             <span>{t('profile')}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push("/dashboard/branding")}>
-                            <Settings className="mr-2 h-4 w-4" />
-                            <span>{t('settings')}</span>
-                        </DropdownMenuItem>
+
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
                             {t('language')}
