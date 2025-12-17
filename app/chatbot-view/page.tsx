@@ -436,26 +436,37 @@ function ChatbotViewContent() {
                 const isProductPage = pageContext.url.includes('/product/') || pageContext.url.includes('/shop/') || pageContext.url.includes('/room/') || pageContext.url.includes('/property/')
                 const isCartPage = pageContext.url.includes('/cart') || pageContext.url.includes('/checkout') || pageContext.url.includes('/booking')
 
+                // Determine language (Default to TR if auto to preserve legacy, or EN if specified)
+                // Actually, if settings.initialLanguage is 'auto', maybe we should default to 'tr' as per user base,
+                // BUT if they explicitly set En, we use En.
+                const currentLang = (settings.initialLanguage === 'en') ? 'en' : 'tr';
+
                 if (isProductPage) {
                     if (pageContext.title) {
                         // Try to make it more personal if we have a title
                         if (industry === 'ecommerce') {
-                            greeting = `👋 ${pageContext.title} harika bir seçim! Özellikleri veya fiyatı hakkında sorunuz var mı?`
+                            greeting = currentLang === 'en'
+                                ? `👋 ${pageContext.title} is a great choice! Do you have questions about features or price?`
+                                : `👋 ${pageContext.title} harika bir seçim! Özellikleri veya fiyatı hakkında sorunuz var mı?`
                         } else if (industry === 'booking') {
-                            greeting = `👋 ${pageContext.title} için müsaitlik durumuna bakmamı ister misiniz?`
+                            greeting = currentLang === 'en'
+                                ? `👋 Shall I check availability for ${pageContext.title}?`
+                                : `👋 ${pageContext.title} için müsaitlik durumuna bakmamı ister misiniz?`
                         } else if (industry === 'real_estate') {
-                            greeting = `👋 ${pageContext.title} ilgini çekti mi? Randevu oluşturabilirim.`
+                            greeting = currentLang === 'en'
+                                ? `👋 Interested in ${pageContext.title}? I can book an appointment.`
+                                : `👋 ${pageContext.title} ilgini çekti mi? Randevu oluşturabilirim.`
                         } else {
-                            greeting = config.greeting_product
+                            greeting = config.greeting_product[currentLang]
                         }
                     } else {
-                        greeting = config.greeting_product
+                        greeting = config.greeting_product[currentLang]
                     }
                 } else if (isCartPage) {
-                    greeting = config.greeting_cart
+                    greeting = config.greeting_cart[currentLang]
                 } else {
                     // Fallback to Industry General Greeting
-                    greeting = config.greeting_general
+                    greeting = config.greeting_general[currentLang]
                 }
             } else if (!greeting && !settings.enableIndustryGreeting) {
                 // If Industry Greeting is disabled, we do NOTHING.
