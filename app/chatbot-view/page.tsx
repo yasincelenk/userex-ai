@@ -357,6 +357,7 @@ function ChatbotViewContent() {
         industry: "ecommerce" as string,
         enableVoiceSupport: false,
         theme: "classic" as string,
+        enableIndustryGreeting: false,
         engagement: {
             enabled: false,
             bubble: {
@@ -383,6 +384,7 @@ function ChatbotViewContent() {
                         industry: data.industry || "ecommerce",
                         enableVoiceSupport: data.enableVoiceSupport || false,
                         theme: data.theme || "classic",
+                        enableIndustryGreeting: data.enableIndustryGreeting !== undefined ? data.enableIndustryGreeting : false,
                         engagement: data.engagement || { enabled: false, bubble: { messages: [] } }
                     })
                 }
@@ -415,8 +417,10 @@ function ChatbotViewContent() {
                 }
             }
 
+
             // 2. If no Custom Bubble, use Industry Context (Product/Page specific)
-            if (!greeting) {
+            // ONLY if enableIndustryGreeting is true AND industry is not 'other'
+            if (!greeting && settings.enableIndustryGreeting && industry !== 'other') {
                 // Context-based logic
                 const isProductPage = pageContext.url.includes('/product/') || pageContext.url.includes('/shop/') || pageContext.url.includes('/room/') || pageContext.url.includes('/property/')
                 const isCartPage = pageContext.url.includes('/cart') || pageContext.url.includes('/checkout') || pageContext.url.includes('/booking')
@@ -439,9 +443,14 @@ function ChatbotViewContent() {
                 } else if (isCartPage) {
                     greeting = config.greeting_cart
                 } else {
-                    // Fallback to Industry General Greeting (NEVER welcomeMessage)
+                    // Fallback to Industry General Greeting
                     greeting = config.greeting_general
                 }
+            } else if (!greeting && !settings.enableIndustryGreeting) {
+                // If Industry Greeting is disabled, we do NOTHING.
+                // The Proactive Engagement will NOT trigger.
+                // This means the user will see the Static Welcome Screen (if messages are empty).
+                return
             }
 
             if (greeting) {

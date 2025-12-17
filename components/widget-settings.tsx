@@ -60,6 +60,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         enablePersonalShopper: false,
         initialLanguage: "auto",
         industry: "ecommerce" as IndustryType,
+        enableIndustryGreeting: false, // Default to false if not present
         // Theme
         theme: "classic" as "classic" | "modern",
         // Widget settings
@@ -166,6 +167,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         enableVoiceAssistant: data.enableVoiceAssistant || false,
                         enablePersonalShopper: data.enablePersonalShopper || false,
                         initialLanguage: data.initialLanguage || "auto",
+                        enableIndustryGreeting: data.enableIndustryGreeting !== undefined ? data.enableIndustryGreeting : false,
                         // Theme
                         theme: data.theme || "classic",
                         // Widget
@@ -952,6 +954,20 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                         ...prev,
                                         engagement: { ...prev.engagement, enabled: checked }
                                     }))}
+                                />
+                            </div>
+
+                            {/* Industry Greeting Toggle */}
+                            <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg bg-muted/20">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Industry Specific Greetings</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Use industry-specific welcome messages instead of the standard greeting.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={settings.enableIndustryGreeting ?? false}
+                                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableIndustryGreeting: checked }))}
                                 />
                             </div>
 
