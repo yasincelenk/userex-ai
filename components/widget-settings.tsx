@@ -875,28 +875,47 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('chatBehavior')}</h4>
 
                             <div className="grid gap-6">
-                                <div className="grid gap-2">
-                                    <Label>{t('industry')}</Label>
-                                    <Select
-                                        value={settings.industry}
-                                        onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value as IndustryType }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={t('selectIndustry')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="ecommerce">{t('industryEcommerce')}</SelectItem>
-                                            <SelectItem value="booking">{t('industryBooking')}</SelectItem>
-                                            <SelectItem value="saas">{t('industrySaas')}</SelectItem>
-                                            <SelectItem value="real_estate">{t('industryRealEstate')}</SelectItem>
-                                            <SelectItem value="healthcare">{t('industryHealthcare')}</SelectItem>
-                                            <SelectItem value="education">{t('industryEducation')}</SelectItem>
-                                            <SelectItem value="finance">{t('industryFinance')}</SelectItem>
-                                            <SelectItem value="service">{t('industryService')}</SelectItem>
-                                            <SelectItem value="other">{t('industryOther')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="text-xs text-muted-foreground">{t('industryDesc')}</p>
+
+                                {/* Industry Settings Group */}
+                                <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+                                    <div className="p-4 space-y-4">
+                                        <div className="flex items-center justify-between space-x-2">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-base font-medium">{t('enableIndustryGreeting') || "Industry Greeting"}</Label>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {t('enableIndustryGreetingDesc') || "Show industry-specific welcome message"}
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                checked={settings.enableIndustryGreeting ?? false}
+                                                onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableIndustryGreeting: checked }))}
+                                            />
+                                        </div>
+
+                                        <div className={`grid gap-2 transition-opacity ${!settings.enableIndustryGreeting ? 'opacity-50' : ''}`}>
+                                            <Label>{t('industry')}</Label>
+                                            <Select
+                                                disabled={!settings.enableIndustryGreeting}
+                                                value={settings.industry}
+                                                onValueChange={(value) => setSettings(prev => ({ ...prev, industry: value as IndustryType }))}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder={t('selectIndustry')} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => {
+                                                        const translationKey = 'industry' + key.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+                                                        return (
+                                                            <SelectItem key={key} value={key}>
+                                                                {t(translationKey) || config.label}
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-xs text-muted-foreground">{t('industryDesc')}</p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
