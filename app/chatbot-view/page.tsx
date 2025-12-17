@@ -399,7 +399,12 @@ function ChatbotViewContent() {
 
     // Proactive Engagement Logic (Context-Aware & Sector-Specific)
     useEffect(() => {
-        if (hasProactiveTriggered || messages.length > 0 || !pageContext || isLoading) return
+        // Check if we should abort (user chatted, or configured to not disturb)
+        // Allow if messages are empty OR if the only message is the Welcome Message (which we want to replace)
+        const isOnlyWelcomeMessage = messages.length === 1 && messages[0].content === settings.welcomeMessage;
+        const hasUserMessages = messages.some(m => m.role === 'user');
+
+        if (hasProactiveTriggered || (messages.length > 0 && !isOnlyWelcomeMessage) || hasUserMessages || !pageContext || isLoading) return
 
         const timer = setTimeout(() => {
             const industry = (settings.industry || DEFAULT_INDUSTRY) as IndustryType
@@ -410,7 +415,6 @@ function ChatbotViewContent() {
 
             if (settings.engagement && settings.engagement.enabled && settings.engagement.bubble?.messages?.length > 0) {
                 // Use the first active message or just the first one
-                // Ideally we would cycle or pick random, but for now take the first one to match "Bubble" content
                 const bubbleMsg = settings.engagement.bubble.messages.find((m: any) => m.isActive) || settings.engagement.bubble.messages[0]
                 if (bubbleMsg && bubbleMsg.text) {
                     greeting = bubbleMsg.text
@@ -448,8 +452,6 @@ function ChatbotViewContent() {
                 }
             } else if (!greeting && !settings.enableIndustryGreeting) {
                 // If Industry Greeting is disabled, we do NOTHING.
-                // The Proactive Engagement will NOT trigger.
-                // This means the user will see the Static Welcome Screen (if messages are empty).
                 return
             }
 
@@ -460,14 +462,21 @@ function ChatbotViewContent() {
                     content: greeting,
                     createdAt: new Date()
                 }
-                setMessages(prev => [...prev, proactiveMsg as any])
+
+                // Replace the welcome message if it exists, otherwise append
+                setMessages(prev => {
+                    // Filter out the static welcome message if it confusingly exists as a bubble
+                    const filtered = prev.filter(m => m.content !== settings.welcomeMessage)
+                    return [...filtered, proactiveMsg as any]
+                })
+
                 setHasProactiveTriggered(true)
             }
 
         }, 12000) // 12 seconds delay
 
         return () => clearTimeout(timer)
-    }, [hasProactiveTriggered, messages.length, pageContext, isLoading, settings.industry, settings.engagement])
+    }, [hasProactiveTriggered, messages.length, pageContext, isLoading, settings.industry, settings.engagement, settings.welcomeMessage])
 
     const contactMessages = {
         tr: "Müşteri temsilcilerimizin sizinle iletişime geçebilmesi için Ad, Soyad, Firma ve İletişim bilgilerinizi paylaşabilir misiniz?",
