@@ -40,7 +40,7 @@ export default function ChatbotConsolePage() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Link href={`/widget-test?id=${user?.uid}`} target="_blank">
+                    <Link href={`/test-widget?id=${user?.uid}`} target="_blank">
                         <Button className="gap-2">
                             {t('testWidget') || "Widget'ı Test Et"} <ExternalLink className="h-4 w-4" />
                         </Button>
