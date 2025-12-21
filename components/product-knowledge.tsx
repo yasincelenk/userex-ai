@@ -22,6 +22,7 @@ interface Product {
     currency: string
     description: string
     inStock: boolean
+    stockQuantity?: number | null  // NEW: Actual stock count from feed
     imageUrl?: string
     createdAt: any
     tenantId?: string
@@ -109,7 +110,8 @@ export function ProductKnowledge() {
     }
 
     const handleDeleteProduct = async (productId: string) => {
-        if (!confirm("Are you sure you want to delete this product?")) return
+        // Automatically approved as per user request
+        // if (!confirm("Are you sure you want to delete this product?")) return
         try {
             await deleteDoc(doc(db, "products", productId))
             toast({

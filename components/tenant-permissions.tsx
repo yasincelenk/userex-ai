@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft, LayoutDashboard, ScanLine, Bot } from "lucide-react"
+import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft, LayoutDashboard, ScanLine, Bot, TrendingUp } from "lucide-react"
 import {
     Card,
     CardContent,
@@ -28,6 +28,8 @@ interface TenantData {
     visibleLeadFinder?: boolean
     enableUiUxAuditor?: boolean
     visibleUiUxAuditor?: boolean
+    enableSalesOptimization?: boolean
+    visibleSalesOptimization?: boolean
     canManageModules?: boolean
     [key: string]: any
 }
@@ -112,6 +114,16 @@ const STANDALONE_MODULES: ModuleConfig[] = [
         icon: ScanLine,
         color: "text-orange-600",
         bgColor: "bg-orange-100",
+    },
+    {
+        id: "sales-optimization",
+        usageKey: "enableSalesOptimization",
+        visibilityKey: "visibleSalesOptimization",
+        title: "Satış Optimizasyonu",
+        description: "İndirim kodları, stok uyarıları, sepet kurtarma ve ürün karşılaştırma özellikleri.",
+        icon: TrendingUp,
+        color: "text-emerald-600",
+        bgColor: "bg-emerald-100",
     }
 ]
 
@@ -267,21 +279,6 @@ export function TenantPermissions({ tenant, userId, onUpdate }: TenantPermission
 
             <div className="space-y-10">
                 <div>
-                    <div className="mb-4">
-                        <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
-                            <Mic className="h-4 w-4" />
-                            Chatbot Entegrasyonları
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                            Bu modüller, web sitenizdeki Chatbot widget'ının yeteneklerini ve davranışını doğrudan etkiler.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {INTEGRATED_MODULES.map(renderModuleCard)}
-                    </div>
-                </div>
-
-                <div className="border-t pt-8">
                     <div className="mb-4">
                         <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
                             <LayoutDashboard className="h-4 w-4" />

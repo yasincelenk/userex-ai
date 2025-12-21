@@ -14,6 +14,14 @@ import { Loader2, CheckCircle2, Bot, ShoppingBag, PenTool, Search, Scan } from "
 import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export default function SignUpForm() {
     const [firstName, setFirstName] = useState("")
@@ -23,12 +31,13 @@ export default function SignUpForm() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
+    const [industry, setIndustry] = useState<IndustryType>("ecommerce")
     const [isLoading, setIsLoading] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
     const { toast } = useToast()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -59,9 +68,27 @@ export default function SignUpForm() {
                 companyName,
                 companyWebsite,
                 email: user.email,
+                industry,
                 role: "TENANT_ADMIN",
                 createdAt: new Date().toISOString(),
-                isActive: false // User must be approved by admin
+                isActive: false, // User must be approved by admin
+
+                // Enable modules based on industry defaultModules
+                enablePersonalShopper: (INDUSTRY_CONFIG[industry].defaultModules as any).productCatalog || false,
+                enableLeadFinder: (INDUSTRY_CONFIG[industry].defaultModules as any).leadCollection || false,
+                enableVoiceAssistant: (INDUSTRY_CONFIG[industry].defaultModules as any).appointments || false,
+                enableCopywriter: industry === 'saas' || industry === 'education' ? true : false,
+                enableUiUxAuditor: false, // Usually independent tool
+
+                // Set initial visibility
+                visiblePersonalShopper: true,
+                visibleLeadFinder: true,
+                visibleVoiceAssistant: true,
+                visibleCopywriter: true,
+                visibleUiUxAuditor: true,
+
+                enableChatbot: true,
+                visibleChatbot: true
             })
 
             // Send notification to admin
@@ -347,8 +374,7 @@ export default function SignUpForm() {
                             <Label htmlFor="companyWebsite">{t('website')}</Label>
                             <Input
                                 id="companyWebsite"
-                                placeholder="https://example.com"
-                                type="url"
+                                placeholder="example.com"
                                 required
                                 value={companyWebsite}
                                 onChange={(e) => setCompanyWebsite(e.target.value)}
@@ -364,6 +390,21 @@ export default function SignUpForm() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="industry">{t('industrySelectLabel') || (language === 'tr' ? 'Sektörünüz' : 'Your Industry')}</Label>
+                            <Select value={industry} onValueChange={(value) => setIndustry(value as IndustryType)}>
+                                <SelectTrigger id="industry" className="w-full">
+                                    <SelectValue placeholder={t('industrySelectPlaceholder') || "Sektör seçin"} />
+                                </SelectTrigger>
+                                <SelectContent className="w-[--radix-select-trigger-width]">
+                                    {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
+                                        <SelectItem key={key} value={key}>
+                                            {(config as any).names?.[language] || config.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">{t('password')}</Label>

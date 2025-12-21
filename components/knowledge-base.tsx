@@ -13,7 +13,8 @@ import { Loader2, Plus, Trash2, Database } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Eye } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Eye, CheckSquare, Square } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -57,6 +58,12 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
     const [question, setQuestion] = useState("")
     const [answer, setAnswer] = useState("")
     const [selectedDoc, setSelectedDoc] = useState<KnowledgeDoc | null>(null)
+
+    // Sitemap State
+    const [sitemapUrls, setSitemapUrls] = useState<string[]>([])
+    const [selectedSitemapUrls, setSelectedSitemapUrls] = useState<string[]>([])
+    const [isFetchingSitemap, setIsFetchingSitemap] = useState(false)
+    const [importProgress, setImportProgress] = useState(0)
 
     const fetchDocs = async () => {
         if (!userId) return
@@ -243,7 +250,8 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
     }
 
     const handleDelete = async (docId: string) => {
-        if (!confirm(t('deleteConfirm'))) return
+        // Automatically approved as per user request
+        // if (!confirm(t('deleteConfirm'))) return
 
         try {
             // 1. Delete from Firestore
@@ -268,6 +276,112 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                 description: t('failedToDelete'),
                 variant: "destructive",
             })
+        }
+    }
+
+    const fetchSitemap = async () => {
+        if (!url) return
+        setIsFetchingSitemap(true)
+        setSitemapUrls([])
+        setSelectedSitemapUrls([])
+        try {
+            const response = await fetch("/api/admin/sitemap", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: url })
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.error || "Failed to fetch sitemap")
+            }
+
+            const data = await response.json()
+            setSitemapUrls(data.urls)
+            toast({
+                title: t('success'),
+                description: `${t('urlsFound')}: ${data.urls.length}`,
+            })
+        } catch (error: any) {
+            console.error("Sitemap error:", error)
+            toast({
+                title: t('error'),
+                description: error.message,
+                variant: "destructive",
+            })
+        } finally {
+            setIsFetchingSitemap(false)
+        }
+    }
+
+    const handleImportSitemap = async () => {
+        if (selectedSitemapUrls.length === 0) return
+        setIsAdding(true)
+        setImportProgress(0)
+
+        try {
+            let successCount = 0
+            for (let i = 0; i < selectedSitemapUrls.length; i++) {
+                const urlToImport = selectedSitemapUrls[i]
+
+                // Similar logic to single URL add
+                // We rely on backend scraping for speed here usually, or reuse the same logic
+                // For simplicity, we'll reuse the single URL logic but wrapped
+                // Ideally, we'd have a bulk API, but loop is fine for < 50 items
+
+                try {
+                    const docRef = doc(collection(db, "knowledge_docs"));
+                    const docId = docRef.id;
+
+                    // 1. API Call
+                    const response = await fetch("/api/knowledge", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ chatbotId: userId, docId, type: "url", url: urlToImport })
+                    })
+
+                    if (response.ok) {
+                        const result = await response.json()
+                        // 2. Save Metadata
+                        await setDoc(docRef, {
+                            chatbotId: userId,
+                            title: result.title || urlToImport,
+                            type: "url",
+                            source: urlToImport,
+                            content: result.preview || "Scraped Content",
+                            fullContent: result.fullContent || result.preview,
+                            createdAt: serverTimestamp()
+                        })
+                        successCount++
+                    }
+                } catch (e) {
+                    console.error("Failed to import URL:", urlToImport, e)
+                }
+
+                setImportProgress(Math.round(((i + 1) / selectedSitemapUrls.length) * 100))
+            }
+
+            toast({
+                title: t('success'),
+                description: `Imported ${successCount}/${selectedSitemapUrls.length} URLs.`,
+            })
+
+            fetchDocs()
+            // setActiveTab("text") // Keep user on URL tab to see results or add more? Maybe reset is better.
+            setUrl("") // Clear input
+            setSitemapUrls([])
+            setSelectedSitemapUrls([])
+
+        } catch (error) {
+            console.error("Import error:", error)
+            toast({
+                title: t('error'),
+                description: "Failed to complete import.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsAdding(false)
+            setImportProgress(0)
         }
     }
 
@@ -447,7 +561,7 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                                         <div className="flex gap-2">
                                             <Input
                                                 id="url"
-                                                placeholder="https://example.com/about"
+                                                placeholder="https://example.com/about or sitemap.xml"
                                                 value={url}
                                                 onChange={(e) => setUrl(e.target.value)}
                                             />
@@ -475,13 +589,22 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                                                 }}
                                                 disabled={isAdding || !url}
                                             >
-                                                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fetch"}
+                                                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fetch Content"}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={fetchSitemap}
+                                                disabled={isFetchingSitemap || !url}
+                                            >
+                                                {isFetchingSitemap ? <Loader2 className="h-4 w-4 animate-spin" /> : t('fetchSitemap')}
                                             </Button>
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {t('scrapeDescription')}
+                                            {t('scrapeDescription')} OR {t('sitemapDescription')}
                                         </p>
                                     </div>
+
+                                    {/* Single Page Preview */}
                                     {content && activeTab === 'url' && (
                                         <div className="space-y-2 border p-4 rounded-md bg-muted/50">
                                             <div className="space-y-1">
@@ -496,12 +619,74 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                                                     className="h-40"
                                                 />
                                             </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                Review the content above. Click "Add to Knowledge Base" to save.
-                                            </p>
+                                            <div className="flex justify-end">
+                                                {/* Main button adds it */}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Sitemap Results */}
+                                    {sitemapUrls.length > 0 && (
+                                        <div className="space-y-4 border rounded-md p-4 bg-muted/30 mt-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h4 className="text-sm font-medium">{t('urlsFound')}: {sitemapUrls.length}</h4>
+                                                <div className="flex gap-2">
+                                                    <Button variant="ghost" size="sm" onClick={() => setSelectedSitemapUrls(sitemapUrls)} className="text-xs h-7">
+                                                        <CheckSquare className="w-3 h-3 mr-1" /> {t('selectAll')}
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => setSelectedSitemapUrls([])} className="text-xs h-7">
+                                                        <Square className="w-3 h-3 mr-1" /> {t('deselectAll')}
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-48 overflow-y-auto border rounded bg-background p-2 space-y-2">
+                                                {sitemapUrls.map((url, idx) => (
+                                                    <div key={idx} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`url-${idx}`}
+                                                            checked={selectedSitemapUrls.includes(url)}
+                                                            onCheckedChange={(checked) => {
+                                                                if (checked) {
+                                                                    setSelectedSitemapUrls([...selectedSitemapUrls, url])
+                                                                } else {
+                                                                    setSelectedSitemapUrls(selectedSitemapUrls.filter(u => u !== url))
+                                                                }
+                                                            }}
+                                                        />
+                                                        <label
+                                                            htmlFor={`url-${idx}`}
+                                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 truncate w-full"
+                                                            title={url}
+                                                        >
+                                                            {url}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <Button
+                                                className="w-full"
+                                                onClick={handleImportSitemap}
+                                                disabled={isAdding || selectedSitemapUrls.length === 0}
+                                            >
+                                                {isAdding ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        {t('processing')} {importProgress > 0 && `(${importProgress}%)`}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        {t('importSelected')} ({selectedSitemapUrls.length})
+                                                    </>
+                                                )}
+                                            </Button>
                                         </div>
                                     )}
                                 </TabsContent>
+
+
 
                                 {/* FILE INPUT */}
                                 <TabsContent value="file" className="space-y-4 mt-4">
@@ -562,117 +747,120 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                             </Tabs>
                         </CardContent>
                     </Card>
-                )}
+                )
+                }
 
                 {/* Right: List Data */}
-                {embedded ? (
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-medium">{t('existingKnowledge')}</h3>
-                        <div className="border rounded-lg">
-                            {docs.length === 0 ? (
-                                <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
-                                    <Database className="h-10 w-10 mb-2 opacity-20" />
-                                    {t('noKnowledge')}
-                                </div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('knowledgeTitle')}</TableHead>
-                                            <TableHead className="text-right">{t('date')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {docs.map((doc) => (
-                                            <TableRow key={doc.id}>
-                                                <TableCell className="font-medium">{doc.title}</TableCell>
-                                                <TableCell className="text-right text-muted-foreground text-xs">
-                                                    {doc.createdAt?.seconds ? new Date(doc.createdAt.seconds * 1000).toLocaleDateString() : "Just now"}
-                                                </TableCell>
-                                                <TableCell className="text-right flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => setSelectedDoc(doc)}
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                        onClick={() => handleDelete(doc.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
+                {
+                    embedded ? (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">{t('existingKnowledge')}</h3>
+                            <div className="border rounded-lg">
+                                {docs.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
+                                        <Database className="h-10 w-10 mb-2 opacity-20" />
+                                        {t('noKnowledge')}
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t('knowledgeTitle')}</TableHead>
+                                                <TableHead className="text-right">{t('date')}</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
+                                        </TableHeader>
+                                        <TableBody>
+                                            {docs.map((doc) => (
+                                                <TableRow key={doc.id}>
+                                                    <TableCell className="font-medium">{doc.title}</TableCell>
+                                                    <TableCell className="text-right text-muted-foreground text-xs">
+                                                        {doc.createdAt?.seconds ? new Date(doc.createdAt.seconds * 1000).toLocaleDateString() : "Just now"}
+                                                    </TableCell>
+                                                    <TableCell className="text-right flex justify-end gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => setSelectedDoc(doc)}
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleDelete(doc.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t('existingKnowledge')}</CardTitle>
-                            <CardDescription>
-                                {t('existingKnowledgeDescription')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {docs.length === 0 ? (
-                                <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
-                                    <Database className="h-10 w-10 mb-2 opacity-20" />
-                                    {t('noKnowledge')}
-                                </div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{t('knowledgeTitle')}</TableHead>
-                                            <TableHead className="text-right">{t('date')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {docs.map((doc) => (
-                                            <TableRow key={doc.id}>
-                                                <TableCell className="font-medium">{doc.title}</TableCell>
-                                                <TableCell className="text-right text-muted-foreground text-xs">
-                                                    {doc.createdAt?.seconds ? new Date(doc.createdAt.seconds * 1000).toLocaleDateString() : "Just now"}
-                                                </TableCell>
-                                                <TableCell className="text-right flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => setSelectedDoc(doc)}
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                        onClick={() => handleDelete(doc.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
+                    ) : (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t('existingKnowledge')}</CardTitle>
+                                <CardDescription>
+                                    {t('existingKnowledgeDescription')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {docs.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground flex flex-col items-center">
+                                        <Database className="h-10 w-10 mb-2 opacity-20" />
+                                        {t('noKnowledge')}
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{t('knowledgeTitle')}</TableHead>
+                                                <TableHead className="text-right">{t('date')}</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {docs.map((doc) => (
+                                                <TableRow key={doc.id}>
+                                                    <TableCell className="font-medium">{doc.title}</TableCell>
+                                                    <TableCell className="text-right text-muted-foreground text-xs">
+                                                        {doc.createdAt?.seconds ? new Date(doc.createdAt.seconds * 1000).toLocaleDateString() : "Just now"}
+                                                    </TableCell>
+                                                    <TableCell className="text-right flex justify-end gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => setSelectedDoc(doc)}
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleDelete(doc.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )
+                }
+            </div >
 
             {/* View Content Modal */}
-            <Dialog open={!!selectedDoc} onOpenChange={(open) => !open && setSelectedDoc(null)}>
+            < Dialog open={!!selectedDoc} onOpenChange={(open) => !open && setSelectedDoc(null)}>
                 <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{selectedDoc?.title}</DialogTitle>
@@ -684,7 +872,7 @@ export function KnowledgeBase({ targetUserId, embedded = false }: KnowledgeBaseP
                         {selectedDoc?.fullContent || selectedDoc?.content}
                     </div>
                 </DialogContent>
-            </Dialog>
-        </div>
+            </Dialog >
+        </div >
     )
 }

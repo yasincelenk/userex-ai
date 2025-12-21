@@ -25,7 +25,9 @@ import {
     ChevronDown,
     ArrowLeft,
     ChevronRight,
-    Home
+    Home,
+    Mic,
+    Calendar
 } from "lucide-react"
 
 import { PublicHeader } from "@/components/public-header"
@@ -80,6 +82,12 @@ export default function AiSupportPage() {
             feature9Title: "Mobile Optimized",
             feature9Desc: "Perfect experience on any device. Responsive design that adapts to smartphones, tablets, and desktops.",
 
+            feature10Title: "Voice Interaction",
+            feature10Desc: "Speak to your chatbot naturally. It supports bidirectional voice conversations with human-like latency.",
+
+            feature11Title: "Appointment Booking",
+            feature11Desc: "Allow customers to book calls or meetings directly within the chat interface, synced with your calendar.",
+
             // How it works
             howItWorksTitle: "Get Started in 3 Simple Steps",
             step1Title: "1. Train Your Bot",
@@ -106,7 +114,7 @@ export default function AiSupportPage() {
 
             // CTA
             ctaTitle: "Ready to Transform Your Customer Support?",
-            ctaSubtitle: "Join thousands of businesses using Userex AI to deliver exceptional customer experiences.",
+            ctaSubtitle: "Join thousands of businesses using exAi to deliver exceptional customer experiences.",
             ctaButton: "Start Your Free Trial",
             noCreditCard: "No credit card required • 14-day free trial • Cancel anytime",
 
@@ -156,6 +164,12 @@ export default function AiSupportPage() {
             feature9Title: "Mobil Optimize",
             feature9Desc: "Her cihazda mükemmel deneyim. Akıllı telefonlara, tabletlere ve masaüstüne uyum sağlayan duyarlı tasarım.",
 
+            feature10Title: "Sesli Etkileşim",
+            feature10Desc: "Chatbotunuzla doğal bir şekilde konuşun. İnsan benzeri gecikme süresiyle çift yönlü sesli sohbetleri destekler.",
+
+            feature11Title: "Randevu Alma",
+            feature11Desc: "Müşterilerin doğrudan sohbet arayüzü içinden arama veya toplantı planlamasına izin verin, takviminizle senkronize çalışır.",
+
             // How it works
             howItWorksTitle: "3 Basit Adımda Başlayın",
             step1Title: "1. Botunuzu Eğitin",
@@ -182,7 +196,7 @@ export default function AiSupportPage() {
 
             // CTA
             ctaTitle: "Müşteri Desteğinizi Dönüştürmeye Hazır mısınız?",
-            ctaSubtitle: "Olağanüstü müşteri deneyimleri sunmak için Userex AI kullanan binlerce işletmeye katılın.",
+            ctaSubtitle: "Olağanüstü müşteri deneyimleri sunmak için exAi kullanan binlerce işletmeye katılın.",
             ctaButton: "Ücretsiz Denemenizi Başlatın",
             noCreditCard: "Kredi kartı gerekmez • 14 günlük ücretsiz deneme • İstediğiniz zaman iptal edin",
 
@@ -206,6 +220,8 @@ export default function AiSupportPage() {
         { icon: Code, title: t.feature7Title, desc: t.feature7Desc, bgClass: "bg-cyan-500/20", iconClass: "text-cyan-400" },
         { icon: BarChart3, title: t.feature8Title, desc: t.feature8Desc, bgClass: "bg-yellow-500/20", iconClass: "text-yellow-400" },
         { icon: Smartphone, title: t.feature9Title, desc: t.feature9Desc, bgClass: "bg-rose-500/20", iconClass: "text-rose-400" },
+        { icon: Mic, title: t.feature10Title, desc: t.feature10Desc, bgClass: "bg-indigo-500/20", iconClass: "text-indigo-400" },
+        { icon: Calendar, title: t.feature11Title, desc: t.feature11Desc, bgClass: "bg-teal-500/20", iconClass: "text-teal-400" },
     ]
 
     const useCases = [

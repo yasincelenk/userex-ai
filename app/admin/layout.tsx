@@ -43,17 +43,9 @@ export default function AdminLayout({
     // The path should contain /admin/tenant/ and have a segment after it
     const isTenantDetail = pathname && pathname.startsWith("/admin/tenant/") && pathname.split("/").length > 3
 
+    // For tenant detail pages, let the nested layout handle everything
     if (isTenantDetail) {
-        return (
-            <SidebarProvider>
-                <div className="flex flex-col h-screen w-full">
-                    <SiteHeader showSidebarTrigger={true} />
-                    <div className="flex flex-1 overflow-hidden">
-                        {children}
-                    </div>
-                </div>
-            </SidebarProvider>
-        )
+        return <>{children}</>
     }
 
     return (

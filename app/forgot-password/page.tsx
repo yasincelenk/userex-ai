@@ -27,14 +27,14 @@ export default function ForgotPasswordPage() {
             await sendPasswordResetEmail(auth, email)
             setIsEmailSent(true)
             toast({
-                title: "Email sent",
-                description: "Check your email for a link to reset your password.",
+                title: t('emailSent'),
+                description: t('resetEmailSent'),
             })
         } catch (error: any) {
             console.error("Reset password error:", error)
             toast({
-                title: "Error",
-                description: error.message || "Failed to send reset email.",
+                title: t('error'),
+                description: error.message || t('failedToLoadProfile'), // Reusing a failed message or could add new one
                 variant: "destructive",
             })
         } finally {
@@ -47,15 +47,15 @@ export default function ForgotPasswordPage() {
             <div className="flex h-screen w-full items-center justify-center px-4">
                 <div className="mx-auto grid w-[350px] gap-6 text-center">
                     <div className="grid gap-2">
-                        <h1 className="text-3xl font-bold">Check your email</h1>
+                        <h1 className="text-3xl font-bold">{t('emailSent')}</h1>
                         <p className="text-muted-foreground">
-                            We have sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+                            {t('resetEmailSent')} <span className="font-medium text-foreground">{email}</span>.
                         </p>
                     </div>
                     <Link href="/login">
                         <Button variant="outline" className="w-full">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Login
+                            {t('backToLogin') || t('back')}
                         </Button>
                     </Link>
                 </div>
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
                 <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                     <div className="flex items-center text-lg font-medium">
                         <Command className="mr-2 h-6 w-6" />
-                        Userex AI Assistant
+                        exAi Assistant
                     </div>
                     <div className="space-y-2">
                         <blockquote className="space-y-2">
@@ -87,9 +87,9 @@ export default function ForgotPasswordPage() {
                 </div>
                 <div className="mx-auto grid w-[350px] gap-6">
                     <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold">Forgot Password</h1>
+                        <h1 className="text-3xl font-bold">{t('forgotPassword')}</h1>
                         <p className="text-balance text-muted-foreground">
-                            Enter your email address and we'll send you a link to reset your password.
+                            {t('resetPasswordDescription')}
                         </p>
                     </div>
                     <form onSubmit={handleResetPassword} className="grid gap-4">
@@ -108,17 +108,17 @@ export default function ForgotPasswordPage() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Sending...
+                                    {t('sending') || "Sending..."}
                                 </>
                             ) : (
-                                "Send Reset Link"
+                                t('sendResetEmail')
                             )}
                         </Button>
                     </form>
                     <div className="mt-4 text-center text-sm">
                         <Link href="/login" className="flex items-center justify-center underline text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Login
+                            {t('backToLogin') || t('back')}
                         </Link>
                     </div>
                 </div>

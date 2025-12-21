@@ -26,7 +26,11 @@ import {
     Bot,
     Sparkles,
     Activity,
-    Package
+    Package,
+    Inbox,
+    Calendar,
+    ArrowLeft,
+    Shield
 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -52,13 +56,36 @@ import {
     SidebarRail,
 } from "@/components/ui/sidebar"
 
-export function ConsoleSidebar() {
+interface ConsoleSidebarProps {
+    targetUserId?: string
+    targetEmail?: string
+}
+
+export function ConsoleSidebar({ targetUserId, targetEmail }: ConsoleSidebarProps) {
     const pathname = usePathname() || ""
     const searchParams = useSearchParams()
     const router = useRouter()
     const { t } = useLanguage()
     const { user, role, enablePersonalShopper, canManageModules } = useAuth()
     const [showPricing, setShowPricing] = useState(false)
+
+    // Build link based on whether we're in super admin mode (targetUserId provided)
+    const buildLink = (path: string) => {
+        if (targetUserId) {
+            // Replace /console/ with /admin/tenant/[userId]/
+            return path.replace('/console/', `/admin/tenant/${targetUserId}/`)
+        }
+        return path
+    }
+
+    // Check if current path matches (accounting for super admin mode)
+    const isActive = (path: string) => {
+        if (targetUserId) {
+            const adminPath = path.replace('/console/', `/admin/tenant/${targetUserId}/`)
+            return pathname === adminPath || pathname.startsWith(adminPath + '/')
+        }
+        return pathname === path || pathname.startsWith(path + '/')
+    }
 
     const handleLogout = async () => {
         await signOut(auth)
@@ -133,21 +160,43 @@ export function ConsoleSidebar() {
                     ) : (
                         /* Chatbot & Default Menu */
                         <>
+                            {/* Super Admin Header when viewing tenant */}
+                            {targetUserId && (
+                                <SidebarGroup>
+                                    <SidebarGroupContent>
+                                        <SidebarMenu>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton size="lg" onClick={() => router.push("/platform/tenants")}>
+                                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                                        <ArrowLeft className="size-4" />
+                                                    </div>
+                                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                                        <span className="truncate font-semibold">{t('backToTenants')}</span>
+                                                        <span className="truncate text-xs text-muted-foreground">{targetEmail || targetUserId}</span>
+                                                    </div>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        </SidebarMenu>
+                                    </SidebarGroupContent>
+                                </SidebarGroup>
+                            )}
+
                             <SidebarGroup>
                                 <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
                                 <SidebarGroupContent>
                                     <SidebarMenu>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot" && !pathname.startsWith("/console/chatbot/shopper")}>
-                                                <Link href="/console/chatbot">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot") && !isActive("/console/chatbot/shopper")}>
+                                                <Link href={buildLink("/console/chatbot")}>
                                                     <LayoutDashboard />
                                                     <span>{t('dashboard')}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
+
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/analytics"}>
-                                                <Link href="/console/chatbot/analytics">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/analytics")}>
+                                                <Link href={buildLink("/console/chatbot/analytics")}>
                                                     <BarChart3 />
                                                     <span>{t('analytics')}</span>
                                                 </Link>
@@ -162,8 +211,8 @@ export function ConsoleSidebar() {
                                 <SidebarGroupContent>
                                     <SidebarMenu>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/knowledge"}>
-                                                <Link href="/console/knowledge">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/knowledge")}>
+                                                <Link href={buildLink("/console/knowledge")}>
                                                     <Database />
                                                     <span>{t('knowledgeBase')}</span>
                                                 </Link>
@@ -171,13 +220,13 @@ export function ConsoleSidebar() {
                                         </SidebarMenuItem>
 
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/widget" && !searchParams.get('tab')}>
-                                                <Link href="/console/chatbot/widget">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/widget") && !searchParams.get('tab')}>
+                                                <Link href={buildLink("/console/chatbot/widget")}>
                                                     <Settings />
                                                     <span>{t('widgetSettings')}</span>
                                                 </Link>
                                             </SidebarMenuButton>
-                                            {pathname.startsWith("/console/chatbot/widget") && (
+                                            {(isActive("/console/chatbot/widget") || pathname.startsWith(buildLink("/console/chatbot/widget"))) && (
                                                 <SidebarMenuSub>
                                                     {[
                                                         { tab: "branding", label: t('branding') },
@@ -188,8 +237,8 @@ export function ConsoleSidebar() {
                                                         { tab: "engagement", label: t('engagement') },
                                                     ].map((item) => (
                                                         <SidebarMenuSubItem key={item.tab}>
-                                                            <SidebarMenuSubButton asChild isActive={searchParams.get('tab') === item.tab || (!searchParams.get('tab') && item.tab === "branding" && pathname === "/console/chatbot/widget")}>
-                                                                <Link href={`/console/chatbot/widget?tab=${item.tab}`}>
+                                                            <SidebarMenuSubButton asChild isActive={searchParams.get('tab') === item.tab || (!searchParams.get('tab') && item.tab === "branding" && isActive("/console/chatbot/widget"))}>
+                                                                <Link href={`${buildLink("/console/chatbot/widget")}?tab=${item.tab}`}>
                                                                     <span>{item.label}</span>
                                                                 </Link>
                                                             </SidebarMenuSubButton>
@@ -200,27 +249,23 @@ export function ConsoleSidebar() {
                                         </SidebarMenuItem>
 
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/integration"}>
-                                                <Link href="/console/chatbot/integration">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/integration")}>
+                                                <Link href={buildLink("/console/chatbot/integration")}>
                                                     <Plug />
                                                     <span>{t('integration')}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
 
-                                        {(canManageModules || role === 'SUPER_ADMIN') && (
-                                            <>
-                                                <SidebarMenuItem>
-                                                    <SidebarMenuButton asChild isActive={pathname.startsWith("/console/modules") || pathname.startsWith("/console/chatbot/shopper")}>
-                                                        <Link href="/console/modules">
-                                                            <Package />
-                                                            <span>{t('modules') || "Modüller"}</span>
-                                                        </Link>
-                                                    </SidebarMenuButton>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isActive("/console/modules") || isActive("/console/chatbot/shopper")}>
+                                                <Link href={buildLink("/console/modules")}>
+                                                    <Package />
+                                                    <span>{t('modules') || "Modüller"}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
 
-                                                </SidebarMenuItem>
-                                            </>
-                                        )}
                                     </SidebarMenu>
                                 </SidebarGroupContent>
                             </SidebarGroup>
@@ -230,18 +275,26 @@ export function ConsoleSidebar() {
                                 <SidebarGroupContent>
                                     <SidebarMenu>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/chats"}>
-                                                <Link href="/console/chatbot/chats">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/chats")}>
+                                                <Link href={buildLink("/console/chatbot/chats")}>
                                                     <MessageSquare />
                                                     <span>{t('chats')}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/leads"}>
-                                                <Link href="/console/chatbot/leads">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/leads")}>
+                                                <Link href={buildLink("/console/chatbot/leads")}>
                                                     <Users />
                                                     <span>{t('leads')}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/appointments")}>
+                                                <Link href={buildLink("/console/chatbot/appointments")}>
+                                                    <Calendar className="w-4 h-4" />
+                                                    <span>{t('appointments') || "Appointments"}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
@@ -254,18 +307,29 @@ export function ConsoleSidebar() {
                                 <SidebarGroupContent>
                                     <SidebarMenu>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={pathname === "/console/chatbot/profile"}>
-                                                <Link href="/console/chatbot/profile">
+                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/profile")}>
+                                                <Link href={buildLink("/console/chatbot/profile")}>
                                                     <UserCircle />
                                                     <span>{t('profile')}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
+                                        {targetUserId && (
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton asChild isActive={pathname?.includes('/permissions')}>
+                                                    <Link href={`/admin/tenant/${targetUserId}/permissions`}>
+                                                        <Shield />
+                                                        <span>{t('appPermissions') || "Uygulama Erişimleri"}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        )}
                                     </SidebarMenu>
                                 </SidebarGroupContent>
                             </SidebarGroup>
 
-                            {role === 'admin' && (
+
+                            {!targetUserId && (role === 'admin' || role === 'SUPER_ADMIN') && (
                                 <SidebarGroup>
                                     <SidebarGroupLabel>Admin</SidebarGroupLabel>
                                     <SidebarGroupContent>
@@ -275,6 +339,22 @@ export function ConsoleSidebar() {
                                                     <Link href="/admin">
                                                         <Users />
                                                         <span>{t('tenants')}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton asChild isActive={pathname === "/admin/requests"}>
+                                                    <Link href="/admin/requests">
+                                                        <Inbox />
+                                                        <span>{t('requests') || "Requests"}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                            <SidebarMenuItem>
+                                                <SidebarMenuButton asChild isActive={pathname === "/admin/appointments"}>
+                                                    <Link href="/admin/appointments">
+                                                        <Calendar className="w-4 h-4" />
+                                                        <span>{t('appointments') || "Appointments"}</span>
                                                     </Link>
                                                 </SidebarMenuButton>
                                             </SidebarMenuItem>

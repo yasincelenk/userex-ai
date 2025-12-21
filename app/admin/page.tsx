@@ -161,7 +161,9 @@ export default function AdminPage() {
                     phone,
                     companyName,
                     companyWebsite,
-                    industry
+                    industry,
+                    callerUid: auth.currentUser?.uid,
+                    callerRole: users.find(u => u.id === auth.currentUser?.uid)?.role || 'SUPER_ADMIN'
                 })
             })
 
@@ -197,7 +199,8 @@ export default function AdminPage() {
     }
 
     const handleDeleteTenant = async (userId: string) => {
-        if (!confirm(t('deleteTenantConfirm'))) return
+        // Automatically approved as per user request
+        // if (!confirm(t('deleteTenantConfirm'))) return
 
         try {
             // Call our new API route to delete user data

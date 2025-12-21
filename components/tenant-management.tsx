@@ -43,7 +43,6 @@ interface UserData {
     role: string
     isActive: boolean
     createdAt: string
-    enablePersonalShopper?: boolean
 }
 
 export function TenantManagement() {
@@ -62,7 +61,6 @@ export function TenantManagement() {
     const [newTenantCompanyName, setNewTenantCompanyName] = useState("")
     const [newTenantWebsite, setNewTenantWebsite] = useState("")
     const [newTenantIndustry, setNewTenantIndustry] = useState<string>("ecommerce")
-    const [newTenantEnablePersonalShopper, setNewTenantEnablePersonalShopper] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
 
@@ -140,31 +138,6 @@ export function TenantManagement() {
         }
     }
 
-    const togglePersonalShopper = async (userId: string, currentStatus: boolean) => {
-        try {
-            await updateDoc(doc(db, "users", userId), {
-                enablePersonalShopper: !currentStatus
-            })
-
-            const updatedUsers = users.map(u =>
-                u.id === userId ? { ...u, enablePersonalShopper: !currentStatus } : u
-            )
-            setUsers(updatedUsers)
-
-            toast({
-                title: t('success'),
-                description: "Personal Shopper status updated",
-            })
-        } catch (error) {
-            console.error("Error updating user:", error)
-            toast({
-                title: t('error'),
-                description: "Failed to update status",
-                variant: "destructive",
-            })
-        }
-    }
-
     const handleCreateTenant = async () => {
         setCreateError(null)
         if (!newTenantEmail || !newTenantPassword || !newTenantFirstName || !newTenantLastName || !newTenantCompanyName) {
@@ -198,7 +171,6 @@ export function TenantManagement() {
                     companyWebsite: newTenantWebsite,
                     callerUid: user?.uid,
                     callerRole: role,
-                    enablePersonalShopper: newTenantEnablePersonalShopper,
                     industry: newTenantIndustry
                 })
             })
@@ -220,7 +192,6 @@ export function TenantManagement() {
             setNewTenantCompanyName("")
             setNewTenantWebsite("")
             setNewTenantIndustry("ecommerce")
-            setNewTenantEnablePersonalShopper(false)
             setCreateError(null)
             // fetchUsers() - No need to call this manually as onSnapshot will pick up the change
         } catch (error: any) {
@@ -237,7 +208,8 @@ export function TenantManagement() {
     }
 
     const handleDeleteTenant = async (userId: string) => {
-        if (!confirm(t('deleteTenantConfirm'))) return
+        // Automatically approved as per user request
+        // if (!confirm(t('deleteTenantConfirm'))) return
 
         try {
             const token = await user?.getIdToken()
@@ -335,7 +307,6 @@ export function TenantManagement() {
                                     <TableHead>{t('role')}</TableHead>
                                     <TableHead>{t('status')}</TableHead>
                                     <TableHead>{t('createdAt')}</TableHead>
-                                    <TableHead>Personal Shopper</TableHead>
                                     <TableHead className="text-right">{t('actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -363,15 +334,6 @@ export function TenantManagement() {
                                         </TableCell>
                                         <TableCell>
                                             {new Date(user.createdAt).toLocaleDateString()}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={user.enablePersonalShopper ? 'default' : 'outline'}
-                                                className="cursor-pointer"
-                                                onClick={() => user.role !== 'SUPER_ADMIN' && togglePersonalShopper(user.id, user.enablePersonalShopper || false)}
-                                            >
-                                                {user.enablePersonalShopper ? "Enabled" : "Disabled"}
-                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {user.role !== 'SUPER_ADMIN' && (

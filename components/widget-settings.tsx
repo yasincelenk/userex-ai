@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from "@/context/LanguageContext"
 import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
+import Lottie from "lottie-react"
 
 interface EngagementMessage {
     text: string;
@@ -42,7 +43,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
     const { user } = useAuth()
     const userId = propUserId || user?.uid
     const { toast } = useToast()
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
     const searchParams = useSearchParams()
     const router = useRouter()
     const pathname = usePathname()
@@ -60,7 +61,8 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         enablePersonalShopper: false,
         initialLanguage: "auto",
         industry: "ecommerce" as IndustryType,
-        enableIndustryGreeting: false, // Default to false if not present
+        enableIndustryGreeting: false,
+        customPrompts: "", // Custom additional prompts for the chatbot
         // Theme
         theme: "classic" as "classic" | "modern",
         // Widget settings
@@ -72,6 +74,8 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         launcherRadius: 50,
         launcherHeight: 60,
         launcherWidth: 60,
+        fullImageLauncherWidth: 60,
+        fullImageLauncherHeight: 60,
         launcherIcon: "library",
         launcherIconUrl: "",
         launcherLibraryIcon: "MessageSquare",
@@ -81,6 +85,12 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
         sideSpacing: 20,
         launcherShadow: "medium",
         launcherAnimation: "none",
+        // Full Image / Lottie Mode
+        launcherType: "standard" as "standard" | "fullImage",
+        launcherImageMode: "image" as "image" | "lottie",
+        launcherFullImageUrl: "",
+        launcherLottieUrl: "",
+        launcherHoverEffect: "scale" as "scale" | "opacity" | "none",
         // Triggers
         autoOpenDelay: 0,
         openOnExitIntent: false,
@@ -130,6 +140,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
     const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile')
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("branding")
+    const [lottieData, setLottieData] = useState<any>(null)
 
     // Sync active tab with URL parameter
     useEffect(() => {
@@ -138,6 +149,21 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
             setActiveTab(tabParam)
         }
     }, [searchParams])
+
+    // Fetch Lottie animation data for preview
+    useEffect(() => {
+        if (settings.launcherLottieUrl && settings.launcherLottieUrl.trim()) {
+            fetch(settings.launcherLottieUrl)
+                .then(res => res.json())
+                .then(data => setLottieData(data))
+                .catch(err => {
+                    console.error('Failed to load Lottie:', err)
+                    setLottieData(null)
+                })
+        } else {
+            setLottieData(null)
+        }
+    }, [settings.launcherLottieUrl])
 
     const handleTabChange = (value: string) => {
         setActiveTab(value)
@@ -179,6 +205,8 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         launcherRadius: data.launcherRadius !== undefined ? data.launcherRadius : 50,
                         launcherHeight: data.launcherHeight || 60,
                         launcherWidth: data.launcherWidth || 60,
+                        fullImageLauncherWidth: data.fullImageLauncherWidth || 60,
+                        fullImageLauncherHeight: data.fullImageLauncherHeight || 60,
                         launcherIcon: "library",
                         launcherIconUrl: data.launcherIconUrl || "",
                         launcherLibraryIcon: data.launcherLibraryIcon || "MessageSquare",
@@ -188,6 +216,12 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
                         launcherShadow: data.launcherShadow || "medium",
                         launcherAnimation: data.launcherAnimation || "none",
+                        // Full Image / Lottie Mode
+                        launcherType: data.launcherType || "standard",
+                        launcherImageMode: data.launcherImageMode || "image",
+                        launcherFullImageUrl: data.launcherFullImageUrl || "",
+                        launcherLottieUrl: data.launcherLottieUrl || "",
+                        launcherHoverEffect: data.launcherHoverEffect || "scale",
                         // Triggers
                         autoOpenDelay: data.autoOpenDelay || 0,
                         openOnExitIntent: data.openOnExitIntent || false,
@@ -255,10 +289,31 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
 
         setIsUploading(true)
         try {
-            const storageRef = ref(storage, `logos/${userId}/${file.name}`)
-            await uploadBytes(storageRef, file)
-            const downloadURL = await getDownloadURL(storageRef)
-            setSettings(prev => ({ ...prev, brandLogo: downloadURL }))
+            // Use server-side upload to bypass client-side rules
+            const timestamp = Date.now()
+            const path = `users/${userId}/logos/${timestamp}-${file.name}` // We can use userId here safely via admin sdk
+
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('path', path)
+
+            const token = await user?.getIdToken()
+            if (!token) throw new Error('Not authenticated')
+            const response = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Upload failed')
+            }
+
+            const data = await response.json()
+            setSettings(prev => ({ ...prev, brandLogo: data.url }))
             toast({
                 title: "Success",
                 description: "Logo uploaded successfully.",
@@ -289,10 +344,30 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
 
         setIsUploading(true)
         try {
-            const storageRef = ref(storage, `launcher_icons/${userId}/${file.name}`)
-            await uploadBytes(storageRef, file)
-            const downloadURL = await getDownloadURL(storageRef)
-            setSettings(prev => ({ ...prev, launcherIcon: "custom", launcherIconUrl: downloadURL }))
+            const timestamp = Date.now()
+            const path = `users/${userId}/launcher_icons/${timestamp}-${file.name}`
+
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('path', path)
+
+            const token = await user?.getIdToken()
+            if (!token) throw new Error('Not authenticated')
+            const response = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Upload failed')
+            }
+
+            const data = await response.json()
+            setSettings(prev => ({ ...prev, launcherIcon: "custom", launcherIconUrl: data.url }))
             toast({
                 title: "Success",
                 description: "Icon uploaded successfully.",
@@ -446,7 +521,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
     const { title: headerTitle, desc: headerDesc } = getHeaderInfo(activeTab)
 
     return (
-        <div className="flex flex-col gap-8 lg:flex-row">
+        <div className="flex flex-col gap-8 lg:flex-row p-8">
             {/* Left Panel: Settings with Tabs */}
             <div className="flex-1 space-y-6">
                 <div className="flex items-center justify-between">
@@ -668,7 +743,107 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                         <div className="space-y-4">
                             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t('launcherAppearance')}</h4>
 
-                            <div className="grid gap-4">
+                            {/* Launcher Type Selection */}
+                            <div className="grid gap-2">
+                                <Label>{t('launcherType') || 'Launcher Type'}</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Button
+                                        variant={settings.launcherType === "standard" ? "secondary" : "outline"}
+                                        onClick={() => setSettings(prev => ({ ...prev, launcherType: "standard" }))}
+                                    >
+                                        {t('standard') || 'Standard'}
+                                    </Button>
+                                    <Button
+                                        variant={settings.launcherType === "fullImage" ? "secondary" : "outline"}
+                                        onClick={() => setSettings(prev => ({ ...prev, launcherType: "fullImage" }))}
+                                    >
+                                        {t('fullImage') || 'Full Image'}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Full Image Mode */}
+                            {settings.launcherType === "fullImage" && (
+                                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                    <div className="grid gap-2">
+                                        <Label>{t('imageSource') || 'Image Source'}</Label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Button size="sm" variant={settings.launcherImageMode === "image" ? "secondary" : "outline"} onClick={() => setSettings(prev => ({ ...prev, launcherImageMode: "image" }))}>PNG/JPG</Button>
+                                            <Button size="sm" variant={settings.launcherImageMode === "lottie" ? "secondary" : "outline"} onClick={() => setSettings(prev => ({ ...prev, launcherImageMode: "lottie" }))}>Lottie</Button>
+                                        </div>
+                                    </div>
+                                    {settings.launcherImageMode === "image" ? (
+                                        <div className="grid gap-2">
+                                            <Label>{t('uploadImage') || 'Upload Image'}</Label>
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
+                                                    {settings.launcherFullImageUrl ? (<img src={settings.launcherFullImageUrl} alt="Launcher" className="w-full h-full object-contain" />) : (<ImageIcon className="w-6 h-6 text-muted-foreground" />)}
+                                                    <input type="file" accept="image/*" onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file || !user) return;
+                                                        try {
+                                                            const timestamp = Date.now();
+                                                            const path = `users/${userId}/launcher_full/${timestamp}-${file.name}`;
+                                                            const formData = new FormData();
+                                                            formData.append('file', file);
+                                                            formData.append('path', path);
+                                                            const token = await user?.getIdToken()
+                                                            if (!token) throw new Error('Not authenticated');
+                                                            const response = await fetch('/api/upload/image', {
+                                                                method: 'POST',
+                                                                headers: { 'Authorization': `Bearer ${token}` },
+                                                                body: formData
+                                                            });
+                                                            if (!response.ok) throw new Error('Upload failed');
+                                                            const data = await response.json();
+                                                            setSettings(prev => ({ ...prev, launcherFullImageUrl: data.url }));
+                                                        } catch (err) { console.error('Upload error:', err); }
+                                                    }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                                </div>
+                                                <span className="text-xs text-muted-foreground">PNG, JPG, GIF</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-3">
+                                            <Label>{t('lottieAnimation') || 'Lottie Animation'}</Label>
+                                            <Input
+                                                placeholder="https://lottie.host/... veya https://assets.lottiefiles.com/..."
+                                                value={settings.launcherLottieUrl}
+                                                onChange={(e) => setSettings(prev => ({ ...prev, launcherLottieUrl: e.target.value }))}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                <a href="https://lottiefiles.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">LottieFiles.com</a>'dan JSON URL yapıştırın
+                                            </p>
+                                            {settings.launcherLottieUrl && settings.launcherLottieUrl.trim() !== '' && (
+                                                <Button size="sm" variant="outline" className="w-fit" onClick={() => setSettings(prev => ({ ...prev, launcherLottieUrl: '' }))}>
+                                                    {t('remove') || 'Kaldır'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label>{t('width') || 'Width'} (px)</Label>
+                                            <Input type="number" value={settings.launcherWidth} onChange={(e) => setSettings(prev => ({ ...prev, launcherWidth: parseInt(e.target.value) || 60 }))} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>{t('height') || 'Height'} (px)</Label>
+                                            <Input type="number" value={settings.launcherHeight} onChange={(e) => setSettings(prev => ({ ...prev, launcherHeight: parseInt(e.target.value) || 60 }))} />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>{t('hoverEffect') || 'Hover Effect'}</Label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <Button size="sm" variant={settings.launcherHoverEffect === "scale" ? "secondary" : "outline"} onClick={() => setSettings(prev => ({ ...prev, launcherHoverEffect: "scale" }))}>{t('scale') || 'Scale'}</Button>
+                                            <Button size="sm" variant={settings.launcherHoverEffect === "opacity" ? "secondary" : "outline"} onClick={() => setSettings(prev => ({ ...prev, launcherHoverEffect: "opacity" }))}>{t('opacity') || 'Opacity'}</Button>
+                                            <Button size="sm" variant={settings.launcherHoverEffect === "none" ? "secondary" : "outline"} onClick={() => setSettings(prev => ({ ...prev, launcherHoverEffect: "none" }))}>{t('none') || 'None'}</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Standard Mode Settings */}
+                            {settings.launcherType === "standard" && (<div className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label>{t('launcherStyle')}</Label>
                                     <div className="grid grid-cols-2 gap-2">
@@ -743,6 +918,17 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                     </div>
                                 </div>
 
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>{t('width') || 'Width'} (px)</Label>
+                                        <Input type="number" value={settings.fullImageLauncherWidth} onChange={(e) => setSettings(prev => ({ ...prev, fullImageLauncherWidth: parseInt(e.target.value) || 60 }))} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>{t('height') || 'Height'} (px)</Label>
+                                        <Input type="number" value={settings.fullImageLauncherHeight} onChange={(e) => setSettings(prev => ({ ...prev, fullImageLauncherHeight: parseInt(e.target.value) || 60 }))} />
+                                    </div>
+                                </div>
+
                                 {(settings.launcherStyle === "circle" || settings.launcherStyle === "square" || settings.launcherStyle === "icon_text") && (
                                     <div className="grid gap-2">
                                         <Label>{t('launcherIcon')}</Label>
@@ -814,6 +1000,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                     </div>
                                 )}
                             </div>
+                            )}
                         </div>
 
                         {/* Effects & Spacing */}
@@ -914,22 +1101,68 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                                 </SelectContent>
                                             </Select>
                                             <p className="text-xs text-muted-foreground">{t('industryDesc')}</p>
+
+                                            {/* Industry Behavior Display */}
+                                            {settings.enableIndustryGreeting && settings.industry && (
+                                                <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-medium">{t('chatbotRole') || 'Rol'}:</span>
+                                                        <span className="text-sm text-primary font-semibold">
+                                                            {INDUSTRY_CONFIG[settings.industry]?.role || 'AI Assistant'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div>
+                                                        <span className="text-sm font-medium">{t('behaviorSummary') || 'Davranış'}:</span>
+                                                        <p className="text-sm text-muted-foreground mt-1">
+                                                            {(INDUSTRY_CONFIG[settings.industry] as any)?.behaviorSummary?.[language] ||
+                                                                (INDUSTRY_CONFIG[settings.industry]?.systemPrompt?.split('\n').slice(0, 3).join(' ').substring(0, 150) + '...')}
+                                                        </p>
+                                                    </div>
+
+                                                    <details className="group">
+                                                        <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                                                            {t('showFullPrompt') || 'Tam prompt\'u göster'}
+                                                        </summary>
+                                                        <pre className="mt-2 p-2 bg-background rounded text-xs whitespace-pre-wrap overflow-auto max-h-48 border">
+                                                            {INDUSTRY_CONFIG[settings.industry]?.systemPrompt}
+                                                        </pre>
+                                                    </details>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Custom Prompts */}
+                                        <div className="grid gap-2 pt-4 border-t">
+                                            <Label>{t('customPrompts') || 'Özel Talimatlar'}</Label>
+                                            <textarea
+                                                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                placeholder={t('customPromptsPlaceholder') || 'Chatbot\'a vermek istediğiniz ek talimatları yazın...'}
+                                                value={settings.customPrompts || ''}
+                                                onChange={(e) => setSettings(prev => ({ ...prev, customPrompts: e.target.value }))}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('customPromptsDesc') || 'Bu talimatlar sektör promptuna ek olarak chatbota verilecektir.'}
+                                            </p>
+                                            <Button
+                                                onClick={handleSave}
+                                                className="mt-2"
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        {t('saving') || 'Kaydediliyor...'}
+                                                    </>
+                                                ) : (
+                                                    t('applyCustomPrompts') || 'Özel Talimatları Uygula'
+                                                )}
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base">{t('leadCollection')}</Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('leadCollectionDesc')}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={settings.enableLeadCollection}
-                                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableLeadCollection: checked }))}
-                                    />
-                                </div>
+                                {/* Lead Collection moved to Lead Collection module settings */}
 
                                 <div className="grid gap-2">
                                     <Label>{t('chatbotLanguage')}</Label>
@@ -1568,7 +1801,7 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
 
             {/* Right Panel: Live Preview */}
             <div className="flex-1 flex flex-col items-center bg-muted/30 rounded-xl border border-dashed border-border/50 p-6 min-h-[600px]">
-                <div className="flex gap-2 mb-6">
+                <div className="flex gap-2 mb-4">
                     <Button
                         variant={previewMode === 'mobile' ? 'default' : 'outline'}
                         size="sm"
@@ -1750,30 +1983,55 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                             <button
                                                 onClick={() => setIsPreviewOpen(true)}
                                                 style={{
-                                                    // Removed artificial 80px limit to allow user setting to take effect
-                                                    width: (settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? 'auto' : `${settings.launcherWidth}px`,
-                                                    minWidth: (settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? `${settings.launcherWidth}px` : undefined,
+                                                    width: `${settings.launcherWidth}px`,
                                                     height: `${settings.launcherHeight}px`,
-                                                    borderRadius: `${settings.launcherRadius}px`,
-                                                    backgroundColor: settings.launcherBackgroundColor || settings.brandColor,
-                                                    boxShadow: settings.launcherShadow === 'none' ? 'none' :
-                                                        settings.launcherShadow === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' :
-                                                            settings.launcherShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.3)',
+                                                    borderRadius: settings.launcherType === 'fullImage' ? '0' : `${settings.launcherRadius}px`,
+                                                    backgroundColor: settings.launcherType === 'fullImage' ? 'transparent' : (settings.launcherBackgroundColor || settings.brandColor),
+                                                    boxShadow: settings.launcherType === 'fullImage' ? 'none' : (
+                                                        settings.launcherShadow === 'none' ? 'none' :
+                                                            settings.launcherShadow === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' :
+                                                                settings.launcherShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.3)'
+                                                    ),
+                                                    padding: (settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') ? '0 12px' : 0,
+                                                    overflow: 'hidden',
                                                 }}
-                                                className={`flex items-center justify-center gap-2 text-white font-medium transition-transform hover:scale-105 ${(settings.launcherStyle === 'icon_text' || settings.launcherStyle === 'text') ? 'px-6' : ''
-                                                    } ${settings.launcherAnimation === 'pulse' ? 'animate-pulse' :
-                                                        settings.launcherAnimation === 'bounce' ? 'animate-bounce' : ''
-                                                    } ${settings.theme === 'modern' ? 'shadow-[0_0_20px_rgba(79,70,229,0.5)]' : ''}`}
+                                                className={`flex items-center justify-center gap-2 text-white font-medium transition-transform hover:scale-105 ${settings.launcherAnimation === 'pulse' ? 'animate-pulse' :
+                                                    settings.launcherAnimation === 'bounce' ? 'animate-bounce' : ''
+                                                    }`}
                                             >
-                                                {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
-                                                    settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
-                                                        <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                                {settings.launcherType === 'fullImage' ? (
+                                                    settings.launcherImageMode === 'lottie' && settings.launcherLottieUrl ? (
+                                                        lottieData ? (
+                                                            <Lottie
+                                                                animationData={lottieData}
+                                                                loop={true}
+                                                                autoplay={true}
+                                                                style={{ width: '100%', height: '100%' }}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 text-white text-center p-1">
+                                                                <span className="text-lg">🎬</span>
+                                                                <span className="text-[8px]">Lottie</span>
+                                                            </div>
+                                                        )
+                                                    ) : settings.launcherFullImageUrl ? (
+                                                        <img src={settings.launcherFullImageUrl} alt="Launcher" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                                     ) : (
                                                         renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
                                                     )
-                                                )}
-                                                {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
-                                                    <span className="text-sm" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
+                                                ) : (
+                                                    <>
+                                                        {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
+                                                            settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
+                                                                <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                                            ) : (
+                                                                renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
+                                                            )
+                                                        )}
+                                                        {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
+                                                            <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
+                                                        )}
+                                                    </>
                                                 )}
                                             </button>
                                         </div>
@@ -1821,25 +2079,53 @@ export default function WidgetSettings({ userId: propUserId }: WidgetSettingsPro
                                         style={{
                                             width: `${settings.launcherWidth}px`,
                                             height: `${settings.launcherHeight}px`,
-                                            borderRadius: `${settings.launcherRadius}px`,
-                                            backgroundColor: settings.launcherBackgroundColor || settings.brandColor,
-                                            boxShadow: settings.launcherShadow === 'none' ? 'none' :
-                                                settings.launcherShadow === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' :
-                                                    settings.launcherShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.3)',
+                                            borderRadius: settings.launcherType === 'fullImage' ? '0' : `${settings.launcherRadius}px`,
+                                            backgroundColor: settings.launcherType === 'fullImage' ? 'transparent' : (settings.launcherBackgroundColor || settings.brandColor),
+                                            boxShadow: settings.launcherType === 'fullImage' ? 'none' : (
+                                                settings.launcherShadow === 'none' ? 'none' :
+                                                    settings.launcherShadow === 'light' ? '0 2px 8px rgba(0,0,0,0.1)' :
+                                                        settings.launcherShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.3)'
+                                            ),
+                                            padding: (settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') ? '0 12px' : 0,
+                                            overflow: 'hidden',
                                         }}
                                         className={`flex items-center justify-center gap-2 text-white font-medium transition-transform hover:scale-105 ${settings.launcherAnimation === 'pulse' ? 'animate-pulse' :
                                             settings.launcherAnimation === 'bounce' ? 'animate-bounce' : ''
                                             }`}
                                     >
-                                        {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
-                                            settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
-                                                <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                        {settings.launcherType === 'fullImage' ? (
+                                            settings.launcherImageMode === 'lottie' && settings.launcherLottieUrl ? (
+                                                lottieData ? (
+                                                    <Lottie
+                                                        animationData={lottieData}
+                                                        loop={true}
+                                                        autoplay={true}
+                                                        style={{ width: '100%', height: '100%' }}
+                                                    />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 text-white text-center p-1">
+                                                        <span className="text-lg">🎬</span>
+                                                        <span className="text-[8px]">Lottie</span>
+                                                    </div>
+                                                )
+                                            ) : settings.launcherFullImageUrl ? (
+                                                <img src={settings.launcherFullImageUrl} alt="Launcher" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                             ) : (
                                                 renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
                                             )
-                                        )}
-                                        {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
-                                            <span className="text-sm" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
+                                        ) : (
+                                            <>
+                                                {(settings.launcherStyle === 'circle' || settings.launcherStyle === 'square' || settings.launcherStyle === 'icon_text') && (
+                                                    settings.launcherIcon === "custom" && settings.launcherIconUrl ? (
+                                                        <img src={settings.launcherIconUrl} alt="Icon" className="w-6 h-6 object-cover rounded-sm" />
+                                                    ) : (
+                                                        renderIcon(settings.launcherLibraryIcon || "MessageSquare", "w-6 h-6")
+                                                    )
+                                                )}
+                                                {(settings.launcherStyle === 'text' || settings.launcherStyle === 'icon_text') && (
+                                                    <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]" style={{ color: settings.launcherIconColor }}>{settings.launcherText}</span>
+                                                )}
+                                            </>
                                         )}
                                     </button>
                                 </div>

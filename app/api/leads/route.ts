@@ -5,7 +5,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy } f
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { chatbotId, name, email, phone, source } = body;
+        const { chatbotId, name, email, phone, source, customFields } = body;
 
         if (!chatbotId) {
             return NextResponse.json({ error: "Chatbot ID is required" }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(req: Request) {
             email: email || "",
             phone: phone || "",
             source: source || "Pre-chat Form",
+            customFields: customFields || {},
             createdAt: serverTimestamp()
         });
 
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }
+
 
 export async function GET(req: Request) {
     try {

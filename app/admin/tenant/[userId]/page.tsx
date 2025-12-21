@@ -1,5 +1,6 @@
-import TenantDetailClient from "./tenant-detail-client"
+import { redirect } from "next/navigation"
 
 export default function TenantDetailPage({ params }: { params: { userId: string } }) {
-    return <TenantDetailClient userId={params.userId} />
+    // Redirect to the new tenant console dashboard
+    redirect(`/admin/tenant/${params.userId}/chatbot`)
 }

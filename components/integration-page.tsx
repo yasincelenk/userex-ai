@@ -235,7 +235,7 @@ export default function IntegrationPage({ userId }: IntegrationPageProps) {
     const directLink = `${origin}/chatbot-view?id=${userId}`
 
     return (
-        <div className="space-y-6 max-w-4xl">
+        <div className="space-y-6 max-w-4xl p-8">
             <Tabs defaultValue="widget" className="w-full space-y-6">
                 <div className="border-b">
                     <TabsList className="h-auto w-full justify-start gap-6 bg-transparent p-0">

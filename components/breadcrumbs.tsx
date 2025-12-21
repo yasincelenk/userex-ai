@@ -22,7 +22,17 @@ export function Breadcrumbs() {
     if (pathname === "/" || pathname === "/platform") return null
 
     // Segments to skip in breadcrumbs (they are redundant in the UI)
-    const skipSegments = ["console", "dashboard", "platform"]
+    const skipSegments = ["console", "dashboard", "platform", "tenant"]
+
+    // Check if this is a tenant admin route
+    const isTenantRoute = pathname?.includes('/admin/tenant/')
+
+    // Get tenant userId from URL if on tenant route
+    const getTenantIdFromPath = () => {
+        const match = pathname?.match(/\/admin\/tenant\/([^\/]+)/)
+        return match ? match[1] : null
+    }
+    const tenantId = getTenantIdFromPath()
 
     return (
         <Breadcrumb className="hidden md:flex">
@@ -33,6 +43,9 @@ export function Breadcrumbs() {
                 {segments.map((segment, index) => {
                     // Skip redundant segments
                     if (skipSegments.includes(segment)) return null
+
+                    // If this is the tenantId segment, show "Tenant" as label
+                    const isTenantIdSegment = isTenantRoute && tenantId && segment === tenantId
 
                     // Special case: Inject "Modules" before "shopper"
                     const showModulesLink = segment === "shopper" || segment === "copywriter" || segment === "lead-finder"
@@ -57,10 +70,14 @@ export function Breadcrumbs() {
                         "widget": "Widget",
                         "catalog": t('productCatalog'),
                         "settings": t('settings'),
-                        "modules": t('modules') || "Modules"
+                        "modules": t('modules') || "Modules",
+                        "appointments": t('appointments') || "Appointments"
                     }
 
-                    const title = labelMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1)
+                    // For tenant ID segment, just show "Tenant"
+                    let title = isTenantIdSegment
+                        ? "Tenant"
+                        : (labelMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1))
 
                     return (
                         <React.Fragment key={href}>

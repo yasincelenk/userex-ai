@@ -41,28 +41,40 @@ export async function generateAIResponse(
 
         // 2. Get Context from Pinecone
         const index = pc.index("chatbot-knowledge");
+        let context = "";
 
-        console.log("AI Service: Creating embedding...");
-        const embeddingResponse = await openai.embeddings.create({
-            model: "text-embedding-3-small",
-            input: lastMessage.content,
-        });
+        // Check if Knowledge Base module is enabled
+        // If undefined, default to true for backward compatibility or strict safety? 
+        // Based on logic, if explicitly false, we skip.
+        const isKnowledgeBaseEnabled = chatbotData?.enableKnowledgeBase !== false;
 
-        const embedding = embeddingResponse.data[0].embedding;
+        if (isKnowledgeBaseEnabled) {
+            console.log("AI Service: Creating embedding...");
+            const embeddingResponse = await openai.embeddings.create({
+                model: "text-embedding-3-small",
+                input: lastMessage.content,
+            });
 
-        console.log("AI Service: Querying Pinecone...");
-        const queryResponse = await index.query({
-            vector: embedding,
-            topK: 5, // Increased to get more potential products
-            includeMetadata: true,
-            filter: {
-                chatbotId: chatbotId
-            }
-        });
+            const embedding = embeddingResponse.data[0].embedding;
 
-        const context = queryResponse.matches
-            .map((match) => match.metadata?.text)
-            .join("\n\n");
+            console.log("AI Service: Querying Pinecone...");
+            const queryResponse = await index.query({
+                vector: embedding,
+                topK: 5,
+                includeMetadata: true,
+                filter: {
+                    chatbotId: chatbotId
+                }
+            });
+
+            context = queryResponse.matches
+                .map((match) => match.metadata?.text)
+                .join("\n\n");
+        } else {
+            console.log("AI Service: Knowledge Base module is disabled. Skipping RAG.");
+        }
+
+
 
         // 3. Prepare System Prompt
         let systemPrompt = `You are a helpful AI assistant for ${chatbotId}. ${industryConfig.systemPrompt}`;
@@ -132,7 +144,131 @@ export async function generateAIResponse(
     
     Use this information to provide more relevant answers. If the user asks "how much is this?", refer to the product on the current page if applicable.
             `;
+
+            // Page type specific instructions
+            const pageType = (userContext as any).pageType;
+            if (pageType === 'cart' || pageType === 'sepet') {
+                systemPrompt += `
+    PAGE CONTEXT - CART:
+    The user is on the cart/shopping page. Help them complete their purchase.
+    - Offer assistance with checkout
+    - Mention any promotions or discounts
+    - Address common concerns (shipping, returns)`;
+            } else if (pageType === 'checkout' || pageType === 'odeme') {
+                systemPrompt += `
+    PAGE CONTEXT - CHECKOUT:
+    The user is on the payment page.
+    - Emphasize security and trust
+    - Be quick and helpful
+    - Remind cancellation policies if asked`;
+            } else if (pageType === 'extras' || pageType === 'ek-hizmetler') {
+                systemPrompt += `
+    PAGE CONTEXT - EXTRAS/ADD-ONS:
+    The user is viewing additional services.
+    - Recommend relevant add-ons (insurance, upgrades, etc.)
+    - Highlight value and benefits
+    - "Complete your experience" messaging`;
+            }
+
+            // User login status
+            const userData = (userContext as any).user;
+            if (userData?.isLoggedIn) {
+                systemPrompt += `
+    USER STATUS - LOGGED IN:
+    - User name: ${userData.name || 'Customer'}
+    - Provide personalized recommendations
+    - Reference their account benefits`;
+            } else {
+                systemPrompt += `
+    USER STATUS - NOT LOGGED IN:
+    - Highlight membership benefits
+    - Encourage registration/login
+    - Collect lead information when appropriate`;
+            }
         }
+
+        // Module-based capabilities
+        const enableAppointments = chatbotData?.enableAppointments === true;
+        const enableLeadCollection = chatbotData?.enableLeadCollection === true;
+        const enableProductCatalog = chatbotData?.enablePersonalShopper === true;
+
+        let moduleInstructions = "";
+        if (enableAppointments) {
+            moduleInstructions += `
+    **APPOINTMENT MODULE ACTIVE:**
+    - You can take appointment requests
+    - Ask for preferred date, time, and purpose
+    - Confirm booking details`;
+        }
+        if (enableLeadCollection) {
+            moduleInstructions += `
+    **LEAD COLLECTION ACTIVE:**
+    - Collect contact information from interested users
+    - Ask for name, phone, email politely but persistently
+    - Thank them after collecting info`;
+        }
+        if (enableProductCatalog) {
+            moduleInstructions += `
+    **PRODUCT CATALOG ACTIVE:**
+    - Provide product recommendations
+    - Compare products and prices
+    - Guide to relevant products`;
+        }
+
+        // Sales Optimization Module
+        const salesOptConfig = chatbotData?.salesOptimizationConfig;
+        if (chatbotData?.enableSalesOptimization && salesOptConfig) {
+            moduleInstructions += `
+    **SALES OPTIMIZATION ACTIVE:**`;
+
+            if (salesOptConfig.discountCodes) {
+                const codes = salesOptConfig.discountCodeConfig?.codes || [];
+                moduleInstructions += `
+    - Discount codes available: ${codes.map((c: any) => `${c.code} (${c.discount}${c.type === 'percent' ? '%' : '₺'})`).join(', ')}
+    - Offer discount codes to hesitant customers
+    - Mention "I have a special discount for you" when appropriate`;
+            }
+
+            if (salesOptConfig.stockAlerts) {
+                const threshold = salesOptConfig.stockAlertConfig?.lowStockThreshold || 5;
+                moduleInstructions += `
+    - Create urgency with low stock warnings
+    - For products with less than ${threshold} items, say "Only X left in stock!"
+    - Use urgency phrases like "Hurry, limited stock!"`;
+            }
+
+            if (salesOptConfig.cartRecovery) {
+                const discount = salesOptConfig.cartRecoveryConfig?.discountPercent || 10;
+                moduleInstructions += `
+    - If user seems to abandon, offer help completing purchase
+    - Mention cart items they may have forgotten
+    ${salesOptConfig.cartRecoveryConfig?.offerDiscount ? `- Offer ${discount}% discount to recover abandoned carts` : ''}`;
+            }
+
+            if (salesOptConfig.productComparison) {
+                moduleInstructions += `
+    - Compare products when user is undecided
+    - Create comparison tables with key features
+    - Recommend the best option based on user needs`;
+            }
+        }
+
+        if (moduleInstructions) {
+            systemPrompt += moduleInstructions;
+        }
+
+        // Answer-first rule
+        systemPrompt += `
+    
+    **CEVAPLAMA KURALI / ANSWER-FIRST RULE:**
+    1. Her soruyu ÖNCE kendin cevapla - answer every question yourself FIRST
+    2. Özet ve net bilgi ver - provide clear, concise information
+    3. Link sadece EK kaynak olarak ver - only use links as SUPPLEMENTARY resources
+    4. ASLA sadece "şuraya bakın" deyip geçme - NEVER just say "check this link" without answering
+    
+    ❌ WRONG: "You can check our return policy here: /returns"
+    ✅ CORRECT: "You can return items within 14 days. Items must be unused and in original packaging. For full details: /returns"
+        `;
 
         if (isVoice) {
             systemPrompt += `

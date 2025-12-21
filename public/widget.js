@@ -25,11 +25,19 @@
     launcherStyle: 'circle',
     launcherWidth: 60,
     launcherHeight: 60,
+    fullImageLauncherWidth: 60,
+    fullImageLauncherHeight: 60,
     launcherRadius: 50,
     launcherText: 'Chat',
     launcherIcon: 'message',
     launcherIconColor: '#FFFFFF',
-    launcherBackgroundColor: ''
+    launcherBackgroundColor: '',
+    // Full Image / Lottie Mode
+    launcherType: 'standard',
+    launcherImageMode: 'image',
+    launcherFullImageUrl: '',
+    launcherLottieUrl: '',
+    launcherHoverEffect: 'scale'
   };
 
   // ============================================
@@ -96,50 +104,64 @@
     }
 
     selectMessage() {
-      const rawMessages = this.settings.bubble.messages || ['Need help?'];
+      const rawMessages = this.settings.bubble?.messages;
 
-      // Filter active messages and normalize structure
+      if (!rawMessages || !Array.isArray(rawMessages) || rawMessages.length === 0) {
+        console.log('Engagement: No valid messages array found');
+        return;
+      }
+
+      // Filter active messages
       const activeMessages = rawMessages.map(m => {
         if (typeof m === 'string') return { text: m, delay: 0, isActive: true };
-        return m;
-      }).filter(m => m.isActive !== false); // Default to true if undefined
+        if (typeof m === 'object' && m !== null && m.text) {
+          return { text: m.text, delay: m.delay || 0, isActive: m.isActive !== false };
+        }
+        return null;
+      }).filter(m => m !== null && m.isActive !== false);
 
-      if (activeMessages.length === 0) return;
+      if (activeMessages.length === 0) {
+        console.log('Engagement: No active messages found');
+        return;
+      }
 
-      this.targetMessage = activeMessages[Math.floor(Math.random() * activeMessages.length)];
-      console.log('Engagement: Selected target message', this.targetMessage);
+      // Sort by delay to ensure sequential display
+      this.messageQueue = activeMessages.sort((a, b) => a.delay - b.delay);
+      this.pendingQueue = [...this.messageQueue]; // For trigger consumption
+
+      // Legacy support to prevent immediate crash before showBubble update
+      this.targetMessage = this.messageQueue[0];
+
+      console.log('Engagement: Message queue prepared', this.messageQueue);
     }
 
     setupTriggers() {
       const triggers = this.settings.triggers;
 
-      // 1. Time on Page Trigger (Global OR Message Specific)
-      let timeOnPage = triggers.timeOnPage;
-
-      // Check message specific delay if global trigger is not set
-      if ((!timeOnPage || timeOnPage <= 0) && this.targetMessage && this.targetMessage.delay > 0) {
-        console.log(`Engagement: Using message specific delay (${this.targetMessage.delay}s) as trigger`);
-        timeOnPage = this.targetMessage.delay;
-      }
-
-      if (timeOnPage && timeOnPage > 0) {
-        const timer = setTimeout(() => {
-          console.log('Engagement: Time on page trigger fired');
-          this.showBubble();
-        }, timeOnPage * 1000);
-        this.timers.push(timer);
+      // 1. Schedule Time-based Messages (Sequential)
+      if (this.messageQueue && this.messageQueue.length > 0) {
+        this.messageQueue.forEach(msg => {
+          // Schedule purely based on message delay
+          if (msg.delay !== undefined) {
+            const timer = setTimeout(() => {
+              console.log(`Engagement: Delay trigger fired for message: "${msg.text}"`);
+              this.showBubble(msg);
+            }, (msg.delay || 0) * 1000);
+            this.timers.push(timer);
+          }
+        });
       }
 
       // 2. Scroll Depth Trigger
       if (triggers.scrollDepth && triggers.scrollDepth > 0) {
         const checkScroll = () => {
           const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-          if (scrollHeight <= 0) return; // No scroll possible
+          if (scrollHeight <= 0) return;
 
           const scrolled = (window.scrollY / scrollHeight) * 100;
           if (scrolled >= triggers.scrollDepth) {
             console.log('Engagement: Scroll depth trigger fired');
-            this.showBubble();
+            this.showBubble(); // Shows next generic
             window.removeEventListener('scroll', debouncedCheck);
           }
         };
@@ -151,7 +173,7 @@
       // 3. Exit Intent Trigger (Desktop only)
       if (triggers.exitIntent && !isMobileDevice()) {
         const handleMouseLeave = (e) => {
-          if (e.clientY <= 5 && !this.hasShown) {
+          if (e.clientY <= 5) {
             console.log('Engagement: Exit intent trigger fired');
             this.showBubble();
           }
@@ -177,12 +199,10 @@
         let inactivityTimer;
         const resetTimer = () => {
           clearTimeout(inactivityTimer);
-          if (!this.hasShown) {
-            inactivityTimer = setTimeout(() => {
-              console.log('Engagement: Inactivity trigger fired');
-              this.showBubble();
-            }, triggers.inactivity * 1000);
-          }
+          inactivityTimer = setTimeout(() => {
+            console.log('Engagement: Inactivity trigger fired');
+            this.showBubble();
+          }, triggers.inactivity * 1000);
         };
 
         ['mousemove', 'keypress', 'scroll', 'click', 'touchstart'].forEach(event => {
@@ -191,26 +211,40 @@
           this.listeners.push({ event, handler, target: document });
         });
 
-        resetTimer(); // Start initial timer
+        resetTimer();
       }
     }
 
-    showBubble() {
+    showBubble(specificMsg = null) {
       // Check if widget is already open
       const container = document.getElementById('userex-chatbot-container');
       const isWidgetOpen = container && container.style.display && container.style.display !== 'none';
 
-      if (this.hasShown || this.bubble || isWidgetOpen) return;
-      if (!this.targetMessage) return; // No message to show
+      if (isWidgetOpen) return;
 
+      // Determine message
+      let message = specificMsg;
+      if (!message) {
+        if (this.pendingQueue && this.pendingQueue.length > 0) {
+          message = this.pendingQueue.shift();
+        } else if (this.messageQueue && this.messageQueue.length > 0) {
+          message = this.messageQueue[Math.floor(Math.random() * this.messageQueue.length)];
+        }
+      }
+
+      if (!message) return;
+
+      // If bubble is already open with same message, ignore
+      if (this.bubble && this.currentMessageText === message.text) return;
+
+      this.currentMessageText = message.text;
       this.hasShown = true;
 
       // Increment session counter
       const shownCount = parseInt(sessionStorage.getItem(this.shownCountKey) || '0');
       sessionStorage.setItem(this.shownCountKey, (shownCount + 1).toString());
 
-      // Clean up all triggers
-      this.cleanup();
+      // Note: We do NOT call cleanup() here anymore to allow subsequent scheduled messages to fire.
 
       // Get bubble config
       const bubble = this.settings.bubble;
@@ -218,7 +252,22 @@
       const style = bubble.style || {};
       const animation = bubble.animation || 'bounce';
 
-      const messageText = this.targetMessage.text;
+      // If bubble exists, update it
+      if (this.bubble) {
+        const content = this.bubble.querySelector('.bubble-content');
+        if (content) {
+          content.textContent = message.text;
+          // Re-trigger animation
+          if (animation && animation !== 'none') {
+            this.bubble.classList.remove(`userex-eng-${animation}`);
+            void this.bubble.offsetWidth; // trigger reflow
+            this.bubble.classList.add(`userex-eng-${animation}`);
+          }
+          return;
+        }
+      }
+
+      const messageText = message.text;
 
       // Create bubble element
       this.bubble = document.createElement('div');
@@ -691,14 +740,23 @@
       iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 0 0 1-2 2H7l-4 4V5a2 0 0 1 2-2h14a2 0 0 1 2 2z"/></svg>`;
     }
 
+    // Determine background color - transparent for full image mode
+    const launcherBgColor = settings.launcherType === 'fullImage'
+      ? 'transparent'
+      : (settings.launcherBackgroundColor || settings.brandColor || settings.primaryColor);
+
+    // Determine dimensions based on type using independent settings
+    const currentWidth = settings.launcherType === 'fullImage' ? (settings.fullImageLauncherWidth || 60) : settings.launcherWidth;
+    const currentHeight = settings.launcherType === 'fullImage' ? (settings.fullImageLauncherHeight || 60) : settings.launcherHeight;
+
     Object.assign(launcher.style, {
       position: 'fixed',
-      width: isTextStyle ? 'auto' : `${settings.launcherWidth}px`,
-      height: `${settings.launcherHeight}px`,
+      width: isTextStyle ? 'auto' : `${currentWidth}px`,
+      height: `${currentHeight}px`,
       minWidth: isTextStyle ? '100px' : 'auto',
-      borderRadius: `${settings.launcherRadius}px`,
-      backgroundColor: settings.launcherBackgroundColor || settings.brandColor || settings.primaryColor,
-      boxShadow: shadowStyle,
+      borderRadius: settings.launcherType === 'fullImage' ? '0' : `${settings.launcherRadius}px`,
+      backgroundColor: launcherBgColor,
+      boxShadow: settings.launcherType === 'fullImage' ? 'none' : shadowStyle,
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
@@ -735,9 +793,95 @@
     const renderLauncherContent = (isOpen) => {
       if (isOpen) {
         launcher.innerHTML = closeSvg;
+
+        // Fix: Even if it is fullImage, when open, we want a visible close button.
+        // We revert the background, shadow, and DIMENSIONS to match standard style so the white 'X' is visible.
+        if (settings.launcherType === 'fullImage') {
+          launcher.style.backgroundColor = settings.launcherBackgroundColor || settings.brandColor || settings.primaryColor || '#000000';
+          launcher.style.boxShadow = shadowStyle;
+          launcher.style.borderRadius = '50%'; // Make it circular
+          // Force standard dimensions for the close button (Standard default is 60px)
+          // We intentionally ignore settings.launcherWidth here because in fullImage mode that controls the image size (which can be large)
+          launcher.style.width = '60px';
+          launcher.style.height = '60px';
+        }
         return;
       }
 
+      // Reset styles for Full Image mode when closed (transparent, no shadow, etc)
+      // Reset styles for Full Image mode when closed (transparent, no shadow, etc)
+      if (settings.launcherType === 'fullImage') {
+        launcher.style.backgroundColor = 'transparent';
+        launcher.style.boxShadow = 'none';
+        launcher.style.borderRadius = '0';
+        // Reset dimensions to full image size (handled by image content usually, but let's ensure we don't force standard size if it was different)
+        // Actually, for fullImage, width/height are set in initial styles based on settings or content. 
+        // We just need to ensure we don't keep the forced dimensions if they differ.
+        // We just need to ensure we don't keep the forced dimensions if they differ.
+        // Re-applying basic style logic from initialization.
+        launcher.style.width = `${settings.fullImageLauncherWidth || 60}px`;
+        launcher.style.height = `${settings.fullImageLauncherHeight || 60}px`;
+      }
+
+      // Full Image Mode (PNG/GIF or Lottie)
+      if (settings.launcherType === 'fullImage') {
+        if (settings.launcherImageMode === 'lottie' && settings.launcherLottieUrl && settings.launcherLottieUrl.trim()) {
+          // Lottie Animation
+          launcher.innerHTML = `<div id="userex-lottie-container" style="width:100%;height:100%;overflow:hidden;"></div>`;
+
+          // Add style to make Lottie SVG fill container
+          const lottieStyle = document.createElement('style');
+          lottieStyle.id = 'userex-lottie-style';
+          lottieStyle.textContent = `
+            #userex-lottie-container svg {
+              width: 100% !important;
+              height: 100% !important;
+            }
+          `;
+          if (!document.getElementById('userex-lottie-style')) {
+            document.head.appendChild(lottieStyle);
+          }
+
+          // Load lottie-web if not loaded
+          if (!window.lottie) {
+            const lottieScript = document.createElement('script');
+            lottieScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+            lottieScript.onload = () => {
+              window.lottie.loadAnimation({
+                container: document.getElementById('userex-lottie-container'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: settings.launcherLottieUrl.trim(),
+                rendererSettings: {
+                  preserveAspectRatio: 'xMidYMid slice'
+                }
+              });
+            };
+            document.head.appendChild(lottieScript);
+          } else {
+            window.lottie.loadAnimation({
+              container: document.getElementById('userex-lottie-container'),
+              renderer: 'svg',
+              loop: true,
+              autoplay: true,
+              path: settings.launcherLottieUrl.trim(),
+              rendererSettings: {
+                preserveAspectRatio: 'xMidYMid slice'
+              }
+            });
+          }
+        } else if (settings.launcherFullImageUrl) {
+          // Static Image (PNG/GIF)
+          launcher.innerHTML = `<img src="${settings.launcherFullImageUrl}" alt="Chat" style="width:100%;height:100%;object-fit:contain;" />`;
+        } else {
+          // Fallback to icon
+          launcher.innerHTML = iconHtml;
+        }
+        return;
+      }
+
+      // Standard Mode
       if (settings.launcherStyle === 'text') {
         launcher.innerHTML = `<span>${settings.launcherText}</span>`;
       } else if (settings.launcherStyle === 'icon_text') {
@@ -756,6 +900,15 @@
 
     // Hover effect
     launcher.onmouseenter = () => {
+      // Handle hover effect based on launcherHoverEffect setting
+      if (settings.launcherHoverEffect === 'none') return;
+
+      if (settings.launcherHoverEffect === 'opacity') {
+        launcher.style.opacity = '0.8';
+        return;
+      }
+
+      // Default: scale effect
       let transform = 'scale(1.05)';
       if (isMiddle && isCenter) transform = 'translate(-50%, -50%) scale(1.05)';
       else if (isMiddle) transform = 'translateY(-50%) scale(1.05)';
@@ -763,6 +916,7 @@
       launcher.style.transform = transform;
     };
     launcher.onmouseleave = () => {
+      launcher.style.opacity = '1';
       let transform = 'scale(1)';
       if (isMiddle && isCenter) transform = 'translate(-50%, -50%) scale(1)';
       else if (isMiddle) transform = 'translateY(-50%) scale(1)';
@@ -818,10 +972,16 @@
     } else {
       // Classic Styles
       let classicVerticalStyle = {};
+
+      // Calculate effective height for positioning
+      // If fullImage, the "closed" launcher is large, but when open it becomes a 60px close button.
+      // So the widget should be positioned relative to that 60px button to avoid a huge gap.
+      const effectiveHeight = settings.launcherType === 'fullImage' ? 60 : settings.launcherHeight;
+
       if (isTop) {
-        classicVerticalStyle = { top: `${verticalSpacing + settings.launcherHeight + 10}px`, bottom: 'auto' };
+        classicVerticalStyle = { top: `${verticalSpacing + effectiveHeight + 24}px`, bottom: 'auto' };
       } else if (isBottom) {
-        classicVerticalStyle = { bottom: `${verticalSpacing + settings.launcherHeight + 10}px`, top: 'auto' };
+        classicVerticalStyle = { bottom: `${verticalSpacing + effectiveHeight + 24}px`, top: 'auto' };
       } else if (isMiddle) {
         // For middle, we place it next to the launcher
         classicVerticalStyle = { top: '50%', transform: 'translateY(-50%)' };
@@ -842,8 +1002,9 @@
       }
 
       Object.assign(iframeContainer.style, {
-        width: '350px',
-        height: '500px',
+        width: '400px', // Increased from 350px
+        height: '600px', // Increased from 500px
+        maxHeight: '80vh',
         ...horizontalStyle,
         ...classicVerticalStyle
       });
@@ -943,9 +1104,12 @@
     fetch(`${baseUrl}/api/widget-settings?chatbotId=${chatbotId}&t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
+        console.log('Engagement data from API:', data.engagement);
         if (data.engagement && data.engagement.enabled) {
           console.log('Initializing Engagement Controller after launcher creation...');
           engagementController = new EngagementController(data.engagement, baseUrl, chatbotId);
+        } else {
+          console.log('Engagement disabled or not configured:', data.engagement?.enabled);
         }
       })
       .catch(err => console.error('Failed to load engagement settings:', err));
@@ -1010,6 +1174,8 @@
           launcherRadius: data.launcherRadius !== undefined ? data.launcherRadius : 50,
           launcherHeight: data.launcherHeight || 60,
           launcherWidth: data.launcherWidth || 60,
+          fullImageLauncherWidth: data.fullImageLauncherWidth || 60,
+          fullImageLauncherHeight: data.fullImageLauncherHeight || 60,
           launcherIcon: data.launcherIcon || 'message',
           launcherIconColor: data.launcherIconColor || '#FFFFFF',
           launcherBackgroundColor: (data.launcherBackgroundColor && data.launcherBackgroundColor.trim()) ? data.launcherBackgroundColor : '',
@@ -1019,6 +1185,12 @@
           sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
           launcherShadow: data.launcherShadow || 'medium',
           launcherAnimation: data.launcherAnimation || 'none',
+          // Full Image / Lottie Mode
+          launcherType: data.launcherType || 'standard',
+          launcherImageMode: data.launcherImageMode || 'image',
+          launcherFullImageUrl: data.launcherFullImageUrl || '',
+          launcherLottieUrl: data.launcherLottieUrl || '',
+          launcherHoverEffect: data.launcherHoverEffect || 'scale',
           // Triggers
           autoOpenDelay: data.autoOpenDelay || 0,
           openOnExitIntent: data.openOnExitIntent || false,
@@ -1031,6 +1203,7 @@
           offlineMessage: data.offlineMessage || 'Şu anda çevrimdışıyız.'
         };
         console.log('Final settings object:', settings);
+        console.log('Launcher Debug:', 'type:', settings.launcherType, 'imageMode:', settings.launcherImageMode, 'lottieUrl:', settings.launcherLottieUrl?.substring(0, 60));
       }
       initWidget();
     })
@@ -1041,6 +1214,74 @@
 
   // --- Context Awareness & Proactive Logic ---
 
+  // Helper: Detect page type from URL
+  function detectPageType() {
+    const path = window.location.pathname.toLowerCase();
+
+    // Cart pages
+    if (path.includes('/cart') || path.includes('/sepet') || path.includes('/basket')) return 'cart';
+
+    // Checkout pages
+    if (path.includes('/checkout') || path.includes('/odeme') || path.includes('/payment')) return 'checkout';
+
+    // Product pages
+    if (path.includes('/product') || path.includes('/urun') || path.includes('/item')) return 'product';
+
+    // Category pages
+    if (path.includes('/category') || path.includes('/kategori') || path.includes('/collection')) return 'category';
+
+    // Booking/reservation pages
+    if (path.includes('/booking') || path.includes('/rezervasyon') || path.includes('/reserve')) return 'booking';
+
+    // Extras/add-ons pages
+    if (path.includes('/extras') || path.includes('/ek-hizmetler') || path.includes('/add-ons') || path.includes('/additional')) return 'extras';
+
+    // Confirmation pages
+    if (path.includes('/confirmation') || path.includes('/onay') || path.includes('/success') || path.includes('/thank')) return 'confirmation';
+
+    // Search pages
+    if (path.includes('/search') || path.includes('/ara') || path.includes('/results')) return 'search';
+
+    // Academic specific pages
+    if (path.includes('/department') || path.includes('/bolum') || path.includes('/faculty')) return 'department';
+    if (path.includes('/dorm') || path.includes('/yurt') || path.includes('/housing') || path.includes('/accommodation')) return 'housing';
+    if (path.includes('/scholarship') || path.includes('/burs')) return 'scholarship';
+    if (path.includes('/apply') || path.includes('/basvuru') || path.includes('/admission')) return 'application';
+
+    return 'general';
+  }
+
+  // Helper: Get user login status from various sources
+  function getUserData() {
+    const userData = {
+      isLoggedIn: false,
+      name: null,
+      email: null
+    };
+
+    // Method 1: Check script data attributes
+    if (currentScript) {
+      const loggedIn = currentScript.getAttribute('data-user-logged-in');
+      if (loggedIn === 'true') {
+        userData.isLoggedIn = true;
+        userData.name = currentScript.getAttribute('data-user-name') || null;
+        userData.email = currentScript.getAttribute('data-user-email') || null;
+      }
+    }
+
+    // Method 2: Check global UserexWidget API
+    if (window.UserexWidget && window.UserexWidget.userData) {
+      const apiData = window.UserexWidget.userData;
+      if (apiData.isLoggedIn) {
+        userData.isLoggedIn = true;
+        userData.name = apiData.name || userData.name;
+        userData.email = apiData.email || userData.email;
+      }
+    }
+
+    return userData;
+  }
+
   // Helper to scrape metadata
   function getPageContext() {
     return {
@@ -1049,9 +1290,20 @@
       description: document.querySelector('meta[name="description"]')?.content || '',
       productName: document.querySelector('meta[property="og:title"]')?.content || document.title,
       productImage: document.querySelector('meta[property="og:image"]')?.content || '',
-      productPrice: document.querySelector('meta[property="product:price:amount"]')?.content || ''
+      productPrice: document.querySelector('meta[property="product:price:amount"]')?.content || '',
+      // NEW: Page type detection
+      pageType: detectPageType(),
+      // NEW: User login status
+      user: getUserData()
     };
   }
+
+  // Expose global API for dynamic user updates
+  window.UserexWidget = window.UserexWidget || {};
+  window.UserexWidget.setUser = function (userData) {
+    window.UserexWidget.userData = userData;
+    sendContextUpdate(); // Immediately notify chatbot of user change
+  };
 
   // Send context update to iframe
   function sendContextUpdate() {

@@ -21,6 +21,10 @@ interface AuthContextType {
     visibleUiUxAuditor: boolean
     enableVoiceAssistant: boolean
     visibleVoiceAssistant: boolean
+    enableKnowledgeBase: boolean
+    visibleKnowledgeBase: boolean
+    enableSalesOptimization: boolean
+    visibleSalesOptimization: boolean
     canManageModules: boolean
     loading: boolean
 }
@@ -40,6 +44,10 @@ const AuthContext = createContext<AuthContextType>({
     visibleUiUxAuditor: true,
     enableVoiceAssistant: false,
     visibleVoiceAssistant: true,
+    enableKnowledgeBase: true,
+    visibleKnowledgeBase: true,
+    enableSalesOptimization: false,
+    visibleSalesOptimization: true,
     canManageModules: false,
     loading: true,
 })
@@ -59,6 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [visibleUiUxAuditor, setVisibleUiUxAuditor] = useState(true)
     const [enableVoiceAssistant, setEnableVoiceAssistant] = useState(false)
     const [visibleVoiceAssistant, setVisibleVoiceAssistant] = useState(true)
+    const [enableKnowledgeBase, setEnableKnowledgeBase] = useState(true)
+    const [visibleKnowledgeBase, setVisibleKnowledgeBase] = useState(true)
+    const [enableSalesOptimization, setEnableSalesOptimization] = useState(false)
+    const [visibleSalesOptimization, setVisibleSalesOptimization] = useState(true)
     const [canManageModules, setCanManageModules] = useState(false)
     const [loading, setLoading] = useState(true)
     const pathname = usePathname()
@@ -110,6 +122,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             setVisibleUiUxAuditor(userData.visibleUiUxAuditor !== false)
                             setEnableVoiceAssistant(userData.enableVoiceAssistant === true)
                             setVisibleVoiceAssistant(userData.visibleVoiceAssistant !== false)
+                            setEnableKnowledgeBase(userData.enableKnowledgeBase !== false) // Default true
+                            setVisibleKnowledgeBase(userData.visibleKnowledgeBase !== false)
+                            setEnableSalesOptimization(userData.enableSalesOptimization === true)
+                            setVisibleSalesOptimization(userData.visibleSalesOptimization !== false)
                             setCanManageModules(userData.canManageModules === true)
                         } else {
                             // User doc doesn't exist but Firebase user does
@@ -160,7 +176,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             enableUiUxAuditor,
             visibleUiUxAuditor,
             enableVoiceAssistant,
+
             visibleVoiceAssistant,
+            enableKnowledgeBase,
+            visibleKnowledgeBase,
+            enableSalesOptimization,
+            visibleSalesOptimization,
             canManageModules
         }}>
             {children}

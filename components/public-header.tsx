@@ -42,7 +42,7 @@ export function PublicHeader({ transparent = false }: PublicHeaderProps) {
                 ? "border-white/10 bg-black/50 backdrop-blur-xl supports-[backdrop-filter]:bg-black/20 shadow-lg shadow-black/5"
                 : "border-transparent bg-transparent supports-[backdrop-filter]:bg-transparent"
         )}>
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="container mx-auto px-4 h-16 flex items-center">
                 <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
                     <Link href="/">
                         <Image
@@ -54,12 +54,14 @@ export function PublicHeader({ transparent = false }: PublicHeaderProps) {
                         />
                     </Link>
                 </div>
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+                <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground ml-16">
                     <Link href="/#products" className="hover:text-white transition-colors">{t('landingProducts')}</Link>
-                    <Link href="/#features" className="hover:text-white transition-colors">{t('landingFeatures')}</Link>
+                    <Link href="/why" className="hover:text-white transition-colors">{language === 'tr' ? 'Neden Biz' : 'Why Us'}</Link>
+                    <Link href="/industries" className="hover:text-white transition-colors">{language === 'tr' ? 'Sektörler' : 'Industries'}</Link>
                     <Link href="/pricing" className="hover:text-white transition-colors">{t('landingPricing')}</Link>
+                    <Link href="/contact" className="hover:text-white transition-colors">{language === 'tr' ? 'İletişim' : 'Contact'}</Link>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 ml-auto">
                     {/* Language Selector */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

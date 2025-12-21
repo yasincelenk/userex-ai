@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { doc, getDoc, updateDoc, arrayUnion, onSnapshot } from "firebase/firestore"
 import { guestDb as db, signInAsGuest } from "@/lib/firebase-guest"
-import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff } from "lucide-react"
+import { MessageSquare, Send, Trash2, Sparkles, X, Maximize2, Minimize2, Mic, Volume2, Square, Headphones, PhoneOff, Calendar, Activity } from "lucide-react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ProductCard } from "@/components/chatbot/product-card"
@@ -139,45 +139,39 @@ function ChatbotViewContent() {
     }
 
     // Handle Text-to-Speech (Simplified)
-    const handleSpeak = (text: string, messageId: string) => {
-        if (!synthesisRef.current) {
-            console.error("SpeechSynthesis not initialized")
-            return
+    const speakText = (text: string, messageId: string | null = null) => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) return
+
+        const utterance = new SpeechSynthesisUtterance(text)
+        utterance.lang = language === "tr" ? "tr-TR" : "en-US"
+
+        // Find preferred voice if set
+        if (settings.preferredVoice) {
+            const voices = window.speechSynthesis.getVoices()
+            const selectedVoice = voices.find(v => v.name === settings.preferredVoice)
+            if (selectedVoice) {
+                utterance.voice = selectedVoice
+            }
         }
 
-        console.log("Speaking:", text)
+        utterance.onstart = () => setIsSpeaking(messageId || 'auto')
+        utterance.onend = () => setIsSpeaking(null)
+        utterance.onerror = () => setIsSpeaking(null)
 
-        // If already speaking this message, stop it (toggle off)
+        window.speechSynthesis.cancel()
+        window.speechSynthesis.speak(utterance)
+    }
+
+    const handleSpeak = (text: string, messageId: string) => {
+        if (!synthesisRef.current) return
+
         if (isSpeaking === messageId) {
             synthesisRef.current.cancel()
             setIsSpeaking(null)
             return
         }
 
-        // Cancel any current speech
-        synthesisRef.current.cancel()
-
-        const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = 'tr-TR'
-
-        // Try to select a Turkish voice
-        const turkishVoice = voices.find(v => v.lang.includes('tr') || v.lang.includes('TR'))
-        if (turkishVoice) {
-            utterance.voice = turkishVoice
-        }
-
-        utterance.onend = () => {
-            console.log("Speaking ended")
-            setIsSpeaking(null)
-        }
-
-        utterance.onerror = (e) => {
-            console.error("Speaking error:", e)
-            setIsSpeaking(null)
-        }
-
-        setIsSpeaking(messageId)
-        synthesisRef.current.speak(utterance)
+        speakText(text, messageId)
     }
 
     // Typing Indicator State
@@ -280,9 +274,39 @@ function ChatbotViewContent() {
                 setMessages((prev: any) => prev.map((m: any) => m.id === assistantMsgId ? { ...m, content: assistantContent } : m))
             }
 
-            // If this was a voice input, automatically speak the response
-            if (shouldSpeakResponse && assistantContent) {
-                handleSpeak(assistantContent, assistantMsgId)
+            // If this was a voice input OR auto-speak is enabled, automatically speak the response
+            if ((shouldSpeakResponse || settings.enableAutoSpeak) && assistantContent) {
+                speakText(assistantContent, assistantMsgId)
+            }
+
+            // Check if AI suggested booking an appointment
+            if (settings.enableAppointments && (
+                assistantContent.toLowerCase().includes('randevu') ||
+                assistantContent.toLowerCase().includes('appointment') ||
+                assistantContent.toLowerCase().includes('book') ||
+                assistantContent.toLowerCase().includes('rezervasyon')
+            )) {
+                // If AI mentions booking, suggest the booking UI
+                const showBookingTrigger = {
+                    id: 'booking-trigger-' + Date.now(),
+                    role: 'assistant',
+                    content: '📅 [Booking UI Suggestion]', // Internal flag or we can show a special button
+                    isSpecial: true,
+                    createdAt: new Date()
+                }
+                // Instead of adding a message, maybe we just show a button or prompt
+                // For now, let's add a visual cue in the next section
+            }
+
+            // Check if AI suggested a UI/UX Audit
+            if (settings.enableUiUxAuditor && (
+                assistantContent.toLowerCase().includes('analiz') ||
+                assistantContent.toLowerCase().includes('denetim') ||
+                assistantContent.toLowerCase().includes('ux') ||
+                assistantContent.toLowerCase().includes('ui') ||
+                assistantContent.toLowerCase().includes('audit')
+            )) {
+                setShowAuditSuggestion(true)
             }
 
         } catch (error: any) {
@@ -372,7 +396,16 @@ function ChatbotViewContent() {
             bubble: {
                 messages: [] as any[]
             }
-        }
+        },
+        enableAppointments: false,
+        appointmentTypes: ["Consultation", "Support", "Demo"],
+        appointmentSuccessMessage: "Randevunuz başarıyla oluşturuldu! Sizinle en kısa sürede iletişime geçeceğiz.",
+        availableDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+        enableAutoSpeak: false,
+        preferredVoice: "",
+        enablePersonalShopper: false,
+        enableUiUxAuditor: false,
+        leadCustomFields: [] as { id: string; label: string; type: string; required: boolean; placeholder?: string; options?: string[] }[],
     })
     const [isLoading, setIsLoading] = useState(true)
 
@@ -395,7 +428,16 @@ function ChatbotViewContent() {
                         theme: data.theme || "classic",
                         enableIndustryGreeting: data.enableIndustryGreeting !== undefined ? data.enableIndustryGreeting : false,
                         initialLanguage: data.initialLanguage || "auto",
-                        engagement: data.engagement || { enabled: false, bubble: { messages: [] } }
+                        engagement: data.engagement || { enabled: false, bubble: { messages: [] } },
+                        enableAppointments: data.enableAppointments || false,
+                        appointmentTypes: data.appointmentTypes || ["Consultation", "Support", "Demo"],
+                        appointmentSuccessMessage: data.appointmentSuccessMessage || "Your appointment has been scheduled successfully!",
+                        availableDays: data.availableDays || ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                        enableAutoSpeak: data.enableAutoSpeak || false,
+                        preferredVoice: data.preferredVoice || "",
+                        enablePersonalShopper: data.enablePersonalShopper || false,
+                        enableUiUxAuditor: data.enableUiUxAuditor || false,
+                        leadCustomFields: data.leadCustomFields || [],
                     })
                 }
             } catch (error) {
@@ -629,6 +671,7 @@ function ChatbotViewContent() {
     const [leadName, setLeadName] = useState("")
     const [leadEmail, setLeadEmail] = useState("")
     const [leadPhone, setLeadPhone] = useState("")
+    const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({})
     const [isSubmittingLead, setIsSubmittingLead] = useState(false)
 
     useEffect(() => {
@@ -652,18 +695,74 @@ function ChatbotViewContent() {
                     chatbotId,
                     name: leadName,
                     email: leadEmail,
-                    phone: leadPhone
+                    phone: leadPhone,
+                    customFields: customFieldValues
                 })
             })
 
             if (res.ok) {
-                localStorage.setItem(`lead_${chatbotId}`, JSON.stringify({ name: leadName, email: leadEmail, phone: leadPhone }))
+                localStorage.setItem(`lead_${chatbotId}`, JSON.stringify({ name: leadName, email: leadEmail, phone: leadPhone, customFields: customFieldValues }))
                 setShowLeadForm(false)
             }
         } catch (error) {
             console.error("Error submitting lead:", error)
         } finally {
             setIsSubmittingLead(false)
+        }
+    }
+
+    // Appointment Booking State
+    const [showBooking, setShowBooking] = useState(false)
+    const [bookingData, setBookingData] = useState({
+        type: "",
+        date: "",
+        time: "",
+        notes: ""
+    })
+    const [isSubmittingBooking, setIsSubmittingBooking] = useState(false)
+    const [showAuditSuggestion, setShowAuditSuggestion] = useState(false)
+
+    const handleBookingSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!bookingData.type || !bookingData.date || !bookingData.time) return
+
+        setIsSubmittingBooking(true)
+        try {
+            const leadData = localStorage.getItem(`lead_${chatbotId}`)
+            const leadInfo = leadData ? JSON.parse(leadData) : {}
+
+            const res = await fetch("/api/appointments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chatbotId,
+                    customerName: leadInfo.name || "Guest User",
+                    customerEmail: leadInfo.email || "",
+                    customerPhone: leadInfo.phone || "",
+                    date: bookingData.date,
+                    time: bookingData.time,
+                    type: bookingData.type,
+                    notes: bookingData.notes,
+                    sessionId,
+                    status: 'pending'
+                })
+            })
+
+            if (res.ok) {
+                const assistantsMsg = {
+                    id: 'appointment-success-' + Date.now(),
+                    role: 'assistant',
+                    content: settings.appointmentSuccessMessage,
+                    createdAt: new Date()
+                }
+                setMessages(prev => [...prev, assistantsMsg as any])
+                setShowBooking(false)
+                setBookingData({ type: "", date: "", time: "", notes: "" })
+            }
+        } catch (error) {
+            console.error("Error submitting appointment:", error)
+        } finally {
+            setIsSubmittingBooking(false)
         }
     }
 
@@ -731,6 +830,52 @@ function ChatbotViewContent() {
                                     placeholder={t('phonePlaceholder')}
                                 />
                             </div>
+
+                            {/* Custom Fields */}
+                            {settings.leadCustomFields.map((field) => (
+                                <div key={field.id} className="space-y-2">
+                                    <label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                                        {field.label}{field.required && ' *'}
+                                    </label>
+                                    {field.type === 'textarea' ? (
+                                        <textarea
+                                            id={field.id}
+                                            required={field.required}
+                                            value={customFieldValues[field.id] || ''}
+                                            onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all min-h-[80px]"
+                                            style={{ '--tw-ring-color': settings.brandColor } as any}
+                                            placeholder={field.placeholder || ''}
+                                        />
+                                    ) : field.type === 'select' ? (
+                                        <select
+                                            id={field.id}
+                                            required={field.required}
+                                            value={customFieldValues[field.id] || ''}
+                                            onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+                                            style={{ '--tw-ring-color': settings.brandColor } as any}
+                                        >
+                                            <option value="">{field.placeholder || 'Select...'}</option>
+                                            {(field.options || []).map((opt, i) => (
+                                                <option key={i} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            id={field.id}
+                                            required={field.required}
+                                            type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
+                                            value={customFieldValues[field.id] || ''}
+                                            onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+                                            style={{ '--tw-ring-color': settings.brandColor } as any}
+                                            placeholder={field.placeholder || ''}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+
                             <button
                                 type="submit"
                                 disabled={isSubmittingLead}
@@ -739,6 +884,94 @@ function ChatbotViewContent() {
                             >
                                 {isSubmittingLead ? "Starting..." : "Start Chatting"}
                             </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Appointment Booking Overlay */}
+            {showBooking && (
+                <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="w-full max-w-sm space-y-6 overflow-y-auto max-h-full py-4">
+                        <div className="text-center space-y-2">
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto"
+                                style={{ backgroundColor: settings.brandColor }}
+                            >
+                                <Calendar className="w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800">{t('bookAppointment') || "Book Appointment"}</h2>
+                            <p className="text-sm text-gray-500">{t('bookAppointmentDesc') || "Please select a time that works for you."}</p>
+                        </div>
+
+                        <form onSubmit={handleBookingSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">{t('appointmentType') || "Type"}</label>
+                                <select
+                                    required
+                                    value={bookingData.type}
+                                    onChange={(e) => setBookingData(prev => ({ ...prev, type: e.target.value }))}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                                    style={{ '--tw-ring-color': settings.brandColor } as any}
+                                >
+                                    <option value="">{t('selectType') || "Select type..."}</option>
+                                    {settings.appointmentTypes.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">{t('date') || "Date"}</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={bookingData.date}
+                                        onChange={(e) => setBookingData(prev => ({ ...prev, date: e.target.value }))}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">{t('time') || "Time"}</label>
+                                    <input
+                                        type="time"
+                                        required
+                                        value={bookingData.time}
+                                        onChange={(e) => setBookingData(prev => ({ ...prev, time: e.target.value }))}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">{t('notes') || "Notes (Optional)"}</label>
+                                <textarea
+                                    value={bookingData.notes}
+                                    onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none"
+                                    rows={2}
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBooking(false)}
+                                    className="flex-1 py-3 rounded-lg bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 transition-colors"
+                                >
+                                    {t('cancel') || "Cancel"}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingBooking}
+                                    className="flex-1 py-3 rounded-lg text-white font-medium shadow-md hover:opacity-90 disabled:opacity-50"
+                                    style={{ backgroundColor: settings.brandColor }}
+                                >
+                                    {isSubmittingBooking ? "..." : (t('confirmBooking') || "Book Now")}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -795,6 +1028,39 @@ function ChatbotViewContent() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Proactive Audit Suggestion */}
+                    {showAuditSuggestion && (
+                        <div className="mx-4 mb-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg shadow-sm animate-in slide-in-from-bottom duration-300">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
+                                    <Activity className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-indigo-900">
+                                        {t('auditSuggestion') || "Bu sayfanın kullanıcı deneyimini analiz etmemi ister misiniz?"}
+                                    </p>
+                                    <div className="mt-2 flex gap-2">
+                                        <button
+                                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md transition-colors"
+                                            onClick={() => {
+                                                window.open(`/console/ui-ux-auditor?url=${encodeURIComponent(pageContext?.url || "")}`, '_blank');
+                                                setShowAuditSuggestion(false);
+                                            }}
+                                        >
+                                            {t('auditNow') || "Şimdi Denetle"}
+                                        </button>
+                                        <button
+                                            className="px-3 py-1.5 text-indigo-600 hover:bg-indigo-100 text-xs font-medium rounded-md transition-colors"
+                                            onClick={() => setShowAuditSuggestion(false)}
+                                        >
+                                            {t('cancel')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth z-10 relative">
@@ -907,9 +1173,20 @@ function ChatbotViewContent() {
                                     className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-50 text-red-500 animate-pulse' : 'hover:bg-gray-50 text-gray-400'}`}
                                     title="Voice Input"
                                 >
-                                    <Mic className="w-4 h-4" />
+                                    <Mic className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`} />
                                 </button>
                             )}
+
+                            {settings.enableAppointments && (
+                                <button
+                                    onClick={() => setShowBooking(true)}
+                                    className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                                    title={t('bookAppointment') || "Book Appointment"}
+                                >
+                                    <Calendar className="w-5 h-5" />
+                                </button>
+                            )}
+
                             <button
                                 type="submit"
                                 disabled={!localInput.trim()}
@@ -919,7 +1196,7 @@ function ChatbotViewContent() {
                             </button>
                         </form>
                         <div className="text-center mt-2">
-                            <p className="text-[10px] text-gray-400">Powered by Userex AI</p>
+                            <p className="text-[10px] text-gray-400">Powered by exAi</p>
                         </div>
                     </div>
                 </div>
@@ -1154,7 +1431,7 @@ function ChatbotViewContent() {
                             </form>
                             <div className="text-center mt-2">
                                 <p className="text-[10px] text-gray-400">
-                                    Powered by <span className="font-semibold">Userex AI</span>
+                                    Powered by <span className="font-semibold">exAi</span>
                                 </p>
                             </div>
                         </div>

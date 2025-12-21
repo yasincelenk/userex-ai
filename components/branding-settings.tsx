@@ -134,7 +134,10 @@ export function BrandingSettings({ targetUserId }: BrandingSettingsProps) {
 
         setIsUploading(true)
         try {
-            const storageRef = ref(storage, `logos/${userId}/${file.name}`)
+            // Upload to the current user's folder to ensure we have permission (storage rules usually allow write to own folder)
+            // We verify user exists with the check above (!user return)
+            const timestamp = Date.now()
+            const storageRef = ref(storage, `logos/${user.uid}/${timestamp}-${file.name}`)
             await uploadBytes(storageRef, file)
             const downloadURL = await getDownloadURL(storageRef)
 

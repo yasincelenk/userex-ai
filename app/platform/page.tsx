@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Lock, Bot, Settings2, Sparkles, Building2, ExternalLink, Activity, ShoppingBag, Mic, Users, ScanLine } from "lucide-react"
+import { ArrowRight, Lock, Bot, Settings2, Sparkles, Building2, ExternalLink, Activity, ShoppingBag, Mic, Users, ScanLine, Inbox } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { useLanguage } from "@/context/LanguageContext"
@@ -104,163 +104,165 @@ export default function PlatformPage() {
             )}
 
             {/* ADD-ONS & APPS SECTION */}
-            <div>
-                <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-yellow-500" />
-                    {t('standaloneApps') || "Standalone Applications"}
-                </h3>
+            {(visibleCopywriter || visibleLeadFinder || visibleUiUxAuditor) && (
+                <div>
+                    <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-yellow-500" />
+                        {t('standaloneApps') || "Standalone Applications"}
+                    </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
 
-                    {/* AI Copywriter */}
-                    {visibleCopywriter && ((enableCopywriter || role === 'admin' || role === 'SUPER_ADMIN') ? (
-                        <Card
-                            className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-purple-100/50"
-                            onClick={() => router.push("/console/copywriter")}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-purple-100 text-purple-600">
-                                        <Sparkles className="w-6 h-6" />
+                        {/* AI Copywriter */}
+                        {visibleCopywriter && ((enableCopywriter || role === 'admin' || role === 'SUPER_ADMIN') ? (
+                            <Card
+                                className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-purple-100/50"
+                                onClick={() => router.push("/console/copywriter")}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-purple-100 text-purple-600">
+                                            <Sparkles className="w-6 h-6" />
+                                        </div>
+                                        <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">{t('active')}</Badge>
                                     </div>
-                                    <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-200">{t('active')}</Badge>
-                                </div>
-                                <CardTitle className="text-xl">{t('aiCopywriter') || "AI Copywriter"}</CardTitle>
-                                <CardDescription>
-                                    {t('aiCopywriterDesc') || "Generate SEO-optimized product descriptions and blog posts automatically."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-between group-hover:bg-purple-50 group-hover:text-purple-700">
-                                    {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ) : (
-                        <Card
-                            className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
-                            onClick={() => handleLockedProductClick('AI Copywriter')}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-                                        <Sparkles className="w-6 h-6" />
+                                    <CardTitle className="text-xl">{t('aiCopywriter') || "AI Copywriter"}</CardTitle>
+                                    <CardDescription>
+                                        {t('aiCopywriterDesc') || "Generate SEO-optimized product descriptions and blog posts automatically."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-between group-hover:bg-purple-50 group-hover:text-purple-700">
+                                        {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ) : (
+                            <Card
+                                className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
+                                onClick={() => handleLockedProductClick('AI Copywriter')}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                                            <Sparkles className="w-6 h-6" />
+                                        </div>
+                                        <Lock className="w-4 h-4 text-gray-400 group-hover:text-purple-500" />
                                     </div>
-                                    <Lock className="w-4 h-4 text-gray-400 group-hover:text-purple-500" />
-                                </div>
-                                <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('aiCopywriter') || "AI Copywriter"}</CardTitle>
-                                <CardDescription>
-                                    {t('aiCopywriterDesc') || "Generate SEO-optimized product descriptions and blog posts automatically."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-purple-600">
-                                    <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                                    <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('aiCopywriter') || "AI Copywriter"}</CardTitle>
+                                    <CardDescription>
+                                        {t('aiCopywriterDesc') || "Generate SEO-optimized product descriptions and blog posts automatically."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-purple-600">
+                                        <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
 
-                    {/* Lead Finder */}
-                    {visibleLeadFinder && ((enableLeadFinder || role === 'admin' || role === 'SUPER_ADMIN') ? (
-                        <Card
-                            className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-blue-100/50"
-                            onClick={() => router.push("/console/lead-finder")}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-blue-100 text-blue-600">
-                                        <Users className="w-6 h-6" />
+                        {/* Lead Finder */}
+                        {visibleLeadFinder && ((enableLeadFinder || role === 'admin' || role === 'SUPER_ADMIN') ? (
+                            <Card
+                                className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-blue-100/50"
+                                onClick={() => router.push("/console/lead-finder")}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-blue-100 text-blue-600">
+                                            <Users className="w-6 h-6" />
+                                        </div>
+                                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">{t('active')}</Badge>
                                     </div>
-                                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">{t('active')}</Badge>
-                                </div>
-                                <CardTitle className="text-xl">{t('aiLeadFinder') || "AI Lead Finder"}</CardTitle>
-                                <CardDescription>
-                                    {t('aiLeadFinderDesc') || "Scrape and enrich B2B leads from Google Maps and LinkedIn automatically."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-between group-hover:bg-blue-50 group-hover:text-blue-700">
-                                    {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ) : (
-                        <Card
-                            className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
-                            onClick={() => handleLockedProductClick('AI Lead Finder')}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                                        <Users className="w-6 h-6" />
+                                    <CardTitle className="text-xl">{t('aiLeadFinder') || "AI Lead Finder"}</CardTitle>
+                                    <CardDescription>
+                                        {t('aiLeadFinderDesc') || "Scrape and enrich B2B leads from Google Maps and LinkedIn automatically."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-between group-hover:bg-blue-50 group-hover:text-blue-700">
+                                        {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ) : (
+                            <Card
+                                className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
+                                onClick={() => handleLockedProductClick('AI Lead Finder')}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                                            <Users className="w-6 h-6" />
+                                        </div>
+                                        <Lock className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
                                     </div>
-                                    <Lock className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                                </div>
-                                <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('aiLeadFinder') || "AI Lead Finder"}</CardTitle>
-                                <CardDescription>
-                                    {t('aiLeadFinderDesc') || "Scrape and enrich B2B leads from Google Maps and LinkedIn automatically."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-blue-600">
-                                    <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                                    <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('aiLeadFinder') || "AI Lead Finder"}</CardTitle>
+                                    <CardDescription>
+                                        {t('aiLeadFinderDesc') || "Scrape and enrich B2B leads from Google Maps and LinkedIn automatically."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-blue-600">
+                                        <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
 
-                    {/* UI/UX Auditor */}
-                    {visibleUiUxAuditor && ((enableUiUxAuditor || role === 'admin' || role === 'SUPER_ADMIN') ? (
-                        <Card
-                            className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-orange-100/50"
-                            onClick={() => router.push("/console/ui-ux-auditor")}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
-                                        <ScanLine className="w-6 h-6" />
+                        {/* UI/UX Auditor */}
+                        {visibleUiUxAuditor && ((enableUiUxAuditor || role === 'admin' || role === 'SUPER_ADMIN') ? (
+                            <Card
+                                className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-orange-100/50"
+                                onClick={() => router.push("/console/ui-ux-auditor")}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
+                                            <ScanLine className="w-6 h-6" />
+                                        </div>
+                                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200">{t('active')}</Badge>
                                     </div>
-                                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200">{t('active')}</Badge>
-                                </div>
-                                <CardTitle className="text-xl">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
-                                <CardDescription>
-                                    {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-between group-hover:bg-orange-50 group-hover:text-orange-700">
-                                    {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ) : (
-                        <Card
-                            className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
-                            onClick={() => handleLockedProductClick('UI/UX Auditor')}
-                        >
-                            <CardHeader>
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
-                                        <ScanLine className="w-6 h-6" />
+                                    <CardTitle className="text-xl">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
+                                    <CardDescription>
+                                        {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-between group-hover:bg-orange-50 group-hover:text-orange-700">
+                                        {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ) : (
+                            <Card
+                                className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
+                                onClick={() => handleLockedProductClick('UI/UX Auditor')}
+                            >
+                                <CardHeader>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
+                                            <ScanLine className="w-6 h-6" />
+                                        </div>
+                                        <Lock className="w-4 h-4 text-gray-400 group-hover:text-orange-500" />
                                     </div>
-                                    <Lock className="w-4 h-4 text-gray-400 group-hover:text-orange-500" />
-                                </div>
-                                <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
-                                <CardDescription>
-                                    {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardFooter>
-                                <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-orange-600">
-                                    <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                                    <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
+                                    <CardDescription>
+                                        {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-orange-600">
+                                        <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ADMINISTRATION SECTION */}
             {(role === 'admin' || role === 'SUPER_ADMIN') && (
@@ -281,7 +283,7 @@ export default function PlatformPage() {
                                         <Building2 className="w-6 h-6" />
                                     </div>
                                     <Badge variant="outline">
-                                        Super Admin
+                                        {t('superAdmin') || "Süper Yönetici"}
                                     </Badge>
                                 </div>
                                 <CardTitle className="text-xl">{t('tenantManagement') || "Tenant Management"}</CardTitle>
@@ -292,6 +294,31 @@ export default function PlatformPage() {
                             <CardFooter>
                                 <Button variant="ghost" className="w-full justify-between hover:bg-red-100 hover:text-red-700">
                                     {t('accessPanel') || "Access Panel"} <ExternalLink className="w-4 h-4 ml-2" />
+                                </Button>
+                            </CardFooter>
+                        </Card>
+
+                        {/* Module Requests */}
+                        <Card className="hover:border-green-500/40 cursor-pointer transition-all"
+                            onClick={() => router.push("/admin/requests")}
+                        >
+                            <CardHeader>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-3 rounded-xl bg-green-100 text-green-600">
+                                        <Inbox className="w-6 h-6" />
+                                    </div>
+                                    <Badge variant="outline" className="border-green-200 text-green-600 bg-green-50">
+                                        {t('actionRequired') || "İşlem Gerekli"}
+                                    </Badge>
+                                </div>
+                                <CardTitle className="text-xl">{t('moduleRequests') || "Modül Erişim Talepleri"}</CardTitle>
+                                <CardDescription>
+                                    {t('moduleRequestsDesc') || "Premium modüller için kullanıcı taleplerini yönetin."}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardFooter>
+                                <Button variant="ghost" className="w-full justify-between hover:bg-green-100 hover:text-green-700">
+                                    {t('reviewRequests') || "Review Requests"} <ExternalLink className="w-4 h-4 ml-2" />
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -307,7 +334,7 @@ export default function PlatformPage() {
                                             <Activity className="w-6 h-6" />
                                         </div>
                                         <Badge variant="outline" className="border-indigo-200 text-indigo-600 bg-indigo-50">
-                                            Super Admin
+                                            {t('superAdmin') || "Süper Yönetici"}
                                         </Badge>
                                     </div>
                                     <CardTitle className="text-xl">{t('resourceView') || "Resource View"}</CardTitle>

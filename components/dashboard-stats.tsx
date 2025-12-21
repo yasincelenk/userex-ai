@@ -10,10 +10,16 @@ import { useLanguage } from "@/context/LanguageContext"
 import { AnalyticsSummary } from "@/lib/analytics"
 import { tr, enUS } from "date-fns/locale"
 
-export function DashboardStats() {
+interface DashboardStatsProps {
+    targetUserId?: string
+}
+
+export function DashboardStats({ targetUserId }: DashboardStatsProps) {
     const { user } = useAuth()
     const { t, language } = useLanguage()
 
+    // Use targetUserId if provided, otherwise use current user's uid
+    const effectiveUserId = targetUserId || user?.uid
     const locale = language === 'tr' ? tr : enUS
 
     const [stats, setStats] = useState({
@@ -26,12 +32,12 @@ export function DashboardStats() {
 
     useEffect(() => {
         const fetchStats = async () => {
-            if (!user?.uid) return
+            if (!effectiveUserId) return
 
             try {
                 // Fetch from API to get correct aggregations and ISO date handling
                 const queryParams = new URLSearchParams({
-                    chatbotId: user.uid,
+                    chatbotId: effectiveUserId,
                     startDate: subDays(new Date(), 30).toISOString(), // Last 30 days default
                     endDate: new Date().toISOString()
                 })
@@ -67,7 +73,7 @@ export function DashboardStats() {
         }
 
         fetchStats()
-    }, [user?.uid])
+    }, [effectiveUserId])
 
     if (isLoading) {
         return (

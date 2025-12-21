@@ -13,6 +13,8 @@ import { ConditionalAuthProvider } from "@/components/conditional-auth-provider"
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CookieConsent } from "@/components/cookie-consent";
 
+import { Toaster } from "@/components/ui/toaster"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,6 +27,7 @@ export default function RootLayout({
           <ConditionalAuthProvider>
             <CookieConsent />
             {children}
+            <Toaster />
           </ConditionalAuthProvider>
         </LanguageProvider>
       </body>

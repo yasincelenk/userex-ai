@@ -102,6 +102,18 @@ export async function POST(request: Request) {
             const pImage = item['g:image_link'] || item.image_link || item.listing_images?.image?.[0] || item.image || "";
             const pDesc = item['g:description'] || item.description || "";
 
+            // Stock/Quantity parsing - Support multiple feed formats
+            // Google Merchant: g:quantity, Shopify: inventory_quantity, Generic: stock, quantity
+            const rawStock = item['g:quantity'] || item['g:inventory'] || item.quantity || item.stock || item.inventory_quantity;
+            const pStock = rawStock !== undefined ? parseInt(String(rawStock), 10) : null;
+            const pInStock = pStock !== null ? pStock > 0 : (
+                item['g:availability'] === 'in stock' ||
+                item['g:availability'] === 'in_stock' ||
+                item.availability === 'in stock' ||
+                item.availability === 'in_stock' ||
+                true // Default to in stock if no info
+            );
+
             // SKU is critical. If missing, we generate one, but that breaks sync for updates.
             // Ideally, we skip items without ID in strict mode, but here we fallback to name hash or random.
             let pSku = item['g:id'] || item.id || item.sku;
@@ -124,8 +136,8 @@ export async function POST(request: Request) {
                 description: String(pDesc).slice(0, 1000),
                 imageUrl: pImage,
                 sku: String(pSku),
-                stock: 10, // Default to in-stock if feed doesn't specify
-                inStock: true,
+                stockQuantity: pStock, // NEW: Actual stock count from feed (null if unknown)
+                inStock: pInStock,      // Boolean: is product available
                 source: 'xml-feed',
                 feedUrl: feedUrl,
                 updatedAt: new Date().toISOString()

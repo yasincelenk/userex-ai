@@ -58,6 +58,12 @@ export async function GET(req: Request) {
                 sideSpacing: data.sideSpacing !== undefined ? data.sideSpacing : 20,
                 launcherShadow: data.launcherShadow || "medium",
                 launcherAnimation: data.launcherAnimation || "none",
+                // Full Image / Lottie Mode
+                launcherType: data.launcherType || "standard",
+                launcherImageMode: data.launcherImageMode || "image",
+                launcherFullImageUrl: data.launcherFullImageUrl || "",
+                launcherLottieUrl: data.launcherLottieUrl || "",
+                launcherHoverEffect: data.launcherHoverEffect || "scale",
                 initialLanguage: data.initialLanguage || "auto",
                 // Triggers
                 autoOpenDelay: data.autoOpenDelay || 0,
