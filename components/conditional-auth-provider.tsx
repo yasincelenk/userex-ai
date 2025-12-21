@@ -11,7 +11,7 @@ const AuthProvider = dynamic(
 )
 
 // Public routes that should NOT use AuthProvider to prevent session conflicts
-const PUBLIC_WIDGET_ROUTES = ['/chatbot-view', '/widget-test', '/test-widget']
+const PUBLIC_WIDGET_ROUTES = ['/chatbot-view', '/widget-test']
 
 export function ConditionalAuthProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
