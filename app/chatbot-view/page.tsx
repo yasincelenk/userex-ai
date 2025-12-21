@@ -1309,15 +1309,19 @@ function ChatbotViewContent() {
 
                                 {messages.map((m: any) => (
                                     <div key={m.id} className={`flex gap-4 max-w-3xl mx-auto ${m.role === 'user' ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                                        <div
-                                            className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs mt-1 shadow-sm ${m.role === 'user' ? 'bg-gray-100 text-gray-600' : 'text-white'}`}
-                                            style={m.role === 'assistant' ? { backgroundColor: settings.brandColor } : {}}
-                                        >
-                                            {m.role === 'user' ? 'You' : 'AI'}
-                                        </div>
+                                        {m.role !== 'user' && (
+                                            <div
+                                                className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs mt-1 shadow-sm text-white"
+                                                style={{ backgroundColor: settings.brandColor }}
+                                            >
+                                                AI
+                                            </div>
+                                        )}
                                         <div className={`space-y-1 max-w-[85%] ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                                             <div className="flex items-center gap-2 justify-between px-1">
-                                                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{m.role === 'user' ? 'You' : settings.companyName}</p>
+                                                {m.role !== 'user' && (
+                                                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{settings.companyName}</p>
+                                                )}
                                                 {m.role === 'assistant' && (
                                                     <button
                                                         onClick={() => handleSpeak(m.content, m.id)}
