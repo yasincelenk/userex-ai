@@ -42,6 +42,8 @@ export function ResourceDashboard() {
         { name: 'PDF-Parse', description: 'PDF doküman içeriği okuma ve işleme', status: 'connected', icon: '📄', isFree: true },
         { name: 'Mammoth (DOCX)', description: 'Word dokümanlarından metin çıkarma', status: 'connected', icon: '📝', isFree: true },
         { name: 'Lottie Animations', description: 'Widget launcher animasyonları', status: 'connected', icon: '🎬', isFree: true },
+        { name: 'Vercel (Hosting)', description: 'Frontend deployment, serverless functions ve Edge Network', status: 'connected', icon: '▲', dashboardUrl: 'https://vercel.com/dashboard', isFree: true },
+        { name: 'GitHub (Repo)', description: 'Kaynak kod yönetimi, versiyon kontrolü ve CI/CD pipeline', status: 'connected', icon: '🐙', dashboardUrl: 'https://github.com/', isFree: true },
     ];
 
     useEffect(() => {
