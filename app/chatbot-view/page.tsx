@@ -36,6 +36,16 @@ function ChatbotViewContent() {
         }
     }, [searchParams, setLanguage])
 
+    // Sync language with settings
+    useEffect(() => {
+        if (settings.initialLanguage && settings.initialLanguage !== 'auto') {
+            const langParam = searchParams?.get("lang")
+            if (!langParam) {
+                setLanguage(settings.initialLanguage as any)
+            }
+        }
+    }, [settings.initialLanguage, searchParams, setLanguage])
+
     const [initialMessages, setInitialMessages] = useState<any[]>([])
 
     // Context State
@@ -787,7 +797,7 @@ function ChatbotViewContent() {
                                     <MessageSquare className="w-8 h-8 text-white" />
                                 )}
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">Welcome</h2>
+                            <h2 className="text-2xl font-bold text-gray-800">{t('welcome')}</h2>
                             <p className="text-sm text-gray-500">Please provide your details to start chatting.</p>
                         </div>
 
@@ -1267,7 +1277,7 @@ function ChatbotViewContent() {
                                     )}
                                 </div>
                                 <div className="space-y-2 max-w-xs">
-                                    <h2 className="text-xl font-bold text-gray-800">Welcome to {settings.companyName}</h2>
+                                    <h2 className="text-xl font-bold text-gray-800">{t('welcomeTo')} {settings.companyName}</h2>
                                     <p className="text-sm text-gray-500 leading-relaxed">
                                         {settings.welcomeMessage}
                                     </p>

@@ -28,6 +28,8 @@ export const translations = {
         integration: "Integration",
 
         // Platform Dashboard
+        welcome: "Welcome",
+        welcomeTo: "Welcome to",
         platformTitle: "AI Hub",
         platformSubtitle: "Manage your active products and explore new AI capabilities.",
         aiSalesChatbot: "AI Sales Chatbot",
@@ -945,6 +947,8 @@ export const translations = {
 
     },
     tr: {
+        welcome: "Hoş Geldiniz",
+        welcomeTo: "Hoş Geldiniz:",
         dashboard: "Panel",
         chats: "Sohbetler",
         tenants: "Müşteriler",
