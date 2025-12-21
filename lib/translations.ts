@@ -1472,7 +1472,7 @@ export const translations = {
         emailSupportDesc: "Genel sorular ve destek için.",
         salesTitle: "Satış",
         salesDesc: "Kurumsal planlar ve özel çözümler için.",
-        welcome: "Hoşgeldiniz",
+
         error: "Hata",
         success: "Başarılı",
         retry: "Yeniden Dene",
