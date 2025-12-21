@@ -185,10 +185,11 @@ function ChatbotViewContent() {
 
     // Generate Session ID on mount and load history with real-time listener
     useEffect(() => {
-        let sid = localStorage.getItem("chat_session_id")
+        const storageKey = `chat_session_id_${chatbotId}`
+        let sid = localStorage.getItem(storageKey)
         if (!sid) {
             sid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-            localStorage.setItem("chat_session_id", sid)
+            localStorage.setItem(storageKey, sid)
         }
         setSessionId(sid)
 
@@ -213,7 +214,7 @@ function ChatbotViewContent() {
         })
 
         return () => unsubscribe()
-    }, [])
+    }, [chatbotId])
 
     // Local Input State to avoid useChat issues
     const [localInput, setLocalInput] = useState('')
@@ -370,7 +371,7 @@ function ChatbotViewContent() {
     const confirmClear = () => {
         setMessages([])
         const newSid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-        localStorage.setItem("chat_session_id", newSid)
+        localStorage.setItem(`chat_session_id_${chatbotId}`, newSid)
         setSessionId(newSid)
         setIsConfirmingClear(false)
         setHasRequestedContactInfo(false)
