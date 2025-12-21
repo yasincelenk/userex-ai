@@ -1195,6 +1195,8 @@
           autoOpenDelay: data.autoOpenDelay || 0,
           openOnExitIntent: data.openOnExitIntent || false,
           openOnScroll: data.openOnScroll || 0,
+          // Language
+          initialLanguage: data.initialLanguage || 'auto',
           // Availability
           enableBusinessHours: data.enableBusinessHours || false,
           timezone: data.timezone || 'UTC',
