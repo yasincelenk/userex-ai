@@ -36,15 +36,7 @@ function ChatbotViewContent() {
         }
     }, [searchParams, setLanguage])
 
-    // Sync language with settings
-    useEffect(() => {
-        if (settings.initialLanguage && settings.initialLanguage !== 'auto') {
-            const langParam = searchParams?.get("lang")
-            if (!langParam) {
-                setLanguage(settings.initialLanguage as any)
-            }
-        }
-    }, [settings.initialLanguage, searchParams, setLanguage])
+
 
     const [initialMessages, setInitialMessages] = useState<any[]>([])
 
@@ -458,6 +450,16 @@ function ChatbotViewContent() {
         }
         loadSettings()
     }, [chatbotId])
+
+    // Sync language with settings
+    useEffect(() => {
+        if (settings.initialLanguage && settings.initialLanguage !== 'auto') {
+            const langParam = searchParams?.get("lang")
+            if (!langParam) {
+                setLanguage(settings.initialLanguage as any)
+            }
+        }
+    }, [settings.initialLanguage, searchParams, setLanguage])
 
     // Proactive Engagement Logic (Context-Aware & Sector-Specific)
     useEffect(() => {
