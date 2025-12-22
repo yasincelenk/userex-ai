@@ -15,7 +15,10 @@ import {
     Shield,
     Globe,
     BarChart3,
-    ShoppingBag
+    ShoppingBag,
+    Mail,
+    Users,
+    TrendingUp
 } from "lucide-react"
 import { ChatbotLoader } from "@/components/chatbot-loader"
 import { PublicHeader } from "@/components/public-header"
@@ -89,16 +92,15 @@ export default function LandingPage() {
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-2xl overflow-hidden">
 
-                        {/* Shopping Assistant - Featured Large Module */}
+                        {/* 1. Shopping Assistant (Large) */}
                         <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col justify-center items-center text-center md:col-span-2 lg:col-span-2 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
-
                             <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 relative z-10">
                                 <ShoppingBag className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-semibold mb-4 text-white relative z-10">{t('landingPersonalShopper') || "AI Personal Shopper"}</h3>
+                            <h3 className="text-2xl font-semibold mb-4 text-white relative z-10">{t('landingPersonalShopper')}</h3>
                             <p className="text-zinc-400 text-base leading-relaxed max-w-md relative z-10">
-                                {t('landingPersonalShopperDesc') || "Boost sales with an intelligent assistant that recommends products, answers queries, and guides customers to checkout."}
+                                {t('landingPersonalShopperDesc')}
                             </p>
                             <Link href="/products/personal-shopper" className="mt-8 relative z-10">
                                 <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-black rounded-full px-6">
@@ -107,76 +109,76 @@ export default function LandingPage() {
                             </Link>
                         </div>
 
-                        {/* Appointments */}
+                        {/* 2. General Chat / AI Support */}
                         <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <Calendar className="w-6 h-6 text-white" />
+                                <Bot className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModAppointments')}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModAppointmentsDesc')}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Genel Sohbet' : 'General Chat'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'Müşteri sorularını yanıtlayan standart asistan.' : 'Standard assistant answering customer queries.'}</p>
                         </div>
 
-                        {/* Voice */}
-                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <Mic className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModVoice')}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModVoiceDesc')}</p>
-                        </div>
-
-                        {/* Knowledge Base */}
+                        {/* 3. Knowledge Base */}
                         <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                                 <Database className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModKnowledge')}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModKnowledgeDesc')}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Bilgi & Eğitim' : 'Knowledge & Education'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'PDF ve web sitenizle yapay zekayı eğitin.' : 'Train AI with your PDFs and website.'}</p>
                         </div>
 
-                        {/* Omnichannel */}
+                        {/* 4. Customer Data Collection (New) */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <Users className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Müşteri Bilgi Toplama' : 'Lead Collection'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'Sohbet sırasında Ad, Soyad, Telefon toplar.' : 'Collects Name, Phone during chat.'}</p>
+                        </div>
+
+                        {/* 5. Appointments */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <Calendar className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Randevu & Takvim' : 'Appointments'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'Sohbet içinden randevu almasını sağlar.' : 'Allows booking appointments within chat.'}</p>
+                        </div>
+
+                        {/* 6. Voice Assistant */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <Mic className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Sesli Asistan' : 'Voice Assistant'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'Sesli konuşma ve dinleme özelliği.' : 'Voice speaking and listening capabilities.'}</p>
+                        </div>
+
+                        {/* 7. Social Media Sharing */}
                         <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                                 <Share2 className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModOmni')}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModOmniDesc')}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Sosyal Medya' : 'Social Sharing'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'Ürün kartlarını paylaşmasını sağlar.' : 'Share product cards easily.'}</p>
                         </div>
 
-                        {/* Coming Soon: AI Ad Optimizer */}
-                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
-                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
-                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
-                            </div>
+                        {/* 8. Email Marketing (New) */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <BarChart3 className="w-6 h-6 text-zinc-400" />
+                                <Mail className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'AI Reklam Optimize' : 'AI Ad Optimizer'}</h3>
-                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Reklam bütçenizi en verimli şekilde kullanın.' : 'Maximize your ad spend efficiency.'}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'E-posta Pazarlama' : 'Email Marketing'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'E-postaları toplar ve senkronize eder.' : 'Collects emails and syncs marketing.'}</p>
                         </div>
 
-                        {/* Coming Soon: Social Selling */}
-                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
-                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
-                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
-                            </div>
+                        {/* 9. Sales Optimization (New) */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <MessageSquare className="w-6 h-6 text-zinc-400" />
+                                <TrendingUp className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Sosyal Satış Botu' : 'Social Selling Bot'}</h3>
-                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Instagram ve DM üzerinden otomatik satış.' : 'Automated sales via Instagram & DM.'}</p>
-                        </div>
-
-                        {/* Coming Soon: Influencer Finder */}
-                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
-                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
-                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <Globe className="w-6 h-6 text-zinc-400" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Influencer Eşleşme' : 'Influencer Match'}</h3>
-                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Markanız için en doğru yüzü bulun.' : 'Find the perfect face for your brand.'}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Satış Optimizasyonu' : 'Sales Optimization'}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'İndirim kodları, stok uyarıları, sepet kurtarma.' : 'Discount codes, stock alerts, cart recovery.'}</p>
                         </div>
                     </div>
                 </div>
