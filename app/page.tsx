@@ -14,13 +14,15 @@ import {
     Calendar,
     Shield,
     Globe,
-    BarChart3
+    BarChart3,
+    ShoppingBag
 } from "lucide-react"
 import { ChatbotLoader } from "@/components/chatbot-loader"
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
 import { useLanguage } from "@/context/LanguageContext"
 import { useAuth } from "@/context/AuthContext"
+import { HeroBackground } from "@/components/landing/hero-background"
 
 export default function LandingPage() {
     const { t, language } = useLanguage()
@@ -32,8 +34,7 @@ export default function LandingPage() {
 
             {/* Hero Section - Minimalist & Premium */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden border-b border-white/5">
-                {/* Subtle Background - No heavy colors */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/40 via-black to-black pointer-events-none" />
+                <HeroBackground />
 
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="max-w-4xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -74,19 +75,38 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Core Value Proposition - Focused on AI Assistant */}
+            {/* Core Value Proposition - Focused on AI Assistant & Shopping */}
             <section className="py-32 relative">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-24 space-y-4">
                         <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-                            {t('landingAiSupport') || "Intelligent AI Assistant"}
+                            {t('landingAiSupport') || "Intelligent AI Modules"}
                         </h2>
                         <p className="text-zinc-400 text-lg max-w-2xl mx-auto font-light">
-                            {t('landingAiSupportDesc') || "Transform your customer experience with our advanced AI chatbot."}
+                            {t('landingAiSupportDesc') || "Powerful modules designed to transform your customer experience."}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 border border-white/10 rounded-2xl overflow-hidden">
+
+                        {/* Shopping Assistant - Featured Large Module */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col justify-center items-center text-center md:col-span-2 lg:col-span-2 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2" />
+
+                            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 relative z-10">
+                                <ShoppingBag className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-semibold mb-4 text-white relative z-10">{t('landingPersonalShopper') || "AI Personal Shopper"}</h3>
+                            <p className="text-zinc-400 text-base leading-relaxed max-w-md relative z-10">
+                                {t('landingPersonalShopperDesc') || "Boost sales with an intelligent assistant that recommends products, answers queries, and guides customers to checkout."}
+                            </p>
+                            <Link href="/products/personal-shopper" className="mt-8 relative z-10">
+                                <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-black rounded-full px-6">
+                                    {language === 'tr' ? 'Keşfet' : 'Explore'} <ArrowRight className="ml-2 w-4 h-4" />
+                                </Button>
+                            </Link>
+                        </div>
+
                         {/* Appointments */}
                         <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
