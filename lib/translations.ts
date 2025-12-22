@@ -382,18 +382,18 @@ export const translations = {
         landingAllRights: "All rights reserved.",
 
         // Login Page Hero & Features
-        loginHeroTitle: "Transform Your Business with AI",
+        loginHeroTitle: "Transform Your Business with Vion",
         loginHeroSubtitle: "One platform, four powerful assistants working together.",
         featureCustSupportTitle: "AI Customer Support",
         featureCustSupportDesc: "24/7 intelligent support that resolves 80% of requests instantly.",
         featureShopperTitle: "Personal Shopper",
         featureShopperDesc: "Smart product recommendations that boost conversion.",
-        featureCopywriterTitle: "AI Copywriter",
-        featureCopywriterDesc: "Generate high-converting content in seconds.",
-        featureLeadFinderTitle: "Lead Finder",
-        featureLeadFinderDesc: "Automated research to find your ideal customers.",
-        featureAuditorTitle: "UI/UX Auditor",
-        featureAuditorDesc: "Analyze and optimize your site's comprehensive usability.",
+        featureSalesOptTitle: "Sales Optimization",
+        featureSalesOptDesc: "Discount codes, stock alerts, and cart recovery.",
+        featureCompetitorTitle: "Competitive Analysis",
+        featureCompetitorDesc: "Real-time price monitoring and comparison.",
+        featureTrendTitle: "Trend Recommendation",
+        featureTrendDesc: "Suggests popular products based on market trends.",
 
         // Pricing Page
         pricingComingSoon: "Coming Soon",
@@ -1696,20 +1696,18 @@ export const translations = {
         returnToList: "Müşteri listesine dön",
 
         // Login Page Hero & Features
-        loginHeroTitle: "İşinizi AI ile Dönüştürün",
+        loginHeroTitle: "İşletmenizi Vion ile Dönüştürün",
         loginHeroSubtitle: "Tek platform, birlikte çalışan dört güçlü asistan.",
         featureCustSupportTitle: "AI Müşteri Desteği",
-        featureCustSupportDesc: "Taleplerin %80'ini o an çözen 7/24 akıllı destek.",
+        featureCustSupportDesc: "Taleplerin %80'ini anında çözen 7/24 akıllı destek.",
         featureShopperTitle: "Kişisel Alışveriş Asistanı",
         featureShopperDesc: "Dönüşümü artıran akıllı ürün önerileri.",
-        featureCopywriterTitle: "AI Metin Yazarı",
-        featureCopywriterDesc: "Saniyeler içinde yüksek dönüşümlü içerik üretin.",
-        featureLeadFinderTitle: "Müşteri Bulucu",
-        featureLeadFinderDesc: "İdeal müşterilerinizi bulmak için otomatik araştırma.",
-        // Widget Settings
-
-
-        featureAuditorDesc: "Sitenizin kapsamlı kullanılabilirliğini analiz edin ve optimize edin.",
+        featureSalesOptTitle: "Satış Optimizasyonu",
+        featureSalesOptDesc: "İndirim kodları, stok uyarıları ve sepet kurtarma.",
+        featureCompetitorTitle: "Rekabet Analizi",
+        featureCompetitorDesc: "Gerçek zamanlı fiyat takibi ve karşılaştırma.",
+        featureTrendTitle: "Trend Önerileri",
+        featureTrendDesc: "Pazar trendlerine göre popüler ürün önerileri.",
 
         // Signup
         signupTitle: "Erişim Başvurusu",

@@ -10,7 +10,7 @@ import { auth, db } from "@/lib/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan, ArrowLeft } from "lucide-react"
+import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan, ArrowLeft, TrendingUp, ScanEye } from "lucide-react"
 import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -74,13 +74,9 @@ export default function LoginForm() {
         <div className="absolute inset-0 bg-black" />
         <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
           <div className="flex items-center text-lg font-medium">
-            <Image
-              src="/exai-logo.png"
-              alt="ex ai"
-              width={100}
-              height={24}
-              className="h-6 w-auto object-contain"
-            />
+            <Link href="/" className="text-2xl font-bold tracking-tighter text-white">
+              Vion
+            </Link>
           </div>
           <div className="space-y-8 max-w-md">
             <div className="space-y-2">
@@ -107,36 +103,27 @@ export default function LoginForm() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20">
-                  <PenTool className="h-6 w-6 text-pink-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <TrendingUp className="h-6 w-6 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{t('featureCopywriterTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureCopywriterDesc')}</p>
+                  <h3 className="font-semibold text-lg">{t('featureSalesOptTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureSalesOptDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 border border-green-500/20">
-                  <Search className="h-6 w-6 text-green-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <ScanEye className="h-6 w-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{t('featureLeadFinderTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureLeadFinderDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20">
-                  <Scan className="h-6 w-6 text-orange-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{t('featureAuditorTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureAuditorDesc')}</p>
+                  <h3 className="font-semibold text-lg">{t('featureCompetitorTitle')}</h3>
+                  <p className="text-sm text-gray-400">{t('featureCompetitorDesc')}</p>
                 </div>
               </div>
             </div>
           </div>
           <div className="text-sm text-gray-400">
-            {t('copyright')}
+            &copy; 2025 Vion. All rights reserved.
           </div>
         </div>
       </div>
