@@ -22,12 +22,14 @@ import {
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
 import { useLanguage } from "@/context/LanguageContext"
+import { useAuth } from "@/context/AuthContext"
 import { HeroBackground } from "@/components/landing/hero-background"
 
 type SupportedLanguage = 'en' | 'tr'
 
 export default function PersonalShopperPage() {
     const { language: globalLanguage } = useLanguage()
+    const { user } = useAuth()
     const language = (globalLanguage === 'tr' ? 'tr' : 'en') as SupportedLanguage
 
     const content = {
@@ -161,12 +163,21 @@ export default function PersonalShopperPage() {
                             {t.heroSubtitle}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                            <Link href="/signup">
-                                <Button className="h-14 px-10 text-lg bg-white text-black hover:bg-zinc-200 transition-all rounded-full font-medium">
-                                    {t.startFree}
-                                    <ArrowRight className="ml-2 w-5 h-5" />
-                                </Button>
-                            </Link>
+                            {user ? (
+                                <Link href="/platform">
+                                    <Button className="h-14 px-10 text-lg bg-white text-black hover:bg-zinc-200 transition-all rounded-full font-medium">
+                                        {language === 'tr' ? 'Panele Git' : 'Go to Console'}
+                                        <ArrowRight className="ml-2 w-5 h-5" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link href="/signup">
+                                    <Button className="h-14 px-10 text-lg bg-white text-black hover:bg-zinc-200 transition-all rounded-full font-medium">
+                                        {t.startFree}
+                                        <ArrowRight className="ml-2 w-5 h-5" />
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -248,9 +259,9 @@ export default function PersonalShopperPage() {
                         <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light">
                             {t.ctaSubtitle}
                         </p>
-                        <Link href="/signup">
+                        <Link href={user ? "/platform" : "/signup"}>
                             <Button className="h-14 px-12 text-lg bg-white text-black hover:bg-zinc-200 shadow-xl transition-all hover:scale-105 rounded-full font-medium">
-                                {t.ctaButton}
+                                {user ? (language === 'tr' ? 'Panele Git' : 'Go to Console') : t.ctaButton}
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Button>
                         </Link>

@@ -10,7 +10,7 @@ import { auth, db } from "@/lib/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan } from "lucide-react"
+import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -143,6 +143,14 @@ export default function LoginForm() {
       <div className="flex items-center justify-center py-12 relative">
         <div className="absolute top-4 right-4 md:top-8 md:right-8">
           <LanguageSwitcher />
+        </div>
+        <div className="absolute top-4 left-4 md:top-8 md:left-8">
+          <Link href="/">
+            <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent hover:text-primary">
+              <ArrowLeft className="w-4 h-4" />
+              {t('back') || (t.language === 'tr' ? 'Ana Sayfa' : 'Home')}
+            </Button>
+          </Link>
         </div>
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
