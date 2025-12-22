@@ -18,13 +18,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         const storedLang = localStorage.getItem('language') as Language;
         if (storedLang && ['en', 'tr'].includes(storedLang)) {
             setLanguage(storedLang);
-        } else {
-            // Try to detect browser language
-            const browserLang = navigator.language.split('-')[0] as Language;
-            if (['en', 'tr'].includes(browserLang)) {
-                setLanguage(browserLang);
-            }
         }
+        // Default is 'en' (set in useState), so no browser detection needed.
     }, []);
 
     const handleSetLanguage = (lang: Language) => {
