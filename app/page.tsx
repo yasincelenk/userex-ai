@@ -18,7 +18,9 @@ import {
     ShoppingBag,
     Mail,
     Users,
-    TrendingUp
+    TrendingUp,
+    LineChart,
+    ScanEye
 } from "lucide-react"
 import { ChatbotLoader } from "@/components/chatbot-loader"
 import { PublicHeader } from "@/components/public-header"
@@ -103,7 +105,7 @@ export default function LandingPage() {
                                 {t('landingPersonalShopperDesc')}
                             </p>
                             <Link href="/products/personal-shopper" className="mt-8 relative z-10">
-                                <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-black rounded-full px-6">
+                                <Button className="bg-white text-black hover:bg-zinc-200 rounded-full px-8 font-medium shadow-lg shadow-white/10">
                                     {language === 'tr' ? 'Keşfet' : 'Explore'} <ArrowRight className="ml-2 w-4 h-4" />
                                 </Button>
                             </Link>
@@ -179,6 +181,30 @@ export default function LandingPage() {
                             </div>
                             <h3 className="text-lg font-semibold mb-3 text-white">{language === 'tr' ? 'Satış Optimizasyonu' : 'Sales Optimization'}</h3>
                             <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'İndirim kodları, stok uyarıları, sepet kurtarma.' : 'Discount codes, stock alerts, cart recovery.'}</p>
+                        </div>
+
+                        {/* 10. Coming Soon: Competitor Analysis */}
+                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
+                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
+                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <ScanEye className="w-6 h-6 text-zinc-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Rakip Analizi' : 'Competitor Analysis'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Rakiplerinizin fiyat ve stratejilerini izleyin.' : 'Monitor competitor pricing and strategies.'}</p>
+                        </div>
+
+                        {/* 11. Coming Soon: Market Trends */}
+                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
+                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
+                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <LineChart className="w-6 h-6 text-zinc-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Pazar Trend Takibi' : 'Market Trends'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Sektörünüzdeki yükselen trendleri yakalayın.' : 'Catch rising trends in your industry.'}</p>
                         </div>
                     </div>
                 </div>
