@@ -46,7 +46,7 @@ export default function LandingPage() {
                             {t('landingTagline') || "Next Gen AI Experience"}
                         </div>
 
-                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white leading-tight">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-tight">
                             {t('landingHeroTitle')}
                         </h1>
 
@@ -143,31 +143,40 @@ export default function LandingPage() {
                             <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModOmniDesc')}</p>
                         </div>
 
-                        {/* Lead Finder */}
-                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <Zap className="w-6 h-6 text-white" />
+                        {/* Coming Soon: AI Ad Optimizer */}
+                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
+                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
+                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingLeadFinder') || "AI Lead Finder"}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingLeadFinderDesc') || "Automated lead scraping and enrichment."}</p>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <BarChart3 className="w-6 h-6 text-zinc-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'AI Reklam Optimize' : 'AI Ad Optimizer'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Reklam bütçenizi en verimli şekilde kullanın.' : 'Maximize your ad spend efficiency.'}</p>
                         </div>
 
-                        {/* Copywriter */}
-                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <MessageSquare className="w-6 h-6 text-white" />
+                        {/* Coming Soon: Social Selling */}
+                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
+                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
+                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingAiCopywriter') || "AI Copywriter"}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingAiCopywriterDesc') || "SEO-optimized content generation."}</p>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <MessageSquare className="w-6 h-6 text-zinc-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Sosyal Satış Botu' : 'Social Selling Bot'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Instagram ve DM üzerinden otomatik satış.' : 'Automated sales via Instagram & DM.'}</p>
                         </div>
 
-                        {/* UI/UX Auditor */}
-                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                <CheckCircle2 className="w-6 h-6 text-white" />
+                        {/* Coming Soon: Influencer Finder */}
+                        <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
+                            <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
+                                {language === 'tr' ? 'YAKINDA' : 'SOON'}
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModUiUx') || "UI/UX Auditor"}</h3>
-                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModUiUxDesc') || "Automated usability analysis."}</p>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <Globe className="w-6 h-6 text-zinc-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Influencer Eşleşme' : 'Influencer Match'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Markanız için en doğru yüzü bulun.' : 'Find the perfect face for your brand.'}</p>
                         </div>
                     </div>
                 </div>
