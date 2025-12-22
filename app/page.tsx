@@ -183,7 +183,7 @@ export default function LandingPage() {
                             <p className="text-zinc-500 text-sm leading-relaxed">{language === 'tr' ? 'İndirim kodları, stok uyarıları, sepet kurtarma.' : 'Discount codes, stock alerts, cart recovery.'}</p>
                         </div>
 
-                        {/* 10. Coming Soon: Competitor Analysis */}
+                        {/* 10. Coming Soon: Competitor Analysis -> Competitive Sales Bot */}
                         <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
                             <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
                                 {language === 'tr' ? 'YAKINDA' : 'SOON'}
@@ -191,11 +191,11 @@ export default function LandingPage() {
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                                 <ScanEye className="w-6 h-6 text-zinc-400" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Rakip Analizi' : 'Competitor Analysis'}</h3>
-                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Rakiplerinizin fiyat ve stratejilerini izleyin.' : 'Monitor competitor pricing and strategies.'}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Rekabet Analizi Asistanı' : 'Competitive Analysis Bot'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Müşterilere rakiplerden daha uygun fiyatlı olduğunuzu sohbet anında kanıtlar.' : 'Proves your price advantage to customers in real-time chat.'}</p>
                         </div>
 
-                        {/* 11. Coming Soon: Market Trends */}
+                        {/* 11. Coming Soon: Market Trends -> Trend Recommendation Bot */}
                         <div className="p-10 bg-black/50 hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center relative overflow-hidden opacity-75 hover:opacity-100">
                             <div className="absolute top-4 right-4 bg-white/10 px-2 py-0.5 rounded text-[10px] font-medium text-white border border-white/5">
                                 {language === 'tr' ? 'YAKINDA' : 'SOON'}
@@ -203,8 +203,8 @@ export default function LandingPage() {
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                                 <LineChart className="w-6 h-6 text-zinc-400" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Pazar Trend Takibi' : 'Market Trends'}</h3>
-                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Sektörünüzdeki yükselen trendleri yakalayın.' : 'Catch rising trends in your industry.'}</p>
+                            <h3 className="text-lg font-semibold mb-3 text-zinc-300">{language === 'tr' ? 'Trend Öneri Asistanı' : 'Trend Recommendation Bot'}</h3>
+                            <p className="text-zinc-600 text-sm leading-relaxed">{language === 'tr' ? 'Yükselen trendleri algılar ve sohbet sırasında en popüler ürünleri önerir.' : 'Detects trends and suggests popular products within the conversation.'}</p>
                         </div>
                     </div>
                 </div>
