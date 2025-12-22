@@ -55,7 +55,6 @@ export function PublicHeader({ transparent = false }: PublicHeaderProps) {
                     </Link>
                 </div>
                 <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground ml-16">
-                    <Link href="/#products" className="hover:text-white transition-colors">{t('landingProducts')}</Link>
                     <Link href="/why" className="hover:text-white transition-colors">{language === 'tr' ? 'Neden Biz' : 'Why Us'}</Link>
                     <Link href="/industries" className="hover:text-white transition-colors">{language === 'tr' ? 'Sektörler' : 'Industries'}</Link>
                     <Link href="/pricing" className="hover:text-white transition-colors">{t('landingPricing')}</Link>

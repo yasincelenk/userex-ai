@@ -142,6 +142,33 @@ export default function LandingPage() {
                             <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModOmni')}</h3>
                             <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModOmniDesc')}</p>
                         </div>
+
+                        {/* Lead Finder */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <Zap className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingLeadFinder') || "AI Lead Finder"}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingLeadFinderDesc') || "Automated lead scraping and enrichment."}</p>
+                        </div>
+
+                        {/* Copywriter */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <MessageSquare className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingAiCopywriter') || "AI Copywriter"}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingAiCopywriterDesc') || "SEO-optimized content generation."}</p>
+                        </div>
+
+                        {/* UI/UX Auditor */}
+                        <div className="p-10 bg-black hover:bg-zinc-900/50 transition-colors group flex flex-col items-center text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                <CheckCircle2 className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-3 text-white">{t('landingModUiUx') || "UI/UX Auditor"}</h3>
+                            <p className="text-zinc-500 text-sm leading-relaxed">{t('landingModUiUxDesc') || "Automated usability analysis."}</p>
+                        </div>
                     </div>
                 </div>
             </section>

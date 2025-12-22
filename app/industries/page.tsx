@@ -13,11 +13,14 @@ import {
     UtensilsCrossed,
     Briefcase,
     Car,
-    School
+    School,
+    ChevronRight,
+    Sparkles
 } from "lucide-react"
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
 import { useLanguage } from "@/context/LanguageContext"
+import { HeroBackground } from "@/components/landing/hero-background"
 
 export default function IndustriesPage() {
     const { language } = useLanguage()
@@ -26,7 +29,7 @@ export default function IndustriesPage() {
         {
             id: 'ecommerce',
             icon: ShoppingCart,
-            color: 'lime',
+            // Keeping semantic colors but making them subtle
             name: { en: 'E-commerce', tr: 'E-ticaret' },
             desc: {
                 en: 'Product recommendations, stock alerts, cart recovery, discount codes',
@@ -40,7 +43,6 @@ export default function IndustriesPage() {
         {
             id: 'travel',
             icon: Plane,
-            color: 'blue',
             name: { en: 'Travel & Tourism', tr: 'Seyahat & Turizm' },
             desc: {
                 en: 'Trip planning, luggage recommendations, insurance offers, booking assistance',
@@ -54,7 +56,6 @@ export default function IndustriesPage() {
         {
             id: 'healthcare',
             icon: HeartPulse,
-            color: 'red',
             name: { en: 'Healthcare', tr: 'Sağlık' },
             desc: {
                 en: 'Appointment scheduling, symptom guidance, department routing',
@@ -68,7 +69,6 @@ export default function IndustriesPage() {
         {
             id: 'education',
             icon: GraduationCap,
-            color: 'amber',
             name: { en: 'Education', tr: 'Eğitim' },
             desc: {
                 en: 'Course info, enrollment assistance, schedule management',
@@ -82,7 +82,6 @@ export default function IndustriesPage() {
         {
             id: 'realestate',
             icon: Home,
-            color: 'emerald',
             name: { en: 'Real Estate', tr: 'Emlak' },
             desc: {
                 en: 'Property search, viewing appointments, price comparisons',
@@ -96,7 +95,6 @@ export default function IndustriesPage() {
         {
             id: 'finance',
             icon: Landmark,
-            color: 'indigo',
             name: { en: 'Finance & Banking', tr: 'Finans & Bankacılık' },
             desc: {
                 en: 'Product comparison, loan calculations, account guidance',
@@ -110,7 +108,6 @@ export default function IndustriesPage() {
         {
             id: 'restaurant',
             icon: UtensilsCrossed,
-            color: 'orange',
             name: { en: 'Restaurant & Food', tr: 'Restoran & Yemek' },
             desc: {
                 en: 'Menu info, reservations, dietary options, order tracking',
@@ -124,7 +121,6 @@ export default function IndustriesPage() {
         {
             id: 'services',
             icon: Briefcase,
-            color: 'purple',
             name: { en: 'Professional Services', tr: 'Profesyonel Hizmetler' },
             desc: {
                 en: 'Quote requests, service explanations, booking',
@@ -138,7 +134,6 @@ export default function IndustriesPage() {
         {
             id: 'automotive',
             icon: Car,
-            color: 'cyan',
             name: { en: 'Automotive', tr: 'Otomotiv' },
             desc: {
                 en: 'Test drive booking, vehicle comparison, service scheduling',
@@ -152,7 +147,6 @@ export default function IndustriesPage() {
         {
             id: 'academic',
             icon: School,
-            color: 'pink',
             name: { en: 'Universities & Schools', tr: 'Üniversite & Okullar' },
             desc: {
                 en: 'Admission info, campus tours, program guidance',
@@ -165,32 +159,35 @@ export default function IndustriesPage() {
         }
     ]
 
-    const colorClasses: Record<string, { bg: string, text: string, border: string }> = {
-        lime: { bg: 'bg-lime-500/20', text: 'text-lime-400', border: 'border-lime-500/30' },
-        blue: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
-        red: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
-        amber: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' },
-        emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-        indigo: { bg: 'bg-indigo-500/20', text: 'text-indigo-400', border: 'border-indigo-500/30' },
-        orange: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30' },
-        purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
-        cyan: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-        pink: { bg: 'bg-pink-500/20', text: 'text-pink-400', border: 'border-pink-500/30' },
-    }
-
     return (
-        <div className="dark min-h-screen bg-black text-white font-sans">
+        <div className="dark min-h-screen bg-black text-white font-sans relative overflow-hidden">
             <PublicHeader />
 
+            {/* Breadcrumb */}
+            <div className="container mx-auto px-4 pt-24 pb-4 relative z-10">
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                    <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
+                        <Home className="w-4 h-4" />
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-white">{language === 'tr' ? 'Sektörler' : 'Industries'}</span>
+                </div>
+            </div>
+
             {/* Hero */}
-            <section className="relative pt-32 pb-16 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
+            <section className="relative pt-12 pb-16 overflow-hidden border-b border-white/5">
+                <HeroBackground />
                 <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center space-y-6">
-                        <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+                    <div className="max-w-4xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-700">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-400 backdrop-blur-sm">
+                            <Sparkles className="w-3 h-3 text-white" />
+                            <span>{language === 'tr' ? 'Sektörel Uzmanlık' : 'Industry Expertise'}</span>
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
                             {language === 'tr' ? '10 Sektör, 10 Uzman AI' : '10 Industries, 10 Expert AIs'}
                         </h1>
-                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        <p className="text-lg text-zinc-400 max-w-2xl mx-auto font-light">
                             {language === 'tr'
                                 ? 'Her sektöre özel davranış, terminoloji ve use case\'ler.'
                                 : 'Industry-specific behavior, terminology, and use cases for each sector.'}
@@ -200,27 +197,26 @@ export default function IndustriesPage() {
             </section>
 
             {/* Industries Grid */}
-            <section className="py-16">
+            <section className="py-20">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {industries.map((industry) => {
-                            const colors = colorClasses[industry.color]
                             const Icon = industry.icon
                             return (
                                 <div
                                     key={industry.id}
-                                    className={`p-6 rounded-2xl bg-black/40 border border-white/5 hover:${colors.border} transition-all duration-300 group`}
+                                    className="p-8 rounded-3xl bg-zinc-900/30 border border-white/5 hover:border-white/20 hover:bg-zinc-900/50 transition-all duration-300 group backdrop-blur-sm"
                                 >
-                                    <div className={`w-14 h-14 rounded-xl ${colors.bg} flex items-center justify-center mb-4`}>
-                                        <Icon className={`w-7 h-7 ${colors.text}`} />
+                                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
+                                        <Icon className="w-7 h-7 text-white" />
                                     </div>
-                                    <h3 className="text-xl font-bold mb-2">
+                                    <h3 className="text-xl font-bold mb-3 text-white">
                                         {industry.name[language as 'en' | 'tr']}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground mb-4">
+                                    <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
                                         {industry.desc[language as 'en' | 'tr']}
                                     </p>
-                                    <div className={`text-xs ${colors.text} bg-white/5 rounded-lg p-3 italic`}>
+                                    <div className="text-xs text-zinc-300 bg-black/50 rounded-xl p-4 italic border border-white/5">
                                         {industry.example[language as 'en' | 'tr']}
                                     </div>
                                 </div>
@@ -231,26 +227,26 @@ export default function IndustriesPage() {
             </section>
 
             {/* CTA */}
-            <section className="py-20">
+            <section className="py-20 border-t border-white/5">
                 <div className="container mx-auto px-4">
-                    <div className="max-w-3xl mx-auto text-center bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/20 rounded-3xl p-12">
-                        <h2 className="text-3xl font-bold mb-4">
+                    <div className="max-w-3xl mx-auto text-center">
+                        <h2 className="text-3xl md:text-5xl font-bold mb-8 text-white tracking-tight">
                             {language === 'tr' ? 'Sektörünüz listede yok mu?' : 'Your industry not listed?'}
                         </h2>
-                        <p className="text-muted-foreground mb-8">
+                        <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light">
                             {language === 'tr'
                                 ? 'Özel sektör konfigürasyonu için bizimle iletişime geçin.'
                                 : 'Contact us for custom industry configuration.'}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link href="/signup">
-                                <Button className="h-12 px-8 bg-purple-600 hover:bg-purple-500 text-white">
+                                <Button className="h-14 px-12 text-lg bg-white text-black hover:bg-zinc-200 rounded-full transition-all hover:scale-105 font-medium">
                                     {language === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
-                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                    <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </Link>
                             <Link href="/contact">
-                                <Button variant="outline" className="h-12 px-8 border-white/20 hover:bg-white/5">
+                                <Button variant="outline" className="h-14 px-12 text-lg border-white/20 text-white hover:bg-white hover:text-black rounded-full transition-all hover:scale-105">
                                     {language === 'tr' ? 'Bize Ulaşın' : 'Contact Us'}
                                 </Button>
                             </Link>

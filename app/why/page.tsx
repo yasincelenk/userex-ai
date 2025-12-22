@@ -13,11 +13,15 @@ import {
     GitCompare,
     CheckCircle2,
     X,
-    Minus
+    Minus,
+    Home,
+    ChevronRight,
+    Sparkles
 } from "lucide-react"
 import { PublicHeader } from "@/components/public-header"
 import { PublicFooter } from "@/components/public-footer"
 import { useLanguage } from "@/context/LanguageContext"
+import { HeroBackground } from "@/components/landing/hero-background"
 
 export default function WhyPage() {
     const { t, language } = useLanguage()
@@ -38,28 +42,44 @@ export default function WhyPage() {
     ]
 
     const renderStatus = (status: boolean | string) => {
-        if (status === true) return <CheckCircle2 className="w-5 h-5 text-lime-500" />
-        if (status === false) return <X className="w-5 h-5 text-red-500/50" />
-        if (status === 'partial') return <Minus className="w-5 h-5 text-yellow-500" />
-        return <span className="text-sm text-muted-foreground">{status}</span>
+        if (status === true) return <CheckCircle2 className="w-5 h-5 text-white" />
+        if (status === false) return <X className="w-5 h-5 text-zinc-700" />
+        if (status === 'partial') return <Minus className="w-5 h-5 text-zinc-500" />
+        return <span className="text-sm text-zinc-400">{status}</span>
     }
 
     return (
-        <div className="dark min-h-screen bg-black text-white font-sans">
+        <div className="dark min-h-screen bg-black text-white font-sans relative overflow-hidden">
             <PublicHeader />
 
+            {/* Breadcrumb */}
+            <div className="container mx-auto px-4 pt-24 pb-4 relative z-10">
+                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                    <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
+                        <Home className="w-4 h-4" />
+                        Home
+                    </Link>
+                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-white">{language === 'tr' ? 'Neden Biz' : 'Why Us'}</span>
+                </div>
+            </div>
+
             {/* Hero */}
-            <section className="relative pt-32 pb-20 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-lime-900/20 via-black to-black pointer-events-none" />
+            <section className="relative pt-12 pb-20 overflow-hidden border-b border-white/5">
+                <HeroBackground />
                 <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center space-y-6">
-                        <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+                    <div className="max-w-4xl mx-auto text-center space-y-6 animate-in fade-in zoom-in-95 duration-700">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-400 backdrop-blur-sm">
+                            <Sparkles className="w-3 h-3 text-white" />
+                            <span>{language === 'tr' ? 'Farkı Keşfedin' : 'Discover the Difference'}</span>
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
                             {language === 'tr' ? 'Neden exAi?' : 'Why exAi?'}
                         </h1>
-                        <p className="text-xl text-lime-400 font-semibold">
-                            {language === 'tr' ? '"Satış yapan chatbot. Destek değil, dönüşüm."' : '"Sales-focused chatbot. Not support, conversion."'}
+                        <p className="text-xl text-white font-medium">
+                            {language === 'tr' ? '"Satış yapan chatbot. Destek değil, dönüşüm."' : '"Sales Chatbot. Not Support, Conversion."'}
                         </p>
-                        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        <p className="text-lg text-zinc-400 max-w-2xl mx-auto font-light">
                             {language === 'tr'
                                 ? 'Rakipler müşteri desteği için tasarlandı. Biz müşteri kazanımı için.'
                                 : 'Competitors are designed for customer support. We are designed for customer acquisition.'}
@@ -71,67 +91,67 @@ export default function WhyPage() {
             {/* 3 Main Differences */}
             <section className="py-20 relative">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center mb-12">
+                    <h2 className="text-3xl font-bold text-center mb-12 text-white tracking-tight">
                         {language === 'tr' ? '3 Ana Fark' : '3 Key Differences'}
                     </h2>
                     <div className="grid md:grid-cols-3 gap-8">
                         {/* Sales Focused */}
-                        <div className="p-8 rounded-3xl bg-gradient-to-b from-lime-500/10 to-transparent border border-lime-500/20 hover:border-lime-500/40 transition-colors">
-                            <div className="w-16 h-16 rounded-2xl bg-lime-500/20 flex items-center justify-center mb-6">
-                                <TrendingUp className="w-8 h-8 text-lime-400" />
+                        <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1 duration-300">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 border border-white/5">
+                                <TrendingUp className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">
+                            <h3 className="text-2xl font-bold mb-4 text-white">
                                 {language === 'tr' ? 'Satış Odaklı' : 'Sales Focused'}
                             </h3>
-                            <p className="text-muted-foreground mb-4">
+                            <p className="text-zinc-400 mb-4 text-sm leading-relaxed">
                                 {language === 'tr'
                                     ? '"Nasıl yardımcı olabilirim?" yerine "Bu ürünü almanızı öneririm" der.'
                                     : 'Instead of "How can I help?" says "I recommend this product for you."'}
                             </p>
-                            <ul className="space-y-2 text-sm">
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> {language === 'tr' ? 'İndirim kodu önerisi' : 'Discount code offers'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> {language === 'tr' ? 'Stok uyarıları' : 'Stock alerts'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-lime-500" /> {language === 'tr' ? 'Sepet kurtarma' : 'Cart recovery'}</li>
+                            <ul className="space-y-3 text-sm text-zinc-300">
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'İndirim kodu önerisi' : 'Discount code offers'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Stok uyarıları' : 'Stock alerts'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Sepet kurtarma' : 'Cart recovery'}</li>
                             </ul>
                         </div>
 
                         {/* Industry Intelligence */}
-                        <div className="p-8 rounded-3xl bg-gradient-to-b from-purple-500/10 to-transparent border border-purple-500/20 hover:border-purple-500/40 transition-colors">
-                            <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6">
-                                <Building2 className="w-8 h-8 text-purple-400" />
+                        <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1 duration-300">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 border border-white/5">
+                                <Building2 className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">
+                            <h3 className="text-2xl font-bold mb-4 text-white">
                                 {language === 'tr' ? 'Sektör Zekası' : 'Industry Intelligence'}
                             </h3>
-                            <p className="text-muted-foreground mb-4">
+                            <p className="text-zinc-400 mb-4 text-sm leading-relaxed">
                                 {language === 'tr'
                                     ? '10 farklı sektöre özel AI davranışı. E-ticarete farklı, seyahate farklı.'
                                     : '10 different industry-specific AI behaviors. Different for e-commerce, different for travel.'}
                             </p>
-                            <ul className="space-y-2 text-sm">
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {language === 'tr' ? 'E-ticaret' : 'E-commerce'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {language === 'tr' ? 'Seyahat' : 'Travel'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-purple-500" /> {language === 'tr' ? '+8 sektör daha' : '+8 more industries'}</li>
+                            <ul className="space-y-3 text-sm text-zinc-300">
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'E-ticaret' : 'E-commerce'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Seyahat' : 'Travel'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? '+8 sektör daha' : '+8 more industries'}</li>
                             </ul>
                         </div>
 
                         {/* Brand Freedom */}
-                        <div className="p-8 rounded-3xl bg-gradient-to-b from-pink-500/10 to-transparent border border-pink-500/20 hover:border-pink-500/40 transition-colors">
-                            <div className="w-16 h-16 rounded-2xl bg-pink-500/20 flex items-center justify-center mb-6">
-                                <Palette className="w-8 h-8 text-pink-400" />
+                        <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1 duration-300">
+                            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 border border-white/5">
+                                <Palette className="w-8 h-8 text-white" />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">
+                            <h3 className="text-2xl font-bold mb-4 text-white">
                                 {language === 'tr' ? 'Marka Özgürlüğü' : 'Brand Freedom'}
                             </h3>
-                            <p className="text-muted-foreground mb-4">
+                            <p className="text-zinc-400 mb-4 text-sm leading-relaxed">
                                 {language === 'tr'
                                     ? 'Logonuzu kullanın, bizimkini değil. Ücretsiz. Rakiplerde $29/ay.'
                                     : 'Use your logo, not ours. Free. Competitors charge $29/month.'}
                             </p>
-                            <ul className="space-y-2 text-sm">
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {language === 'tr' ? 'Özel renkler' : 'Custom colors'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {language === 'tr' ? 'Logo & avatar' : 'Logo & avatar'}</li>
-                                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-pink-500" /> {language === 'tr' ? 'Branding silme: $0' : 'Remove branding: $0'}</li>
+                            <ul className="space-y-3 text-sm text-zinc-300">
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Özel renkler' : 'Custom colors'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Logo & avatar' : 'Logo & avatar'}</li>
+                                <li className="flex items-center gap-3"><CheckCircle2 className="w-4 h-4 text-white" /> {language === 'tr' ? 'Branding silme: $0' : 'Remove branding: $0'}</li>
                             </ul>
                         </div>
                     </div>
@@ -139,42 +159,50 @@ export default function WhyPage() {
             </section>
 
             {/* Sales Optimization Features */}
-            <section className="py-20 bg-white/5">
+            <section className="py-20 border-t border-white/5">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center mb-4">
+                    <h2 className="text-3xl font-bold text-center mb-4 text-white">
                         {language === 'tr' ? 'Satış Optimizasyonu' : 'Sales Optimization'}
                     </h2>
-                    <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+                    <p className="text-zinc-400 text-center mb-12 max-w-2xl mx-auto font-light">
                         {language === 'tr'
                             ? 'Chatbot\'unuz sadece soru cevaplamaz, satış yapar.'
                             : 'Your chatbot doesn\'t just answer questions, it sells.'}
                     </p>
                     <div className="grid md:grid-cols-4 gap-6">
-                        <div className="p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-purple-500/30 transition-colors text-center">
-                            <Tag className="w-10 h-10 text-purple-400 mx-auto mb-4" />
-                            <h3 className="font-bold mb-2">{language === 'tr' ? 'İndirim Kodları' : 'Discount Codes'}</h3>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="p-6 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-white/20 transition-colors text-center group">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                <Tag className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="font-bold mb-2 text-white">{language === 'tr' ? 'İndirim Kodları' : 'Discount Codes'}</h3>
+                            <p className="text-sm text-zinc-400">
                                 {language === 'tr' ? '"Size özel %10 indirim kodu"' : '"Special 10% discount for you"'}
                             </p>
                         </div>
-                        <div className="p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-orange-500/30 transition-colors text-center">
-                            <Package className="w-10 h-10 text-orange-400 mx-auto mb-4" />
-                            <h3 className="font-bold mb-2">{language === 'tr' ? 'Stok Uyarıları' : 'Stock Alerts'}</h3>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="p-6 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-white/20 transition-colors text-center group">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                <Package className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="font-bold mb-2 text-white">{language === 'tr' ? 'Stok Uyarıları' : 'Stock Alerts'}</h3>
+                            <p className="text-sm text-zinc-400">
                                 {language === 'tr' ? '"Sadece 3 adet kaldı!"' : '"Only 3 left in stock!"'}
                             </p>
                         </div>
-                        <div className="p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-blue-500/30 transition-colors text-center">
-                            <ShoppingCart className="w-10 h-10 text-blue-400 mx-auto mb-4" />
-                            <h3 className="font-bold mb-2">{language === 'tr' ? 'Sepet Kurtarma' : 'Cart Recovery'}</h3>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="p-6 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-white/20 transition-colors text-center group">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                <ShoppingCart className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="font-bold mb-2 text-white">{language === 'tr' ? 'Sepet Kurtarma' : 'Cart Recovery'}</h3>
+                            <p className="text-sm text-zinc-400">
                                 {language === 'tr' ? 'Terk edilen sepetleri geri kazan' : 'Recover abandoned carts'}
                             </p>
                         </div>
-                        <div className="p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-green-500/30 transition-colors text-center">
-                            <GitCompare className="w-10 h-10 text-green-400 mx-auto mb-4" />
-                            <h3 className="font-bold mb-2">{language === 'tr' ? 'Ürün Karşılaştırma' : 'Product Comparison'}</h3>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="p-6 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-white/20 transition-colors text-center group">
+                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                <GitCompare className="w-5 h-5 text-white" />
+                            </div>
+                            <h3 className="font-bold mb-2 text-white">{language === 'tr' ? 'Ürün Karşılaştırma' : 'Product Comparison'}</h3>
+                            <p className="text-sm text-zinc-400">
                                 {language === 'tr' ? 'En iyi seçeneği öner' : 'Recommend the best option'}
                             </p>
                         </div>
@@ -183,29 +211,29 @@ export default function WhyPage() {
             </section>
 
             {/* Comparison Table */}
-            <section className="py-20">
+            <section className="py-20 border-t border-white/5">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center mb-4">
+                    <h2 className="text-3xl font-bold text-center mb-4 text-white">
                         {language === 'tr' ? 'Rakiplerle Karşılaştırma' : 'Competitor Comparison'}
                     </h2>
-                    <p className="text-muted-foreground text-center mb-12">
+                    <p className="text-zinc-400 text-center mb-12">
                         {language === 'tr' ? 'Özelliklere göre kıyaslama' : 'Feature-by-feature comparison'}
                     </p>
-                    <div className="max-w-5xl mx-auto overflow-x-auto">
+                    <div className="max-w-5xl mx-auto overflow-x-auto bg-zinc-900/20 rounded-3xl p-8 border border-white/5">
                         <table className="w-full table-fixed">
                             <thead>
                                 <tr className="border-b border-white/10">
-                                    <th className="text-left py-4 px-4 w-[200px]">{language === 'tr' ? 'Özellik' : 'Feature'}</th>
-                                    <th className="py-4 px-4 text-lime-400 w-[120px]"><div className="flex justify-center">exAi</div></th>
-                                    <th className="py-4 px-4 text-muted-foreground w-[120px]"><div className="flex justify-center">Tawk.to</div></th>
-                                    <th className="py-4 px-4 text-muted-foreground w-[120px]"><div className="flex justify-center">Intercom</div></th>
-                                    <th className="py-4 px-4 text-muted-foreground w-[120px]"><div className="flex justify-center">Drift</div></th>
+                                    <th className="text-left py-4 px-4 w-[200px] text-zinc-300 font-medium">{language === 'tr' ? 'Özellik' : 'Feature'}</th>
+                                    <th className="py-4 px-4 text-white w-[120px] font-bold"><div className="flex justify-center">exAi</div></th>
+                                    <th className="py-4 px-4 text-zinc-500 w-[120px] font-medium"><div className="flex justify-center">Tawk.to</div></th>
+                                    <th className="py-4 px-4 text-zinc-500 w-[120px] font-medium"><div className="flex justify-center">Intercom</div></th>
+                                    <th className="py-4 px-4 text-zinc-500 w-[120px] font-medium"><div className="flex justify-center">Drift</div></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {comparisonData.map((row, i) => (
                                     <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                        <td className="py-4 px-4 text-sm">{row.feature}</td>
+                                        <td className="py-4 px-4 text-sm text-zinc-300">{row.feature}</td>
                                         <td className="py-4 px-4"><div className="flex justify-center">{renderStatus(row.userex)}</div></td>
                                         <td className="py-4 px-4"><div className="flex justify-center">{renderStatus(row.tawkto)}</div></td>
                                         <td className="py-4 px-4"><div className="flex justify-center">{renderStatus(row.intercom)}</div></td>
@@ -219,26 +247,26 @@ export default function WhyPage() {
             </section>
 
             {/* CTA */}
-            <section className="py-20">
+            <section className="py-20 border-t border-white/5">
                 <div className="container mx-auto px-4">
-                    <div className="max-w-3xl mx-auto text-center bg-gradient-to-b from-lime-500/10 to-transparent border border-lime-500/20 rounded-3xl p-12">
-                        <h2 className="text-3xl font-bold mb-4">
+                    <div className="max-w-3xl mx-auto text-center">
+                        <h2 className="text-3xl md:text-5xl font-bold mb-8 text-white tracking-tight">
                             {language === 'tr' ? 'Hazır mısınız?' : 'Ready to Start?'}
                         </h2>
-                        <p className="text-muted-foreground mb-8">
+                        <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light">
                             {language === 'tr'
                                 ? 'Satış yapan chatbot\'unuzu bugün oluşturun.'
                                 : 'Create your sales-focused chatbot today.'}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link href="/signup">
-                                <Button className="h-12 px-8 bg-lime-600 hover:bg-lime-500 text-white">
+                                <Button className="h-14 px-12 text-lg bg-white text-black hover:bg-zinc-200 rounded-full transition-all hover:scale-105 font-medium">
                                     {language === 'tr' ? 'Ücretsiz Başla' : 'Start Free'}
-                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                    <ArrowRight className="ml-2 w-5 h-5" />
                                 </Button>
                             </Link>
                             <Link href="/contact">
-                                <Button variant="outline" className="h-12 px-8 border-white/20 hover:bg-white/5">
+                                <Button variant="outline" className="h-14 px-12 text-lg border-white/20 text-white hover:bg-white hover:text-black rounded-full transition-all hover:scale-105">
                                     {language === 'tr' ? 'Demo Talep Et' : 'Request Demo'}
                                 </Button>
                             </Link>

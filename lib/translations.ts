@@ -266,8 +266,8 @@ export const translations = {
 
         // Landing Page
         landingTagline: "The All-in-One AI Platform",
-        landingHeroTitle: "Supercharge Your Business with AI Chatbots",
-        landingHeroSubtitle: "Deploy intelligent AI chatbots for customer support, sales, and lead generation. Train your bot with your own data and watch it work 24/7.",
+        landingHeroTitle: "Sales Chatbot. Not Support, Conversion.",
+        landingHeroSubtitle: "Competitors are designed for support. We are built for customer acquisition. Transform visitors into customers 24/7.",
         landingStartFree: "Start for free",
         landingProducts: "Products",
         landingFeatures: "Features",
@@ -1274,8 +1274,8 @@ export const translations = {
 
         // Landing Page
         landingTagline: "Hepsi Bir Arada AI Platformu",
-        landingHeroTitle: "AI Chatbotlarla İşinizi Güçlendirin",
-        landingHeroSubtitle: "Müşteri desteği, satış ve potansiyel müşteri oluşturma için akıllı AI chatbotlar dağıtın. Botunuzu kendi verilerinizle eğitin, 7/24 çalışmasını izleyin.",
+        landingHeroTitle: "Satış Yapan Chatbot. Destek Değil, Dönüşüm.",
+        landingHeroSubtitle: "Rakipler müşteri desteği için tasarlandı. Biz müşteri kazanımı için. Ziyaretçilerinizi 7/24 müşteriye dönüştürün.",
         landingStartFree: "Ücretsiz başla",
         landingProducts: "Ürünler",
         landingFeatures: "Özellikler",
