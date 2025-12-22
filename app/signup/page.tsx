@@ -305,13 +305,13 @@ export default function SignUpForm() {
                     </div>
                 </div>
             </div>
-            <div className="flex items-center justify-center py-12 relative overflow-y-auto">
+            <div className="flex items-center justify-center py-12 relative overflow-y-auto bg-black border-l border-white/5">
                 <div className="absolute top-4 right-4 md:top-8 md:right-8">
                     <LanguageSwitcher />
                 </div>
                 <div className="absolute top-4 left-4 md:top-8 md:left-8">
                     <Link href="/">
-                        <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent hover:text-primary">
+                        <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent text-zinc-400 hover:text-white">
                             <ArrowLeft className="w-4 h-4" />
                             {language === 'tr' ? 'Ana Sayfa' : 'Home'}
                         </Button>
@@ -319,14 +319,14 @@ export default function SignUpForm() {
                 </div>
                 <div className="mx-auto grid w-[350px] gap-6 my-8">
                     <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold">{t('signupTitle')}</h1>
-                        <p className="text-balance text-muted-foreground">
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('signupTitle')}</h1>
+                        <p className="text-balance text-zinc-400">
                             {t('signupDesc')}
                         </p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-500/15 border border-red-500/50 rounded-md p-3 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm text-red-400 flex items-center gap-2">
                             <div className="w-1 h-1 rounded-full bg-red-500" />
                             {error}
                         </div>
@@ -335,48 +335,52 @@ export default function SignUpForm() {
                     <form onSubmit={handleSignUp} className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="firstName">{t('firstName')}</Label>
+                                <Label htmlFor="firstName" className="text-zinc-300">{t('firstName')}</Label>
                                 <Input
                                     id="firstName"
                                     placeholder="John"
                                     required
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
+                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="lastName">{t('lastName')}</Label>
+                                <Label htmlFor="lastName" className="text-zinc-300">{t('lastName')}</Label>
                                 <Input
                                     id="lastName"
                                     placeholder="Doe"
                                     required
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
+                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                                 />
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="companyName">{t('companyName')}</Label>
+                            <Label htmlFor="companyName" className="text-zinc-300">{t('companyName')}</Label>
                             <Input
                                 id="companyName"
                                 placeholder={t('companyName') === 'Şirket Adı' ? 'Acme A.Ş.' : 'Acme Inc.'}
                                 required
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
+                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="companyWebsite">{t('website')}</Label>
+                            <Label htmlFor="companyWebsite" className="text-zinc-300">{t('website')}</Label>
                             <Input
                                 id="companyWebsite"
                                 placeholder="example.com"
                                 required
                                 value={companyWebsite}
                                 onChange={(e) => setCompanyWebsite(e.target.value)}
+                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="email">{t('email')}</Label>
+                            <Label htmlFor="email" className="text-zinc-300">{t('email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -384,17 +388,18 @@ export default function SignUpForm() {
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="industry">{t('industrySelectLabel') || (language === 'tr' ? 'Sektörünüz' : 'Your Industry')}</Label>
+                            <Label htmlFor="industry" className="text-zinc-300">{t('industrySelectLabel') || (language === 'tr' ? 'Sektörünüz' : 'Your Industry')}</Label>
                             <Select value={industry} onValueChange={(value) => setIndustry(value as IndustryType)}>
-                                <SelectTrigger id="industry" className="w-full">
+                                <SelectTrigger id="industry" className="w-full bg-white/5 border-white/10 text-white focus:ring-white/20 focus:border-white/20">
                                     <SelectValue placeholder={t('industrySelectPlaceholder') || "Sektör seçin"} />
                                 </SelectTrigger>
-                                <SelectContent className="w-[--radix-select-trigger-width]">
+                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
                                     {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
-                                        <SelectItem key={key} value={key}>
+                                        <SelectItem key={key} value={key} className="focus:bg-white/10 focus:text-white">
                                             {(config as any).names?.[language] || config.label}
                                         </SelectItem>
                                     ))}
@@ -402,26 +407,28 @@ export default function SignUpForm() {
                             </Select>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="password">{t('password')}</Label>
+                            <Label htmlFor="password" className="text-zinc-300">{t('password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
+                            <Label htmlFor="confirmPassword" className="text-zinc-300">{t('confirmPassword')}</Label>
                             <Input
                                 id="confirmPassword"
                                 type="password"
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
                             />
                         </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
+                        <Button type="submit" className="w-full bg-white text-black hover:bg-zinc-200 transition-colors font-medium h-10" disabled={isLoading}>
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -432,9 +439,9 @@ export default function SignUpForm() {
                             )}
                         </Button>
                     </form>
-                    <div className="mt-4 text-center text-sm">
+                    <div className="mt-4 text-center text-sm text-zinc-400">
                         {t('alreadyHaveAccount')}{" "}
-                        <Link href="/login" className="underline">
+                        <Link href="/login" className="underline hover:text-white transition-colors">
                             {t('signIn')}
                         </Link>
                     </div>
