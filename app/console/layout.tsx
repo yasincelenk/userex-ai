@@ -20,11 +20,11 @@ export default function ConsoleLayout({
         <AuthGuard>
             <LanguageProvider>
                 <SidebarProvider>
-                    <div className="flex flex-col h-screen w-full bg-background">
+                    <div className="flex flex-col h-screen w-full bg-[#f4f6f8]">
                         <SiteHeader />
                         <div className="flex flex-1 overflow-hidden">
                             <ConsoleSidebar />
-                            <main className="flex-1 overflow-y-auto bg-muted/10">
+                            <main className="flex-1 overflow-y-auto bg-[#f4f6f8] relative">
                                 {children}
                             </main>
                         </div>

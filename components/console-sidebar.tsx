@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
     LayoutDashboard,
     MessageSquare,
@@ -11,25 +10,14 @@ import {
     Settings,
     UserCircle,
     Database,
-    Palette,
     Plug,
     BarChart3,
     LogOut,
-    ChevronLeft,
-    ShoppingBag,
-    Eye,
-    ScanLine,
-    CheckSquare,
-    FileText,
-    GitMerge,
-    TrendingUp,
-    Bot,
-    Sparkles,
-    Activity,
     Package,
-    Inbox,
-    Calendar,
     ArrowLeft,
+    Zap,
+    GraduationCap,
+    Grid,
     Shield
 } from "lucide-react"
 import { signOut } from "firebase/auth"
@@ -43,18 +31,13 @@ import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
     SidebarRail,
 } from "@/components/ui/sidebar"
+import Image from "next/image"
 
 interface ConsoleSidebarProps {
     targetUserId?: string
@@ -66,19 +49,18 @@ export function ConsoleSidebar({ targetUserId, targetEmail }: ConsoleSidebarProp
     const searchParams = useSearchParams()
     const router = useRouter()
     const { t } = useLanguage()
-    const { user, role, enablePersonalShopper, canManageModules } = useAuth()
+    const { user, role } = useAuth()
     const [showPricing, setShowPricing] = useState(false)
 
     // Build link based on whether we're in super admin mode (targetUserId provided)
     const buildLink = (path: string) => {
         if (targetUserId) {
-            // Replace /console/ with /admin/tenant/[userId]/
             return path.replace('/console/', `/admin/tenant/${targetUserId}/`)
         }
         return path
     }
 
-    // Check if current path matches (accounting for super admin mode)
+    // Check if current path matches
     const isActive = (path: string) => {
         if (targetUserId) {
             const adminPath = path.replace('/console/', `/admin/tenant/${targetUserId}/`)
@@ -92,268 +74,143 @@ export function ConsoleSidebar({ targetUserId, targetEmail }: ConsoleSidebarProp
         router.push("/login")
     }
 
+    // Navigation Items
+    const navItems = [
+        {
+            title: t('dashboard'),
+            icon: Zap,
+            href: "/console/chatbot",
+            active: isActive("/console/chatbot") && !isActive("/console/chatbot/shopper")
+        },
+        {
+            title: t('visitors'),
+            icon: Users,
+            href: "/console/chatbot/leads",
+            active: isActive("/console/chatbot/leads") || isActive("/console/chatbot/appointments")
+        },
+        {
+            title: t('chats'),
+            icon: MessageSquare,
+            href: "/console/chatbot/chats",
+            active: isActive("/console/chatbot/chats")
+        },
+        {
+            title: t('training'),
+            icon: GraduationCap,
+            href: "/console/knowledge",
+            active: isActive("/console/knowledge")
+        },
+        {
+            title: t('modules') || "Modules",
+            icon: Grid, // Plugin/Grid icon
+            href: "/console/modules",
+            active: isActive("/console/modules") || isActive("/console/chatbot/shopper")
+        },
+        {
+            title: t('reports'), // Analytics -> Reports
+            icon: BarChart3,
+            href: "/console/chatbot/analytics",
+            active: isActive("/console/chatbot/analytics")
+        },
+        {
+            title: t('integrations'),
+            icon: Plug,
+            href: "/console/chatbot/integration",
+            active: isActive("/console/chatbot/integration")
+        }
+    ]
+
     return (
         <>
-            <Sidebar collapsible="icon" className="!top-16 !h-[calc(100svh-4rem)] border-r">
-                <SidebarContent>
-                    {pathname.startsWith("/console/copywriter") ? (
-                        /* Copywriter Menu */
-                        <SidebarGroup>
-                            <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <SidebarMenu>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={pathname === "/console/copywriter"}>
-                                            <Link href="/console/copywriter">
-                                                <LayoutDashboard />
-                                                <span>{t('generator')}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    ) : pathname.startsWith("/console/lead-finder") ? (
-                        /* Lead Finder Menu */
-                        <SidebarGroup>
-                            <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <SidebarMenu>
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={pathname === "/console/lead-finder"}>
-                                            <Link href="/console/lead-finder">
-                                                <LayoutDashboard />
-                                                <span>{t('leadSearch')}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    ) : (
-                        /* Chatbot & Default Menu */
-                        <>
-                            {/* Super Admin Header when viewing tenant */}
-                            {targetUserId && (
-                                <SidebarGroup>
-                                    <SidebarGroupContent>
-                                        <SidebarMenu>
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton size="lg" onClick={() => router.push("/platform/tenants")}>
-                                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                                        <ArrowLeft className="size-4" />
-                                                    </div>
-                                                    <div className="grid flex-1 text-left text-sm leading-tight">
-                                                        <span className="truncate font-semibold">{t('backToTenants')}</span>
-                                                        <span className="truncate text-xs text-muted-foreground">{targetEmail || targetUserId}</span>
-                                                    </div>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </SidebarGroup>
-                            )}
+            <Sidebar collapsible="icon" className="!top-0 !h-screen border-r-0 bg-[#1e1e2d] text-white z-40" variant="sidebar">
+                <SidebarHeader className="h-16 flex items-center justify-center border-b border-white/10 bg-[#1e1e2d]">
+                    <div className="flex items-center gap-2 px-2 w-full">
+                        <div className="flex items-center justify-center w-8 h-8 rounded bg-blue-600 text-white font-bold">
+                            V
+                        </div>
+                        <span className="font-bold text-lg tracking-tight group-data-[collapsible=icon]:hidden">Vion</span>
+                    </div>
+                </SidebarHeader>
 
-                            <SidebarGroup>
-                                <SidebarGroupLabel>{t('overview')}</SidebarGroupLabel>
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot") && !isActive("/console/chatbot/shopper")}>
-                                                <Link href={buildLink("/console/chatbot")}>
-                                                    <LayoutDashboard />
-                                                    <span>{t('dashboard')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/analytics")}>
-                                                <Link href={buildLink("/console/chatbot/analytics")}>
-                                                    <BarChart3 />
-                                                    <span>{t('analytics')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-
-                            <SidebarGroup>
-                                <SidebarGroupLabel>{t('configuration')}</SidebarGroupLabel>
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/knowledge")}>
-                                                <Link href={buildLink("/console/knowledge")}>
-                                                    <Database />
-                                                    <span>{t('knowledgeBase')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/widget") && !searchParams.get('tab')}>
-                                                <Link href={buildLink("/console/chatbot/widget")}>
-                                                    <Settings />
-                                                    <span>{t('widgetSettings')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                            {(isActive("/console/chatbot/widget") || pathname.startsWith(buildLink("/console/chatbot/widget"))) && (
-                                                <SidebarMenuSub>
-                                                    {[
-                                                        { tab: "branding", label: t('branding') },
-                                                        { tab: "appearance", label: t('appearance') },
-                                                        { tab: "behavior", label: t('behavior') },
-
-                                                        { tab: "availability", label: t('availability') },
-                                                        { tab: "engagement", label: t('engagement') },
-                                                    ].map((item) => (
-                                                        <SidebarMenuSubItem key={item.tab}>
-                                                            <SidebarMenuSubButton asChild isActive={searchParams.get('tab') === item.tab || (!searchParams.get('tab') && item.tab === "branding" && isActive("/console/chatbot/widget"))}>
-                                                                <Link href={`${buildLink("/console/chatbot/widget")}?tab=${item.tab}`}>
-                                                                    <span>{item.label}</span>
-                                                                </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    ))}
-                                                </SidebarMenuSub>
-                                            )}
-                                        </SidebarMenuItem>
-
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/integration")}>
-                                                <Link href={buildLink("/console/chatbot/integration")}>
-                                                    <Plug />
-                                                    <span>{t('integration')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/modules") || isActive("/console/chatbot/shopper")}>
-                                                <Link href={buildLink("/console/modules")}>
-                                                    <Package />
-                                                    <span>{t('modules') || "Modüller"}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-
-                            <SidebarGroup>
-                                <SidebarGroupLabel>{t('communication')}</SidebarGroupLabel>
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/chats")}>
-                                                <Link href={buildLink("/console/chatbot/chats")}>
-                                                    <MessageSquare />
-                                                    <span>{t('chats')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/leads")}>
-                                                <Link href={buildLink("/console/chatbot/leads")}>
-                                                    <Users />
-                                                    <span>{t('leads')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/appointments")}>
-                                                <Link href={buildLink("/console/chatbot/appointments")}>
-                                                    <Calendar className="w-4 h-4" />
-                                                    <span>{t('appointments') || "Appointments"}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-
-                            <SidebarGroup>
-                                <SidebarGroupLabel>{t('settings')}</SidebarGroupLabel>
-                                <SidebarGroupContent>
-                                    <SidebarMenu>
-                                        <SidebarMenuItem>
-                                            <SidebarMenuButton asChild isActive={isActive("/console/chatbot/profile")}>
-                                                <Link href={buildLink("/console/chatbot/profile")}>
-                                                    <UserCircle />
-                                                    <span>{t('profile')}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                        {targetUserId && (
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton asChild isActive={pathname?.includes('/permissions')}>
-                                                    <Link href={`/admin/tenant/${targetUserId}/permissions`}>
-                                                        <Shield />
-                                                        <span>{t('appPermissions') || "Uygulama Erişimleri"}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        )}
-                                    </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-
-
-                            {!targetUserId && (role === 'admin' || role === 'SUPER_ADMIN') && (
-                                <SidebarGroup>
-                                    <SidebarGroupLabel>Admin</SidebarGroupLabel>
-                                    <SidebarGroupContent>
-                                        <SidebarMenu>
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton asChild isActive={pathname === "/admin"}>
-                                                    <Link href="/admin">
-                                                        <Users />
-                                                        <span>{t('tenants')}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton asChild isActive={pathname === "/admin/requests"}>
-                                                    <Link href="/admin/requests">
-                                                        <Inbox />
-                                                        <span>{t('requests') || "Requests"}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                            <SidebarMenuItem>
-                                                <SidebarMenuButton asChild isActive={pathname === "/admin/appointments"}>
-                                                    <Link href="/admin/appointments">
-                                                        <Calendar className="w-4 h-4" />
-                                                        <span>{t('appointments') || "Appointments"}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </SidebarGroup>
-                            )}
-                        </>
+                <SidebarContent className="bg-[#1e1e2d] px-2 py-4">
+                    {/* Super Admin Back Button */}
+                    {targetUserId && (
+                        <SidebarMenu className="mb-4">
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    size="lg"
+                                    onClick={() => router.push("/platform/tenants")}
+                                    className="bg-white/5 hover:bg-white/10 text-white"
+                                >
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-500 text-white">
+                                        <ArrowLeft className="size-4" />
+                                    </div>
+                                    <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                                        <span className="truncate font-semibold">{t('backToTenants')}</span>
+                                        <span className="truncate text-xs text-white/50">{targetEmail || targetUserId}</span>
+                                    </div>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
                     )}
+
+                    <SidebarMenu className="gap-2">
+                        {navItems.map((item) => (
+                            <SidebarMenuItem key={item.href}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={item.active}
+                                    className={cn(
+                                        "w-full justify-start gap-3 px-3 py-6 h-auto transition-all duration-200",
+                                        "hover:bg-white/10 hover:text-white",
+                                        item.active
+                                            ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                                            : "text-zinc-400 group-hover:text-white"
+                                    )}
+                                >
+                                    <Link href={buildLink(item.href)}>
+                                        <item.icon className={cn("size-5", item.active ? "text-white" : "text-zinc-400 group-hover:text-white")} />
+                                        <span className="font-medium text-[15px] group-data-[collapsible=icon]:hidden">{item.title}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
                 </SidebarContent>
 
-                <SidebarFooter>
-                    <SidebarMenu>
+                <SidebarFooter className="bg-[#1e1e2d] border-t border-white/10 p-2">
+                    <SidebarMenu className="gap-1">
+                        {/* Widget Settings (Bottom) */}
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive("/console/chatbot/widget")}
+                                className={cn(
+                                    "w-full justify-start gap-3 px-3 py-3 h-auto hover:bg-white/10",
+                                    isActive("/console/chatbot/widget") ? "text-white bg-white/10" : "text-zinc-400"
+                                )}
+                            >
+                                <Link href={buildLink("/console/chatbot/widget")}>
+                                    <Settings className="size-5" />
+                                    <span className="font-medium group-data-[collapsible=icon]:hidden">{t('settings')}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        {/* Profile / User */}
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 size="lg"
-                                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                                className="data-[state=open]:bg-white/10 hover:bg-white/5 text-white mt-2"
                             >
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-500 text-white font-bold">
                                     {user?.email?.[0].toUpperCase() || 'U'}
                                 </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                                     <span className="truncate font-semibold">{user?.displayName || 'User'}</span>
-                                    <span className="truncate text-xs">{user?.email}</span>
+                                    <span className="truncate text-xs text-zinc-400">{user?.email}</span>
                                 </div>
-                                <LogOut className="ml-auto size-4" onClick={handleLogout} />
+                                <LogOut className="ml-auto size-4 text-zinc-400 hover:text-white group-data-[collapsible=icon]:hidden" onClick={handleLogout} />
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
