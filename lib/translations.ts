@@ -1846,7 +1846,6 @@ export const translations = {
         newTenant: "Yeni Müşteri",
         anonymousUser: "Anonim Kullanıcı",
         anonymous: "Anonim",
-        customer: "Müşteri",
         mute: "Sesi kapat",
         unmute: "Sesi aç",
         noNewNotifications: "Yeni bildirim yok",
