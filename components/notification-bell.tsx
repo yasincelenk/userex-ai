@@ -74,8 +74,7 @@ export function NotificationBell() {
                 body,
                 icon: '/exai-logo-dark.png',
                 badge: '/exai-logo-dark.png',
-                tag,
-                renotify: true
+                tag
             })
 
             notification.onclick = () => {
