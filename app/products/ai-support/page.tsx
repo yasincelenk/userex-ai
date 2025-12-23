@@ -18,7 +18,8 @@ import {
     Code,
     BarChart3,
     Languages,
-    Smartphone
+    Smartphone,
+    Zap
 } from "lucide-react"
 
 import { PublicHeader } from "@/components/public-header"

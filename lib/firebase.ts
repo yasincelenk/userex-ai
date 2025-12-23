@@ -33,4 +33,9 @@ const guestApp = getApps().find(app => app.name === "guest") || initializeApp(fi
 const guestDb = getFirestore(guestApp);
 const guestAuth = getAuth(guestApp);
 
-export { app, db, auth, storage, guestApp, guestDb, guestAuth };
+// Initialize Providers
+const googleProvider = new GoogleAuthProvider();
+const microsoftProvider = new OAuthProvider('microsoft.com');
+const appleProvider = new OAuthProvider('apple.com');
+
+export { app, db, auth, storage, guestApp, guestDb, guestAuth, googleProvider, microsoftProvider, appleProvider };
