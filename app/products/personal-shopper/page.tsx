@@ -69,7 +69,7 @@ export default function PersonalShopperPage() {
             step3Desc: "The AI engages visitors, guides them to products, and boosts your conversion rate.",
 
             ctaTitle: "Ready to Boost Your E-commerce Sales?",
-            ctaSubtitle: "Join top brands using exAi to deliver personalized shopping experiences at scale.",
+            ctaSubtitle: "Join top brands using Vion to deliver personalized shopping experiences at scale.",
             ctaButton: "Create Your Store Bot",
             noCreditCard: "No credit card required • 14-day free trial",
         },
@@ -109,7 +109,7 @@ export default function PersonalShopperPage() {
             step3Desc: "AI ziyaretçilerle etkileşime geçer, onları ürünlere yönlendirir ve dönüşüm oranınızı artırır.",
 
             ctaTitle: "E-ticaret Satışlarınızı Artırmaya Hazır mısınız?",
-            ctaSubtitle: "Ölçeklenebilir kişiselleştirilmiş alışveriş deneyimleri sunmak için exAi kullanan lider markalara katılın.",
+            ctaSubtitle: "Ölçeklenebilir kişiselleştirilmiş alışveriş deneyimleri sunmak için Vion kullanan lider markalara katılın.",
             ctaButton: "Mağaza Botunuzu Oluşturun",
             noCreditCard: "Kredi kartı gerekmez • 14 günlük ücretsiz deneme",
         }

@@ -21,7 +21,7 @@ export function PricingModal({ isOpen, onClose, currentPlan = 'free' }: PricingM
             price: 'Free',
             period: '/ 14 Days',
             icon: Rocket,
-            description: 'Full access to test exAi before you commit.',
+            description: 'Full access to test Vion before you commit.',
             features: [
                 '50 Test Conversations',
                 'Basic Proactive Triggers',

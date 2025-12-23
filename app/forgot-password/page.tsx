@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
                 <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
                     <div className="flex items-center text-lg font-medium">
                         <Command className="mr-2 h-6 w-6" />
-                        exAi Assistant
+                        Vion Assistant
                     </div>
                     <div className="space-y-2">
                         <blockquote className="space-y-2">

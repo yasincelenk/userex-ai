@@ -1452,7 +1452,7 @@ function ChatbotViewContent() {
                             </form>
                             <div className="text-center mt-2">
                                 <p className="text-[10px] text-gray-400">
-                                    Powered by <span className="font-semibold">exAi</span>
+                                    Powered by <span className="font-semibold">Vion</span>
                                 </p>
                             </div>
                         </div>

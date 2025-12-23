@@ -17,25 +17,25 @@ export async function POST(req: Request) {
         const mailOptions = {
             from: process.env.SMTP_USER,
             to: email,
-            subject: 'Your exAi Account has been Approved!',
+            subject: 'Your Vion Account has been Approved!',
             text: `
                 Hello ${name},
                 
-                Your account for exAi has been approved!
+                Your account for Vion has been approved!
                 
                 You can now log in to the platform at: https://app.userex.com.tr/login
                 
                 Best regards,
-                The exAi Team
+                The Vion Team
             `,
             html: `
-                <h3>Welcome to exAi!</h3>
+                <h3>Welcome to Vion!</h3>
                 <p>Hello ${name},</p>
                 <p>Your account has been approved!</p>
                 <p>You can now log in to the platform at: <a href="https://app.userex.com.tr/login">https://app.userex.com.tr/login</a></p>
                 <br/>
                 <p>Best regards,</p>
-                <p>The exAi Team</p>
+                <p>The Vion Team</p>
             `
         };
 

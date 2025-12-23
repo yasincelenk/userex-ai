@@ -60,10 +60,10 @@ ${message}
 
         // Send email
         const result = await transporter.sendMail({
-            from: `"exAi İletişim Formu" <${process.env.SMTP_USER}>`,
+            from: `"Vion İletişim Formu" <${process.env.SMTP_USER}>`,
             to: 'info@userex.com.tr',
             replyTo: email,
-            subject: `[exAi] ${subjectLabels[subject] || 'İletişim'} - ${name}`,
+            subject: `[Vion] ${subjectLabels[subject] || 'İletişim'} - ${name}`,
             text: emailContent
         })
 

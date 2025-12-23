@@ -251,7 +251,7 @@ export default function ContactPage() {
                                         → {language === 'tr' ? 'Fiyatlandırma' : 'Pricing'}
                                     </a>
                                     <a href="/why" className="block text-zinc-400 hover:text-white transition-colors">
-                                        → {language === 'tr' ? 'Neden exAi?' : 'Why exAi?'}
+                                        → {language === 'tr' ? 'Neden Vion?' : 'Why Vion?'}
                                     </a>
                                     <a href="/industries" className="block text-zinc-400 hover:text-white transition-colors">
                                         → {language === 'tr' ? 'Sektörler' : 'Industries'}

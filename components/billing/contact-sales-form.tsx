@@ -77,7 +77,7 @@ export function ContactSalesForm({ planId, onBack, onSuccess }: ContactSalesForm
                     <br /><br />
                     <strong>TR12 3456 7890 1234 5678 90 (Iş Bankası)</strong>
                     <br />
-                    exAi Corp.
+                    Vion Corp.
                 </div>
             </div>
         );
