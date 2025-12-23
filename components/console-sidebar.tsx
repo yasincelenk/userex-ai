@@ -18,7 +18,10 @@ import {
     Zap,
     GraduationCap,
     Grid,
-    Shield
+    Shield,
+    CreditCard,
+    Code,
+    Bell
 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -180,28 +183,78 @@ export function ConsoleSidebar({ targetUserId, targetEmail }: ConsoleSidebarProp
 
                 <SidebarFooter className="bg-[#1e1e2d] border-t border-white/10 p-2">
                     <SidebarMenu className="gap-1">
-                        {/* Widget Settings (Bottom) */}
+                        {/* Settings Group */}
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
                                 isActive={isActive("/console/chatbot/widget")}
                                 className={cn(
-                                    "w-full justify-start gap-3 px-3 py-3 h-auto hover:bg-white/10",
-                                    isActive("/console/chatbot/widget") ? "text-white bg-white/10" : "text-zinc-400"
+                                    "w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-white/10 text-zinc-400 hover:text-white transition-colors",
+                                    isActive("/console/chatbot/widget") && "text-white bg-white/10"
                                 )}
                             >
                                 <Link href={buildLink("/console/chatbot/widget")}>
-                                    <Settings className="size-5" />
-                                    <span className="font-medium group-data-[collapsible=icon]:hidden">{t('settings')}</span>
+                                    <Settings className="size-4" />
+                                    <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{t('settings')} (Widget)</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive("/console/settings/subscription")}
+                                className={cn(
+                                    "w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-white/10 text-zinc-400 hover:text-white transition-colors",
+                                    isActive("/console/settings/subscription") && "text-white bg-white/10"
+                                )}
+                            >
+                                <Link href="/console/settings/subscription">
+                                    <CreditCard className="size-4" />
+                                    <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{t('subscription')}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive("/console/settings/developers")}
+                                className={cn(
+                                    "w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-white/10 text-zinc-400 hover:text-white transition-colors",
+                                    isActive("/console/settings/developers") && "text-white bg-white/10"
+                                )}
+                            >
+                                <Link href="/console/settings/developers">
+                                    <Code className="size-4" />
+                                    <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{t('developers')}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive("/console/settings/notifications")}
+                                className={cn(
+                                    "w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-white/10 text-zinc-400 hover:text-white transition-colors",
+                                    isActive("/console/settings/notifications") && "text-white bg-white/10"
+                                )}
+                            >
+                                <Link href="/console/settings/notifications">
+                                    <Bell className="size-4" />
+                                    <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{t('notificationSettings') || "Notifications"}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <div className="h-px bg-white/10 my-2" />
 
                         {/* Profile / User */}
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 size="lg"
-                                className="data-[state=open]:bg-white/10 hover:bg-white/5 text-white mt-2"
+                                className="data-[state=open]:bg-white/10 hover:bg-white/5 text-white"
                             >
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-indigo-500 text-white font-bold">
                                     {user?.email?.[0].toUpperCase() || 'U'}
