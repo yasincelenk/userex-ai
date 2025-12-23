@@ -1213,7 +1213,7 @@ function ChatbotViewContent() {
                             </button>
                         </form>
                         <div className="text-center mt-2">
-                            <p className="text-[10px] text-gray-400">Powered by exAi</p>
+                            <p className="text-[10px] text-gray-400">Powered by Vion</p>
                         </div>
                     </div>
                 </div>
