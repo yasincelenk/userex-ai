@@ -1212,8 +1212,9 @@ function ChatbotViewContent() {
                                 <Send className="w-4 h-4" />
                             </button>
                         </form>
-                        <div className="text-center mt-2">
-                            <p className="text-[10px] text-gray-400">Powered by Vion</p>
+                        <div className="text-center mt-2 flex items-center justify-center gap-1">
+                            <span className="text-[10px] text-gray-400">Powered by</span>
+                            <img src="/vion-logo-full-dark.png" alt="Vion" className="h-3 opacity-60" />
                         </div>
                     </div>
                 </div>
@@ -1450,10 +1451,9 @@ function ChatbotViewContent() {
                                     <Send className="w-4 h-4" />
                                 </button>
                             </form>
-                            <div className="text-center mt-2">
-                                <p className="text-[10px] text-gray-400">
-                                    Powered by <span className="font-semibold">Vion</span>
-                                </p>
+                            <div className="text-center mt-2 flex items-center justify-center gap-1">
+                                <span className="text-[10px] text-gray-400">Powered by</span>
+                                <img src="/vion-logo-full-dark.png" alt="Vion" className="h-3 opacity-60" />
                             </div>
                         </div>
                     </div>
