@@ -273,7 +273,10 @@ export default function AutopilotPage() {
 
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Userex Autopilot</h2>
+                    <div className="flex items-center gap-3 mb-6">
+                        <h2 className="text-3xl font-bold tracking-tight">Vion Autopilot</h2>
+                        <Badge variant="secondary" className="text-sm">Beta</Badge>
+                    </div>
                     <p className="text-muted-foreground">
                         Autonomous AI agent that tests your application end-to-end.
                     </p>

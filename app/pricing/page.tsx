@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
+import { VionLogo } from "@/components/vion-logo"
 import { PublicHeader } from "@/components/public-header"
 import { useLanguage } from "@/context/LanguageContext"
 import { ArrowRight, Mail, Sparkles } from "lucide-react"
@@ -54,17 +55,13 @@ export default function PricingPage() {
             <footer className="border-t border-white/5 py-12 bg-black/50 backdrop-blur-sm z-10">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-xl">
-                            <Image
-                                src="/exai-logo.png"
-                                alt="ex ai"
-                                width={100}
-                                height={28}
-                                className="h-6 w-auto object-contain"
-                            />
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <a href="mailto:info@vion.ai">
+                                info@vion.ai
+                            </a>
                         </div>
                         <div className="text-sm text-zinc-500">
-                            © 2025 ex ai. {t('landingAllRights')}
+                            © 2025 Vion. {t('landingAllRights')}
                         </div>
                         <div className="flex gap-6 text-sm text-zinc-500">
                             <Link href="/privacy" className="hover:text-white transition-colors">{t('landingPrivacy')}</Link>

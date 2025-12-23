@@ -1,4 +1,4 @@
-import { MessageSquare, ShoppingBag, PenTool, Search, Eye } from "lucide-react"
+import { MessageSquare, ShoppingBag, PenTool, Search } from "lucide-react"
 
 export interface ProductItem {
     id: string
@@ -43,14 +43,5 @@ export const products: ProductItem[] = [
         color: "text-purple-500",
         bgColor: "bg-purple-50"
     },
-    {
-        id: "ui-ux-auditor",
-        title: "UI/UX Auditor",
-        description: "Analyze and improve your design's usability and accessibility.",
-        icon: Eye,
-        status: "active",
-        href: "/console/ui-ux-auditor",
-        color: "text-green-500",
-        bgColor: "bg-green-50"
-    }
+
 ]

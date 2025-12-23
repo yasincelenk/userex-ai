@@ -130,33 +130,6 @@ export function ConsoleSidebar({ targetUserId, targetEmail }: ConsoleSidebarProp
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    ) : pathname.startsWith("/console/ui-ux-auditor") ? (
-                        /* UI/UX Auditor Menu */
-                        <SidebarGroup>
-                            <SidebarGroupLabel>{t('analysisTools')}</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <SidebarMenu>
-                                    {[
-                                        { href: "/console/ui-ux-auditor/autopilot", icon: Bot, label: t('autopilot') },
-                                        { href: "/console/ui-ux-auditor/visual", icon: Eye, label: t('visualAnalysis') },
-                                        { href: "/console/ui-ux-auditor/accessibility", icon: ScanLine, label: t('accessibility') },
-                                        { href: "/console/ui-ux-auditor/heuristic", icon: CheckSquare, label: t('heuristicEval') },
-                                        { href: "/console/ui-ux-auditor/copy", icon: FileText, label: t('copyTone') },
-                                        { href: "/console/ui-ux-auditor/user-flow", icon: GitMerge, label: t('userFlow') },
-                                        { href: "/console/ui-ux-auditor/cro", icon: TrendingUp, label: t('optimization') },
-                                    ].map((item) => (
-                                        <SidebarMenuItem key={item.href}>
-                                            <SidebarMenuButton asChild isActive={pathname === item.href}>
-                                                <Link href={item.href}>
-                                                    <item.icon />
-                                                    <span>{item.label}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
                     ) : (
                         /* Chatbot & Default Menu */
                         <>

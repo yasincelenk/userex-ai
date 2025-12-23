@@ -17,8 +17,6 @@ interface TenantData {
     visibleCopywriter?: boolean
     enableLeadFinder?: boolean
     visibleLeadFinder?: boolean
-    enableUiUxAuditor?: boolean
-    visibleUiUxAuditor?: boolean
     enableVoiceAssistant?: boolean
     visibleVoiceAssistant?: boolean
 }

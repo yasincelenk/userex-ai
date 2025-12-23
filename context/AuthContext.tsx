@@ -17,8 +17,6 @@ interface AuthContextType {
     visibleCopywriter: boolean
     enableLeadFinder: boolean
     visibleLeadFinder: boolean
-    enableUiUxAuditor: boolean
-    visibleUiUxAuditor: boolean
     enableVoiceAssistant: boolean
     visibleVoiceAssistant: boolean
     enableKnowledgeBase: boolean
@@ -40,8 +38,6 @@ const AuthContext = createContext<AuthContextType>({
     visibleCopywriter: true,
     enableLeadFinder: true,
     visibleLeadFinder: true,
-    enableUiUxAuditor: true,
-    visibleUiUxAuditor: true,
     enableVoiceAssistant: false,
     visibleVoiceAssistant: true,
     enableKnowledgeBase: true,
@@ -63,8 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [visibleCopywriter, setVisibleCopywriter] = useState(true)
     const [enableLeadFinder, setEnableLeadFinder] = useState(true)
     const [visibleLeadFinder, setVisibleLeadFinder] = useState(true)
-    const [enableUiUxAuditor, setEnableUiUxAuditor] = useState(true)
-    const [visibleUiUxAuditor, setVisibleUiUxAuditor] = useState(true)
     const [enableVoiceAssistant, setEnableVoiceAssistant] = useState(false)
     const [visibleVoiceAssistant, setVisibleVoiceAssistant] = useState(true)
     const [enableKnowledgeBase, setEnableKnowledgeBase] = useState(true)
@@ -118,8 +112,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             setVisibleCopywriter(userData.visibleCopywriter !== false)
                             setEnableLeadFinder(userData.enableLeadFinder === true)
                             setVisibleLeadFinder(userData.visibleLeadFinder !== false)
-                            setEnableUiUxAuditor(userData.enableUiUxAuditor === true)
-                            setVisibleUiUxAuditor(userData.visibleUiUxAuditor !== false)
                             setEnableVoiceAssistant(userData.enableVoiceAssistant === true)
                             setVisibleVoiceAssistant(userData.visibleVoiceAssistant !== false)
                             setEnableKnowledgeBase(userData.enableKnowledgeBase !== false) // Default true
@@ -173,8 +165,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             visibleCopywriter,
             enableLeadFinder,
             visibleLeadFinder,
-            enableUiUxAuditor,
-            visibleUiUxAuditor,
             enableVoiceAssistant,
 
             visibleVoiceAssistant,

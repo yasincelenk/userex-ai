@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft, LayoutDashboard, ScanLine, Bot, TrendingUp } from "lucide-react"
+import { Loader2, ShoppingBag, Mic, FileText, Users, ArrowRight, ArrowLeft, LayoutDashboard, Bot, TrendingUp } from "lucide-react"
 import {
     Card,
     CardContent,
@@ -26,8 +26,6 @@ interface TenantData {
     visibleCopywriter?: boolean
     enableLeadFinder?: boolean
     visibleLeadFinder?: boolean
-    enableUiUxAuditor?: boolean
-    visibleUiUxAuditor?: boolean
     enableSalesOptimization?: boolean
     visibleSalesOptimization?: boolean
     canManageModules?: boolean
@@ -106,16 +104,6 @@ const STANDALONE_MODULES: ModuleConfig[] = [
         bgColor: "bg-green-100",
     },
     {
-        id: "ui-ux-auditor",
-        usageKey: "enableUiUxAuditor",
-        visibilityKey: "visibleUiUxAuditor",
-        title: "UI/UX Denetçisi",
-        description: "Sitenizin kapsamlı kullanılabilirliğini analiz edin ve optimize edin.",
-        icon: ScanLine,
-        color: "text-orange-600",
-        bgColor: "bg-orange-100",
-    },
-    {
         id: "sales-optimization",
         usageKey: "enableSalesOptimization",
         visibilityKey: "visibleSalesOptimization",
@@ -137,8 +125,6 @@ export function TenantPermissions({ tenant, userId, onUpdate }: TenantPermission
         visibleCopywriter: tenant.visibleCopywriter ?? true,
         enableLeadFinder: tenant.enableLeadFinder ?? true,
         visibleLeadFinder: tenant.visibleLeadFinder ?? true,
-        enableUiUxAuditor: tenant.enableUiUxAuditor ?? true,
-        visibleUiUxAuditor: tenant.visibleUiUxAuditor ?? true,
     })
     const [loading, setLoading] = useState<Record<string, boolean>>({})
     const { toast } = useToast()

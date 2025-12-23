@@ -469,7 +469,7 @@ export const translations = {
         privacy5Title: "5. GDPR & KVKK Rights",
         privacy5Content: "If you are a resident of the EEU or Turkey, you have the right to access, correct, update, or request deletion of your personal information. You also have the right to object to the processing of your personal information.",
         privacy6Title: "6. Contact Us",
-        privacy6Content: "If you have any questions about this Privacy Policy, please contact us at: support@userex.ai",
+        privacy6Content: "If you have any questions about this Privacy Policy, please contact us at: support@vion.ai",
 
         // Contact Page
         contactTitle: "Contact Us",
@@ -713,7 +713,7 @@ export const translations = {
         returnToLogin: "Return to Login",
 
         forgotPassword: "Forgot Password?",
-        copyright: "© 2025 ex ai by Userex. All rights reserved.",
+        copyright: "© 2025 Vion AI. All rights reserved.",
 
         // Auth
         login: "Login",
@@ -798,6 +798,38 @@ export const translations = {
         animationPulse: "Pulse",
         animationShake: "Shake",
         animationNone: "None",
+
+        // Notification & Time
+        justNow: "Just now",
+        minutesAgo: "min ago",
+        hoursAgo: "h ago",
+        daysAgo: "d ago",
+        newMessage: "New Message",
+        newAppointment: "New Appointment",
+        newLead: "New Lead",
+        newTenant: "New Tenant",
+        anonymousUser: "Anonymous User",
+        anonymous: "Anonymous",
+        customer: "Customer",
+        mute: "Mute sound",
+        unmute: "Unmute sound",
+        noNewNotifications: "No new notifications",
+        all: "All",
+        notifications: "Notifications",
+
+        // Notification Settings
+        notificationSettings: "Notification Settings",
+        notificationSettingsDesc: "Manage how you receive notifications.",
+        pushNotifications: "Push Notifications",
+        pushNotificationsDesc: "Receive browser notifications for important events.",
+        emailNotifications: "Email Notifications",
+        emailNotificationsDesc: "Receive email summaries and alerts.",
+        soundNotifications: "Sound Notifications",
+        soundNotificationsDesc: "Play a sound when a new notification arrives.",
+        notifyOnChat: "Notify on new chat message",
+        notifyOnLead: "Notify on new lead",
+        notifyOnAppointment: "Notify on new appointment request",
+
         behavior: "Behavior",
         // Widget Settings Titles
         configureChatbotDesc: "Configure your chatbot's settings and appearance.",
@@ -1463,7 +1495,7 @@ export const translations = {
         privacy5Title: "5. GDPR & KVKK Hakları",
         privacy5Content: "AEA veya Türkiye'de ikamet ediyorsanız, kişisel bilgilerinize erişme, düzeltme, güncelleme veya silinmesini talep etme hakkına sahipsiniz. Ayrıca kişisel bilgilerinizin işlenmesine itiraz etme hakkına da sahipsiniz.",
         privacy6Title: "6. Bize Ulaşın",
-        privacy6Content: "Bu Gizlilik Politikası hakkında herhangi bir sorunuz varsa, lütfen bizimle iletişime geçin: support@userex.ai",
+        privacy6Content: "Bu Gizlilik Politikası hakkında herhangi bir sorunuz varsa, lütfen bizimle iletişime geçin: support@vion.ai",
 
         // Contact Page
         contactTitle: "Bize Ulaşın",
@@ -1721,7 +1753,7 @@ export const translations = {
         returnToLogin: "Giriş Ekranına Dön",
 
         forgotPassword: "Şifremi Unuttum?",
-        copyright: "© 2025 ex ai by Userex. Tüm hakları saklıdır.",
+        copyright: "© 2025 Vion AI. Tüm hakları saklıdır.",
 
         // Auth
         login: "Giriş Yap",
@@ -1802,6 +1834,38 @@ export const translations = {
         animationPulse: "Nabız",
         animationShake: "Sallan",
         animationNone: "Yok",
+
+        // Bildirim & Zaman
+        justNow: "Şimdi",
+        minutesAgo: "dk önce",
+        hoursAgo: "sa önce",
+        daysAgo: "g önce",
+        newMessage: "Yeni Mesaj",
+        newAppointment: "Yeni Randevu",
+        newLead: "Yeni Lead",
+        newTenant: "Yeni Müşteri",
+        anonymousUser: "Anonim Kullanıcı",
+        anonymous: "Anonim",
+        customer: "Müşteri",
+        mute: "Sesi kapat",
+        unmute: "Sesi aç",
+        noNewNotifications: "Yeni bildirim yok",
+        all: "Tümü",
+        notifications: "Bildirimler",
+
+        // Bildirim Ayarları
+        notificationSettings: "Bildirim Ayarları",
+        notificationSettingsDesc: "Bildirim tercihlerinizi yönetin.",
+        pushNotifications: "Push Bildirimleri",
+        pushNotificationsDesc: "Önemli olaylar için tarayıcı bildirimleri alın.",
+        emailNotifications: "E-posta Bildirimleri",
+        emailNotificationsDesc: "E-posta özetleri ve uyarıları alın.",
+        soundNotifications: "Sesli Bildirimler",
+        soundNotificationsDesc: "Yeni bildirim geldiğinde ses çal.",
+        notifyOnChat: "Yeni sohbet mesajlarında bildir",
+        notifyOnLead: "Yeni lead geldiğinde bildir",
+        notifyOnAppointment: "Yeni randevu talebinde bildir",
+
         behavior: "Davranış",
         // Widget Settings Titles
         configureChatbotDesc: "Chatbot ayarlarını ve görünümünü yapılandırın.",

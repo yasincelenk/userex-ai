@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { createUserWithEmailAndPassword } from "firebase/auth"
+import { createUserWithEmailAndPassword, User } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, CheckCircle2, Bot, ShoppingBag, PenTool, Search, Scan, ArrowLeft, TrendingUp, ScanEye } from "lucide-react"
-import Image from "next/image"
+import { Loader2, CheckCircle2, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { VionLogo } from "@/components/vion-logo"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { INDUSTRY_CONFIG, IndustryType } from "@/lib/industry-config"
@@ -22,107 +22,149 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
+import { PasswordStrength, isPasswordStrong } from "@/components/auth/password-strength"
+import { PhoneInput } from "@/components/auth/phone-input"
+
+type SignupStep = 'initial' | 'form' | 'success'
 
 export default function SignUpForm() {
-    const [firstName, setFirstName] = useState("")
-    const [lastName, setLastName] = useState("")
-    const [companyName, setCompanyName] = useState("")
-    const [companyWebsite, setCompanyWebsite] = useState("")
+    // Step management
+    const [step, setStep] = useState<SignupStep>('initial')
+
+    // Form state
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
+    const [fullName, setFullName] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
     const [industry, setIndustry] = useState<IndustryType>("ecommerce")
+
+    // UI state
     const [isLoading, setIsLoading] = useState(false)
-    const [isSuccess, setIsSuccess] = useState(false)
     const [error, setError] = useState("")
+
+    // Social auth state
+    const [authProvider, setAuthProvider] = useState<string>('email')
+    const [socialUser, setSocialUser] = useState<User | null>(null)
+
     const router = useRouter()
     const { toast } = useToast()
     const { t, language } = useLanguage()
 
-    const handleSignUp = async (e: React.FormEvent) => {
+    // Handle email submit to go to form step
+    const handleEmailSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setError("")
+        if (email) {
+            setStep('form')
+        }
+    }
 
-        if (password !== confirmPassword) {
-            const msg = "Passwords do not match."
-            setError(msg)
-            toast({
-                title: t('error'),
-                description: msg,
-                variant: "destructive",
-            })
+    // Handle social auth success
+    const handleSocialAuthSuccess = async (user: User, providerId: string) => {
+        setSocialUser(user)
+        setAuthProvider(providerId)
+        setEmail(user.email || '')
+        setFullName(user.displayName || '')
+
+        // Check if user already exists in Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid))
+        if (userDoc.exists()) {
+            // User exists, redirect to platform
+            router.push("/platform")
             return
         }
 
+        // New user, go to form step
+        setStep('form')
+    }
+
+    // Create user document in Firestore
+    const createUserDocument = async (userId: string, userEmail: string) => {
+        const nameParts = fullName.trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
+        await setDoc(doc(db, "users", userId), {
+            firstName,
+            lastName,
+            fullName,
+            email: userEmail,
+            phoneNumber,
+            industry,
+            authProvider,
+            role: "TENANT_ADMIN",
+            createdAt: new Date().toISOString(),
+            isActive: false, // User must be approved by admin
+
+            // Enable modules based on industry defaultModules
+            enablePersonalShopper: (INDUSTRY_CONFIG[industry].defaultModules as any).productCatalog || false,
+            enableLeadFinder: (INDUSTRY_CONFIG[industry].defaultModules as any).leadCollection || false,
+            enableVoiceAssistant: (INDUSTRY_CONFIG[industry].defaultModules as any).appointments || false,
+            enableCopywriter: industry === 'saas' || industry === 'education' ? true : false,
+
+            // Set initial visibility
+            visiblePersonalShopper: true,
+            visibleLeadFinder: true,
+            visibleVoiceAssistant: true,
+            visibleCopywriter: true,
+
+            enableChatbot: true,
+            visibleChatbot: true
+        })
+
+        // Create default chatbot document
+        await setDoc(doc(db, "chatbots", userId), {
+            companyName: fullName || "Acme Corp",
+            welcomeMessage: "Hello! How can I help you today?",
+            brandColor: "#000000",
+            brandLogo: "",
+            suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
+            enableLeadCollection: false,
+            createdAt: new Date().toISOString()
+        })
+
+        // Send notification to admin
+        try {
+            await fetch('/api/admin/notify-signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: userEmail,
+                    name: fullName,
+                    company: fullName
+                })
+            })
+        } catch (notifyError) {
+            console.error("Failed to send admin notification:", notifyError)
+        }
+    }
+
+    // Handle form submission
+    const handleSignUp = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setError("")
         setIsLoading(true)
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-            const user = userCredential.user
+            if (socialUser) {
+                // Social auth user - just create the Firestore document
+                await createUserDocument(socialUser.uid, socialUser.email || email)
+                await auth.signOut()
+            } else {
+                // Email/password signup
+                if (!isPasswordStrong(password)) {
+                    setError("Password does not meet the requirements.")
+                    setIsLoading(false)
+                    return
+                }
 
-            // Create user document with default role and extra fields
-            // Set isActive to false for application-based flow
-            await setDoc(doc(db, "users", user.uid), {
-                firstName,
-                lastName,
-                companyName,
-                companyWebsite,
-                email: user.email,
-                industry,
-                role: "TENANT_ADMIN",
-                createdAt: new Date().toISOString(),
-                isActive: false, // User must be approved by admin
-
-                // Enable modules based on industry defaultModules
-                enablePersonalShopper: (INDUSTRY_CONFIG[industry].defaultModules as any).productCatalog || false,
-                enableLeadFinder: (INDUSTRY_CONFIG[industry].defaultModules as any).leadCollection || false,
-                enableVoiceAssistant: (INDUSTRY_CONFIG[industry].defaultModules as any).appointments || false,
-                enableCopywriter: industry === 'saas' || industry === 'education' ? true : false,
-                enableUiUxAuditor: false, // Usually independent tool
-
-                // Set initial visibility
-                visiblePersonalShopper: true,
-                visibleLeadFinder: true,
-                visibleVoiceAssistant: true,
-                visibleCopywriter: true,
-                visibleUiUxAuditor: true,
-
-                enableChatbot: true,
-                visibleChatbot: true
-            })
-
-            // Send notification to admin
-            try {
-                await fetch('/api/admin/notify-signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: user.email,
-                        name: `${firstName} ${lastName}`,
-                        company: companyName
-                    })
-                })
-            } catch (notifyError) {
-                console.error("Failed to send admin notification:", notifyError)
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+                await createUserDocument(userCredential.user.uid, email)
+                await auth.signOut()
             }
 
-            // Create default chatbot document
-            await setDoc(doc(db, "chatbots", user.uid), {
-                companyName: companyName || "Acme Corp",
-                welcomeMessage: "Hello! How can I help you today?",
-                brandColor: "#000000",
-                brandLogo: "",
-                suggestedQuestions: ["What are your pricing plans?", "How do I get started?", "Contact support"],
-                enableLeadCollection: false,
-                createdAt: new Date().toISOString()
-            })
-
-            // No email verification needed for application flow
-
-            // Sign out immediately so the user is not logged in while pending approval
-            await auth.signOut()
-
-            setIsSuccess(true)
+            setStep('success')
             toast({
                 title: t('success'),
                 description: t('applicationReceived'),
@@ -132,7 +174,9 @@ export default function SignUpForm() {
             let errorMessage = error.message || t('failedToCreateAccount')
 
             if (error.code === 'auth/email-already-in-use') {
-                errorMessage = "This email address is already in use. Please sign in instead."
+                errorMessage = language === 'tr'
+                    ? "Bu e-posta adresi zaten kullanılıyor. Lütfen giriş yapın."
+                    : "This email address is already in use. Please sign in instead."
             }
 
             setError(errorMessage)
@@ -146,307 +190,314 @@ export default function SignUpForm() {
         }
     }
 
-    if (isSuccess) {
+    // Success state
+    if (step === 'success') {
         return (
-            <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px] h-screen">
-                <div className="hidden bg-muted lg:block relative">
-                    <div className="absolute inset-0 bg-black" />
-                    <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
-                        <div className="flex items-center text-lg font-medium">
-                            <Image
-                                src="/exai-logo.png"
-                                alt="ex ai"
-                                width={100}
-                                height={24}
-                                className="h-6 w-auto object-contain"
-                            />
-                        </div>
-                        <div className="space-y-8 max-w-md">
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
-                                <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
-                            </div>
-                            <div className="grid gap-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500/10 border border-lime-500/20">
-                                        <Bot className="h-6 w-6 text-lime-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
-                                        <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                                        <ShoppingBag className="h-6 w-6 text-purple-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
-                                        <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20">
-                                        <PenTool className="h-6 w-6 text-pink-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{t('featureCopywriterTitle')}</h3>
-                                        <p className="text-sm text-gray-400">{t('featureCopywriterDesc')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 border border-green-500/20">
-                                        <Search className="h-6 w-6 text-green-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{t('featureLeadFinderTitle')}</h3>
-                                        <p className="text-sm text-gray-400">{t('featureLeadFinderDesc')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20">
-                                        <Scan className="h-6 w-6 text-orange-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-lg">{t('featureAuditorTitle')}</h3>
-                                        <p className="text-sm text-gray-400">{t('featureAuditorDesc')}</p>
-                                    </div>
-                                </div>
+            <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black flex flex-col">
+                <header className="flex items-center justify-between p-6">
+                    <Link href="/">
+                        <VionLogo variant="black" className="text-2xl dark:hidden" />
+                        <VionLogo variant="white" className="text-2xl hidden dark:block" />
+                    </Link>
+                    <Link href="/login">
+                        <Button variant="outline" size="sm">
+                            {t('login')}
+                        </Button>
+                    </Link>
+                </header>
+
+                <main className="flex-1 flex items-center justify-center p-6">
+                    <div className="w-full max-w-md text-center space-y-6">
+                        <div className="flex justify-center">
+                            <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
                             </div>
                         </div>
-                        <div className="text-sm text-gray-400">
-                            {t('copyright')}
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-bold tracking-tight">{t('applicationReceived')}</h1>
+                            <p className="text-muted-foreground">
+                                {t('applicationPendingMsg')}
+                            </p>
                         </div>
+                        <Link href="/login">
+                            <Button className="w-full h-11">
+                                {t('returnToLogin')}
+                            </Button>
+                        </Link>
                     </div>
-                </div>
-                <div className="flex items-center justify-center py-12 relative">
-                    <div className="absolute top-4 right-4 md:top-8 md:right-8">
-                        <LanguageSwitcher />
-                    </div>
-                    <div className="mx-auto grid w-[350px] gap-6 text-center">
-                        <div className="flex justify-center mb-4">
-                            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                <CheckCircle2 className="h-6 w-6 text-blue-600" />
-                            </div>
-                        </div>
-                        <h1 className="text-3xl font-bold">{t('applicationReceived')}</h1>
-                        <p className="text-muted-foreground">
-                            {t('applicationPendingMsg')}
-                        </p>
-                        <div className="grid gap-4">
-                            <Link href="/login">
-                                <Button className="w-full">
-                                    {t('returnToLogin')}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                </main>
+
+                <footer className="p-6 text-center text-sm text-muted-foreground">
+                    © 2025 Vion. {t('landingAllRights')}
+                </footer>
             </div>
         )
     }
 
     return (
-        <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px] h-screen">
-            <div className="hidden bg-muted lg:block relative">
-                <div className="absolute inset-0 bg-black" />
-                <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
-                    <div className="flex items-center text-lg font-medium">
-                        <Link href="/" className="text-2xl font-bold tracking-tighter text-white">
-                            Vion
-                        </Link>
-                    </div>
-                    <div className="space-y-8 max-w-md">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
-                            <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
-                        </div>
-                        <div className="grid gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500/10 border border-lime-500/20">
-                                    <Bot className="h-6 w-6 text-lime-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
-                                    <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                                    <ShoppingBag className="h-6 w-6 text-purple-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
-                                    <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
-                                    <TrendingUp className="h-6 w-6 text-amber-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg">{t('featureSalesOptTitle')}</h3>
-                                    <p className="text-sm text-gray-400">{t('featureSalesOptDesc')}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20">
-                                    <ScanEye className="h-6 w-6 text-blue-400" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg">{t('featureCompetitorTitle')}</h3>
-                                    <p className="text-sm text-gray-400">{t('featureCompetitorDesc')}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="text-sm text-gray-400">
-                        &copy; 2025 Vion. All rights reserved.
-                    </div>
-                </div>
-            </div>
-            <div className="flex items-center justify-center py-12 relative overflow-y-auto bg-black border-l border-white/5">
-                <div className="absolute top-4 right-4 md:top-8 md:right-8">
+        <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black flex flex-col">
+            {/* Header */}
+            <header className="flex items-center justify-between p-6">
+                <Link href="/">
+                    <VionLogo variant="black" className="text-2xl dark:hidden" />
+                    <VionLogo variant="white" className="text-2xl hidden dark:block" />
+                </Link>
+                <div className="flex items-center gap-3">
                     <LanguageSwitcher />
-                </div>
-                <div className="absolute top-4 left-4 md:top-8 md:left-8">
-                    <Link href="/">
-                        <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent text-zinc-400 hover:text-white">
-                            <ArrowLeft className="w-4 h-4" />
-                            {language === 'tr' ? 'Ana Sayfa' : 'Home'}
+                    <Link href="/login">
+                        <Button variant="outline" size="sm">
+                            {t('login')}
                         </Button>
                     </Link>
                 </div>
-                <div className="mx-auto grid w-[350px] gap-6 my-8">
-                    <div className="grid gap-2 text-center">
-                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('signupTitle')}</h1>
-                        <p className="text-balance text-zinc-400">
-                            {t('signupDesc')}
+            </header>
+
+            {/* Main Content */}
+            <main className="flex-1 flex items-center justify-center p-6">
+                <div className="w-full max-w-md space-y-8">
+                    {/* Title */}
+                    <div className="text-center space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {language === 'tr' ? 'Ücretsiz Başlayın' : 'Get started for free'}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {language === 'tr' ? 'Kredi kartı gerekmez' : 'No credit card needed'}
                         </p>
                     </div>
 
+                    {/* Error Display */}
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm text-red-400 flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-red-500" />
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-600 dark:text-red-400">
                             {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSignUp} className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="firstName" className="text-zinc-300">{t('firstName')}</Label>
+                    {/* Step: Initial - Social + Email */}
+                    {step === 'initial' && (
+                        <div className="space-y-6">
+                            <SocialAuthButtons
+                                mode="signup"
+                                onSuccess={handleSocialAuthSuccess}
+                                disabled={isLoading}
+                            />
+
+                            {/* Divider */}
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-white dark:bg-black px-2 text-muted-foreground">
+                                        {language === 'tr' ? 'veya' : 'or'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Email Input */}
+                            <form onSubmit={handleEmailSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">
+                                        {language === 'tr' ? 'İş E-postası' : 'Business email'}
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="name@work-email.com"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="h-11"
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90">
+                                    {language === 'tr' ? 'E-posta ile Kayıt Ol' : 'Sign up with email'}
+                                </Button>
+                            </form>
+
+                            {/* Login Link */}
+                            <p className="text-center text-sm text-muted-foreground">
+                                {t('alreadyHaveAccount')}{" "}
+                                <Link href="/login" className="text-primary hover:underline font-medium">
+                                    {t('signIn')}
+                                </Link>
+                            </p>
+
+                            {/* Terms */}
+                            <p className="text-center text-xs text-muted-foreground">
+                                {language === 'tr'
+                                    ? 'Kayıt olarak '
+                                    : 'You agree to our '}
+                                <Link href="/terms" className="text-primary hover:underline">
+                                    {language === 'tr' ? 'Kullanım Koşulları' : 'Terms of Use'}
+                                </Link>
+                                {language === 'tr' ? ' ve ' : ' and '}
+                                <Link href="/privacy" className="text-primary hover:underline">
+                                    {language === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}
+                                </Link>
+                                {language === 'tr' ? "'nı kabul etmiş olursunuz." : ''}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Step: Form - Full Details */}
+                    {step === 'form' && (
+                        <form onSubmit={handleSignUp} className="space-y-4">
+                            {/* Back Button */}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="mb-2 -ml-2"
+                                onClick={() => {
+                                    setStep('initial')
+                                    setSocialUser(null)
+                                    setAuthProvider('email')
+                                }}
+                            >
+                                <ArrowLeft className="w-4 h-4 mr-1" />
+                                {language === 'tr' ? 'Geri' : 'Back'}
+                            </Button>
+
+                            {/* Email (read-only if set) */}
+                            <div className="space-y-2">
+                                <Label htmlFor="email">
+                                    {language === 'tr' ? 'İş E-postası' : 'Business email'}
+                                </Label>
                                 <Input
-                                    id="firstName"
-                                    placeholder="John"
-                                    required
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={!!socialUser}
+                                    className="h-11"
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="lastName" className="text-zinc-300">{t('lastName')}</Label>
-                                <Input
-                                    id="lastName"
-                                    placeholder="Doe"
-                                    required
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
-                                    className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="companyName" className="text-zinc-300">{t('companyName')}</Label>
-                            <Input
-                                id="companyName"
-                                placeholder={t('companyName') === 'Şirket Adı' ? 'Acme A.Ş.' : 'Acme Inc.'}
-                                required
-                                value={companyName}
-                                onChange={(e) => setCompanyName(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="companyWebsite" className="text-zinc-300">{t('website')}</Label>
-                            <Input
-                                id="companyWebsite"
-                                placeholder="example.com"
-                                required
-                                value={companyWebsite}
-                                onChange={(e) => setCompanyWebsite(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="email" className="text-zinc-300">{t('email')}</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="m@example.com"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="industry" className="text-zinc-300">{t('industrySelectLabel') || (language === 'tr' ? 'Sektörünüz' : 'Your Industry')}</Label>
-                            <Select value={industry} onValueChange={(value) => setIndustry(value as IndustryType)}>
-                                <SelectTrigger id="industry" className="w-full bg-white/5 border-white/10 text-white focus:ring-white/20 focus:border-white/20">
-                                    <SelectValue placeholder={t('industrySelectPlaceholder') || "Sektör seçin"} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
-                                        <SelectItem key={key} value={key} className="focus:bg-white/10 focus:text-white">
-                                            {(config as any).names?.[language] || config.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="password" className="text-zinc-300">{t('password')}</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="confirmPassword" className="text-zinc-300">{t('confirmPassword')}</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                required
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-white text-black hover:bg-zinc-200 transition-colors font-medium h-10" disabled={isLoading}>
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {t('submitting')}
-                                </>
-                            ) : (
-                                t('submitApplication')
+
+                            {/* Password (only for email signup) */}
+                            {!socialUser && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">{t('password')}</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder={language === 'tr' ? 'Şifrenizi belirleyin' : 'Set your password'}
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="h-11 pr-10"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <PasswordStrength password={password} className="mt-2" />
+                                </div>
                             )}
-                        </Button>
-                    </form>
-                    <div className="mt-4 text-center text-sm text-zinc-400">
-                        {t('alreadyHaveAccount')}{" "}
-                        <Link href="/login" className="underline hover:text-white transition-colors">
-                            {t('signIn')}
-                        </Link>
-                    </div>
+
+                            {/* Full Name */}
+                            <div className="space-y-2">
+                                <Label htmlFor="fullName">
+                                    {language === 'tr' ? 'Ad Soyad' : 'Full name'}
+                                </Label>
+                                <Input
+                                    id="fullName"
+                                    placeholder="John Smith"
+                                    required
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    className="h-11"
+                                />
+                            </div>
+
+                            {/* Phone Number */}
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">
+                                    {language === 'tr' ? 'Cep Telefonu' : 'Mobile phone number'}
+                                </Label>
+                                <PhoneInput
+                                    value={phoneNumber}
+                                    onChange={setPhoneNumber}
+                                    defaultCountry="TR"
+                                />
+                            </div>
+
+                            {/* Industry */}
+                            <div className="space-y-2">
+                                <Label htmlFor="industry">
+                                    {t('industrySelectLabel') || (language === 'tr' ? 'Sektörünüz' : 'Your Industry')}
+                                </Label>
+                                <Select value={industry} onValueChange={(value) => setIndustry(value as IndustryType)}>
+                                    <SelectTrigger id="industry" className="w-full h-11">
+                                        <SelectValue placeholder={t('industrySelectPlaceholder') || "Select industry"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => (
+                                            <SelectItem key={key} value={key}>
+                                                {(config as any).names?.[language] || config.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Submit Button */}
+                            <Button
+                                type="submit"
+                                className="w-full h-11 bg-primary hover:bg-primary/90"
+                                disabled={isLoading || (!socialUser && !isPasswordStrong(password))}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        {t('submitting')}
+                                    </>
+                                ) : (
+                                    language === 'tr' ? 'Hesap Oluştur' : 'Create an account'
+                                )}
+                            </Button>
+
+                            {/* Login Link */}
+                            <p className="text-center text-sm text-muted-foreground">
+                                {t('alreadyHaveAccount')}{" "}
+                                <Link href="/login" className="text-primary hover:underline font-medium">
+                                    {t('signIn')}
+                                </Link>
+                            </p>
+
+                            {/* Terms */}
+                            <p className="text-center text-xs text-muted-foreground">
+                                {language === 'tr'
+                                    ? 'Kayıt olarak '
+                                    : 'You agree to our '}
+                                <Link href="/terms" className="text-primary hover:underline">
+                                    {language === 'tr' ? 'Kullanım Koşulları' : 'Terms of Use'}
+                                </Link>
+                                {language === 'tr' ? ' ve ' : ' and '}
+                                <Link href="/privacy" className="text-primary hover:underline">
+                                    {language === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}
+                                </Link>
+                                {language === 'tr' ? "'nı kabul etmiş olursunuz." : ''}
+                            </p>
+                        </form>
+                    )}
                 </div>
-            </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="p-6 text-center text-sm text-muted-foreground">
+                © 2025 Vion. {t('landingAllRights')}
+            </footer>
         </div>
     )
 }

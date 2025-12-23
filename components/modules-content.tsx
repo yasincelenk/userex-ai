@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { ShoppingBag, ArrowRight, Mic, MessageSquare, Calendar, Users, BookOpen, Share2, Mail, Lock, Activity, TrendingUp } from "lucide-react"
+import { ShoppingBag, ArrowRight, Mic, MessageSquare, Calendar, Users, BookOpen, Share2, Mail, Lock, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/LanguageContext"
 import { useAuth } from "@/context/AuthContext"
@@ -25,7 +25,7 @@ const ICON_MAP = {
     BookOpen,
     Share2,
     Mail,
-    Activity,
+
     TrendingUp
 }
 
@@ -39,7 +39,6 @@ const MODULE_FIRESTORE_MAP: Record<ModuleId, string> = {
     knowledgeBase: 'enableKnowledgeBase',
     socialMedia: 'enableSocialMedia',
     emailMarketing: 'enableEmailMarketing',
-    uiUxAuditor: 'enableUiUxAuditor',
     salesOptimization: 'enableSalesOptimization'
 }
 
@@ -57,8 +56,7 @@ export function ModulesContent({ targetUserId }: ModulesContentProps) {
         enableChatbot,
         enableVoiceAssistant,
         enableKnowledgeBase,
-        enableLeadFinder,
-        enableUiUxAuditor
+        enableLeadFinder
     } = useAuth()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState<ModuleId | null>(null)
@@ -91,7 +89,6 @@ export function ModulesContent({ targetUserId }: ModulesContentProps) {
                         appointments: data.enableAppointments === true,
                         socialMedia: data.enableSocialMedia === true,
                         emailMarketing: data.enableEmailMarketing === true,
-                        uiUxAuditor: data.enableUiUxAuditor === true,
                         salesOptimization: data.enableSalesOptimization === true,
                     })
                 } else {
@@ -105,7 +102,7 @@ export function ModulesContent({ targetUserId }: ModulesContentProps) {
                         appointments: false,
                         socialMedia: false,
                         emailMarketing: false,
-                        uiUxAuditor: false,
+
                     })
                 }
             } catch (error) {
@@ -172,9 +169,6 @@ export function ModulesContent({ targetUserId }: ModulesContentProps) {
                 break
             case 'leadCollection':
                 router.push(isSuperAdminViewingTenant ? `${basePath}/modules` : "/console/modules/leads/settings")
-                break
-            case 'uiUxAuditor':
-                router.push(isSuperAdminViewingTenant ? `${basePath}/modules` : "/console/ui-ux-auditor")
                 break
             case 'salesOptimization':
                 router.push(isSuperAdminViewingTenant ? `${basePath}/modules` : "/console/modules/sales-optimization")

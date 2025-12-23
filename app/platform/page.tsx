@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Lock, Bot, Settings2, Sparkles, Building2, ExternalLink, Activity, ShoppingBag, Mic, Users, ScanLine, Inbox } from "lucide-react"
+import { ArrowRight, Lock, Bot, Settings2, Sparkles, Building2, ExternalLink, Activity, ShoppingBag, Mic, Users, Inbox } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { useLanguage } from "@/context/LanguageContext"
@@ -21,8 +21,6 @@ export default function PlatformPage() {
         visibleCopywriter,
         enableLeadFinder,
         visibleLeadFinder,
-        enableUiUxAuditor,
-        visibleUiUxAuditor,
         enablePersonalShopper,
         visiblePersonalShopper,
         enableVoiceAssistant,
@@ -104,7 +102,7 @@ export default function PlatformPage() {
             )}
 
             {/* ADD-ONS & APPS SECTION */}
-            {(visibleCopywriter || visibleLeadFinder || visibleUiUxAuditor) && (
+            {(visibleCopywriter || visibleLeadFinder) && (
                 <div>
                     <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-yellow-500" />
@@ -212,54 +210,7 @@ export default function PlatformPage() {
                             </Card>
                         ))}
 
-                        {/* UI/UX Auditor */}
-                        {visibleUiUxAuditor && ((enableUiUxAuditor || role === 'admin' || role === 'SUPER_ADMIN') ? (
-                            <Card
-                                className="group relative overflow-hidden border bg-white hover:shadow-lg transition-all cursor-pointer border-orange-100/50"
-                                onClick={() => router.push("/console/ui-ux-auditor")}
-                            >
-                                <CardHeader>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 rounded-xl bg-orange-100 text-orange-600">
-                                            <ScanLine className="w-6 h-6" />
-                                        </div>
-                                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200">{t('active')}</Badge>
-                                    </div>
-                                    <CardTitle className="text-xl">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
-                                    <CardDescription>
-                                        {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardFooter>
-                                    <Button variant="ghost" className="w-full justify-between group-hover:bg-orange-50 group-hover:text-orange-700">
-                                        {t('openConsole') || "Open Console"} <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ) : (
-                            <Card
-                                className="group relative overflow-hidden border bg-gray-50/50 hover:bg-white transition-all cursor-pointer hover:shadow-md"
-                                onClick={() => handleLockedProductClick('UI/UX Auditor')}
-                            >
-                                <CardHeader>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 rounded-xl bg-gray-200 text-gray-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
-                                            <ScanLine className="w-6 h-6" />
-                                        </div>
-                                        <Lock className="w-4 h-4 text-gray-400 group-hover:text-orange-500" />
-                                    </div>
-                                    <CardTitle className="text-xl text-gray-600 group-hover:text-gray-900">{t('uiUxAuditor') || "UI/UX Auditor"}</CardTitle>
-                                    <CardDescription>
-                                        {t('uiUxAuditorDesc') || "Analyze your website's usability and conversion rate optimization (CRO) with AI."}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardFooter>
-                                    <Button variant="ghost" className="w-full justify-start text-muted-foreground group-hover:text-orange-600">
-                                        <Lock className="w-4 h-4 mr-2" /> {t('unlockFeature') || "Unlock Feature"}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
+
                     </div>
                 </div>
             )}

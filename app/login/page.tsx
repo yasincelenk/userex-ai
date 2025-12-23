@@ -5,25 +5,52 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "firebase/auth"
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, User } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Command, Bot, ShoppingBag, PenTool, Search, Scan, ArrowLeft, TrendingUp, ScanEye } from "lucide-react"
-import Image from "next/image"
+import { Loader2, Eye, EyeOff } from "lucide-react"
+import { VionLogo } from "@/components/vion-logo"
 import { useLanguage } from "@/context/LanguageContext"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { SocialAuthButtons } from "@/components/auth/social-auth-buttons"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
   const { toast } = useToast()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
+  // Handle social auth success
+  const handleSocialAuthSuccess = async (user: User, providerId: string) => {
+    try {
+      // Check if user exists in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid))
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data()
+        if (userData.isActive === false) {
+          await auth.signOut()
+          setError(t('accountPendingApproval'))
+          return
+        }
+        // User exists and is active, redirect to platform
+        router.push("/platform")
+      } else {
+        // New user from social login - redirect to signup to complete profile
+        // The signup page will detect the existing social auth and show the form step
+        router.push("/signup")
+      }
+    } catch (error: any) {
+      console.error("Social auth error:", error)
+      setError(error.message || "Authentication failed")
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,139 +96,165 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px] h-screen">
-      <div className="hidden bg-muted lg:block relative">
-        <div className="absolute inset-0 bg-black" />
-        <div className="relative z-20 flex h-full flex-col justify-between p-10 text-white">
-          <div className="flex items-center text-lg font-medium">
-            <Link href="/" className="text-2xl font-bold tracking-tighter text-white">
-              Vion
-            </Link>
-          </div>
-          <div className="space-y-8 max-w-md">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">{t('loginHeroTitle')}</h2>
-              <p className="text-gray-400">{t('loginHeroSubtitle')}</p>
-            </div>
-            <div className="grid gap-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lime-500/10 border border-lime-500/20">
-                  <Bot className="h-6 w-6 text-lime-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{t('featureCustSupportTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureCustSupportDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <ShoppingBag className="h-6 w-6 text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{t('featureShopperTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureShopperDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <TrendingUp className="h-6 w-6 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{t('featureSalesOptTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureSalesOptDesc')}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20">
-                  <ScanEye className="h-6 w-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{t('featureCompetitorTitle')}</h3>
-                  <p className="text-sm text-gray-400">{t('featureCompetitorDesc')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="text-sm text-gray-400">
-            &copy; 2025 Vion. All rights reserved.
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center justify-center py-12 relative bg-black border-l border-white/5">
-        <div className="absolute top-4 right-4 md:top-8 md:right-8">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between p-6">
+        <Link href="/">
+          <VionLogo variant="black" className="text-2xl dark:hidden" />
+          <VionLogo variant="white" className="text-2xl hidden dark:block" />
+        </Link>
+        <div className="flex items-center gap-3">
           <LanguageSwitcher />
-        </div>
-        <div className="absolute top-4 left-4 md:top-8 md:left-8">
-          <Link href="/">
-            <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent text-zinc-400 hover:text-white">
-              <ArrowLeft className="w-4 h-4" />
-              {t('back') || (t.language === 'tr' ? 'Ana Sayfa' : 'Home')}
+          <Link href="/signup">
+            <Button variant="outline" size="sm">
+              {language === 'tr' ? 'Ücretsiz Kayıt Ol' : 'Sign up free'}
             </Button>
           </Link>
         </div>
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold text-white tracking-tight">{t('login')}</h1>
-            <p className="text-balance text-zinc-400">
-              {t('loginDescription')}
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-8">
+          {/* Title */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {language === 'tr' ? 'Tekrar Hoşgeldiniz' : 'Welcome back'}
+            </h1>
+            <p className="text-muted-foreground">
+              {language === 'tr' ? 'Hesabınıza giriş yapın' : 'Log in to your account'}
             </p>
           </div>
 
+          {/* Error Display */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm text-red-400 flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-red-500" />
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="text-zinc-300">{t('email')}</Label>
+          {/* Social Auth Buttons */}
+          <SocialAuthButtons
+            mode="login"
+            onSuccess={handleSocialAuthSuccess}
+            disabled={isLoading}
+          />
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-black px-2 text-muted-foreground">
+                {language === 'tr' ? 'veya' : 'or'}
+              </span>
+            </div>
+          </div>
+
+          {/* Email/Password Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                {language === 'tr' ? 'İş E-postası' : 'Business email'}
+              </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="admin@admin.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
+                className="h-11"
               />
             </div>
-            <div className="grid gap-2">
+
+            {/* Password */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-zinc-300">{t('password')}</Label>
-                <Link href="/forgot-password" className="text-sm text-zinc-400 hover:text-white hover:underline transition-colors">
+                <Label htmlFor="password">{t('password')}</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
                   {t('forgotPassword')}
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:border-white/20 focus:ring-white/20"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={language === 'tr' ? '12 karakter veya daha fazla' : '12 characters or more'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-11 pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
-            <Button type="submit" className="w-full bg-white text-black hover:bg-zinc-200 transition-colors font-medium h-10" disabled={isLoading}>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {t('loggingIn')}
                 </>
               ) : (
-                t('login')
+                language === 'tr' ? 'E-posta ile Giriş Yap' : 'Log in with email'
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-zinc-400">
+
+          {/* Signup Link */}
+          <p className="text-center text-sm text-muted-foreground">
             {t('dontHaveAccount')}{" "}
-            <Link href="/signup" className="underline hover:text-white transition-colors">
+            <Link href="/signup" className="text-primary hover:underline font-medium">
               {t('signUp')}
             </Link>
-          </div>
+          </p>
+
+          {/* Custom SSO Link (optional) */}
+          <p className="text-center">
+            <Link
+              href="#"
+              className="text-sm text-primary hover:underline"
+              onClick={(e) => {
+                e.preventDefault()
+                toast({
+                  title: language === 'tr' ? 'Yakında' : 'Coming Soon',
+                  description: language === 'tr' ? 'Özel SSO desteği yakında eklenecek.' : 'Custom SSO support coming soon.',
+                })
+              }}
+            >
+              {language === 'tr' ? 'Özel SSO ile giriş yap' : 'Log in with custom SSO'}
+            </Link>
+          </p>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="p-6 text-center text-sm text-muted-foreground">
+        © 2025 Vion. {t('landingAllRights')}
+      </footer>
     </div>
   )
 }

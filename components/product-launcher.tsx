@@ -10,13 +10,12 @@ import { useAuth } from "@/context/AuthContext"
 
 export function ProductLauncher() {
     const router = useRouter()
-    const { enableChatbot, enableCopywriter, enableLeadFinder, enableUiUxAuditor } = useAuth()
+    const { enableChatbot, enableCopywriter, enableLeadFinder } = useAuth()
 
     const visibleProducts = products.filter(product => {
         if (product.id === 'chatbot') return enableChatbot
         if (product.id === 'copywriter') return enableCopywriter
         if (product.id === 'lead-finder') return enableLeadFinder
-        if (product.id === 'ui-ux-auditor') return enableUiUxAuditor
         return false // Don't show unknown products by default
     })
 

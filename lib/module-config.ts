@@ -1,4 +1,4 @@
-export type ModuleId = 'generalChatbot' | 'appointments' | 'leadCollection' | 'productCatalog' | 'knowledgeBase' | 'voiceAssistant' | 'socialMedia' | 'emailMarketing' | 'uiUxAuditor' | 'salesOptimization';
+export type ModuleId = 'generalChatbot' | 'appointments' | 'leadCollection' | 'productCatalog' | 'knowledgeBase' | 'voiceAssistant' | 'socialMedia' | 'emailMarketing' | 'salesOptimization';
 
 export type IndustryType = 'ecommerce' | 'booking' | 'real_estate' | 'saas' | 'service' | 'healthcare' | 'education' | 'academic' | 'finance' | 'other';
 
@@ -118,16 +118,7 @@ export const MODULES: Record<ModuleId, ModuleConfig> = {
         icon: 'Mail',
         recommendedFor: ['ecommerce', 'saas', 'education']
     },
-    uiUxAuditor: {
-        id: 'uiUxAuditor',
-        nameKey: 'modules.uiUxAuditor',
-        descriptionKey: 'modules.uiUxAuditorDesc',
-        isPremium: true,
-        isCore: false,
-        price: 59,
-        icon: 'Activity',
-        recommendedFor: ['saas', 'ecommerce']
-    },
+
     salesOptimization: {
         id: 'salesOptimization',
         nameKey: 'modules.salesOptimization',
@@ -150,6 +141,6 @@ export const ORDERED_MODULES: ModuleConfig[] = [
     MODULES.voiceAssistant,    // 6. Voice Assistant
     MODULES.socialMedia,       // 7. Social Media
     MODULES.emailMarketing,    // 8. Email Marketing
-    MODULES.uiUxAuditor,       // 9. UI/UX Auditor
+
     MODULES.salesOptimization, // 10. Sales Optimization
 ];

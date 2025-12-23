@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "UserEx AI Assistant",
-  description: "AI Chatbot Assistant",
+  title: "Vion AI",
+  description: "AI-Powered Business Assistant",
 };
 
 import { ConditionalAuthProvider } from "@/components/conditional-auth-provider";

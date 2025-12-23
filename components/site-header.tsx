@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, LogOut, Settings, LayoutDashboard, Globe, Check } from "lucide-react"
+import { User, LogOut, Settings, LayoutDashboard, Globe, Check, Bell } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 import { Breadcrumbs } from "@/components/breadcrumbs"
+import { NotificationBell } from "@/components/notification-bell"
 
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useLanguage } from "@/context/LanguageContext"
@@ -62,10 +63,10 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
                 <div className="flex items-center gap-2 ml-2">
                     <div className="flex items-center gap-2 ml-2">
                         <Image
-                            src="/exai-logo-dark.png"
-                            alt="UserEx AI"
+                            src="/vion-logo-full-dark.png"
+                            alt="Vion"
                             width={100}
-                            height={32}
+                            height={24}
                             className="h-6 w-auto object-contain"
                             priority
                         />
@@ -75,6 +76,7 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
                 <Breadcrumbs />
             </div>
             <div className="ml-auto flex items-center gap-2">
+                <NotificationBell />
                 <DropdownMenu>
                     <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 h-auto p-2 hover:bg-accent hover:text-accent-foreground outline-none")}>
                         <div className="hidden md:flex flex-col items-end">
@@ -99,6 +101,10 @@ export function SiteHeader({ showSidebarTrigger = true }: { showSidebarTrigger?:
                         <DropdownMenuItem onClick={() => router.push("/dashboard")}>
                             <LayoutDashboard className="mr-2 h-4 w-4" />
                             <span>{t('dashboard')}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/console/settings/notifications")}>
+                            <Bell className="mr-2 h-4 w-4" />
+                            <span>{t('notificationSettings') || 'Bildirim Ayarları'}</span>
                         </DropdownMenuItem>
 
 

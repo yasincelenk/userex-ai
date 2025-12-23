@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Users, Save, Loader2, Trash2, Plus, ExternalLink } from "lucide-react"
+import { ArrowLeft, Users, Save, Loader2, Trash2, Plus, ExternalLink, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -35,6 +35,8 @@ export default function LeadCollectionSettingsPage() {
     const [isSaving, setIsSaving] = useState(false)
     const [isActive, setIsActive] = useState(false)
     const [customFields, setCustomFields] = useState<CustomField[]>([])
+    const [enableNotifications, setEnableNotifications] = useState(false)
+    const [notificationEmail, setNotificationEmail] = useState("")
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -47,6 +49,8 @@ export default function LeadCollectionSettingsPage() {
                     const data = chatbotSnap.data()
                     setIsActive(data.enableLeadCollection || false)
                     setCustomFields(data.leadCustomFields || [])
+                    setEnableNotifications(data.enableLeadNotifications || false)
+                    setNotificationEmail(data.leadNotificationEmail || user?.email || "")
                 }
             } catch (error) {
                 console.error("Error fetching settings:", error)
@@ -70,7 +74,9 @@ export default function LeadCollectionSettingsPage() {
                 }),
                 updateDoc(chatbotRef, {
                     enableLeadCollection: isActive,
-                    leadCustomFields: customFields
+                    leadCustomFields: customFields,
+                    enableLeadNotifications: enableNotifications,
+                    leadNotificationEmail: notificationEmail
                 })
             ])
 
@@ -172,6 +178,50 @@ export default function LeadCollectionSettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Notifications */}
+                {isActive && (
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <Bell className="w-5 h-5 text-indigo-600" />
+                                <CardTitle>{t('notifications') || "Bildirimler"}</CardTitle>
+                            </div>
+                            <CardDescription>
+                                {t('leadNotificationsDesc') || "Yeni lead geldiğinde email bildirimi alın."}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">{t('enableEmailNotifications') || "Email Bildirimlerini Etkinleştir"}</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('enableEmailNotificationsDesc') || "Yeni lead kaydedildiğinde aşağıdaki adrese email gönderilir."}
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={enableNotifications}
+                                    onCheckedChange={setEnableNotifications}
+                                />
+                            </div>
+
+                            {enableNotifications && (
+                                <div className="space-y-1.5">
+                                    <Label>{t('notificationEmail') || "Bildirim Email Adresi"}</Label>
+                                    <Input
+                                        type="email"
+                                        value={notificationEmail}
+                                        onChange={(e) => setNotificationEmail(e.target.value)}
+                                        placeholder={user?.email || "email@example.com"}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('notificationEmailHint') || "Varsayılan olarak hesap emailiniz kullanılır."}
+                                    </p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Custom Fields */}
                 {isActive && (
